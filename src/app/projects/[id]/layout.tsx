@@ -1,0 +1,72 @@
+'use client'
+
+import { useParams, useRouter } from 'next/navigation'
+import { useProjects } from '@/lib/hooks/use-projects'
+
+/**
+ * Project workspace layout per D-04: full project workspace replaces the dashboard view.
+ * Per D-09: chapter sidebar always visible alongside the editor.
+ * Per D-07: project metadata editable within workspace.
+ */
+export default function ProjectLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const params = useParams<{ id: string }>()
+  const router = useRouter()
+  const { projects, loading } = useProjects()
+  const project = projects.find(p => p.id === params.id)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
+        <div className="text-zinc-400 text-sm">加载中...</div>
+      </div>
+    )
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950">
+        <div className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+          项目未找到
+        </div>
+        <p className="text-zinc-500 mb-6">该作品不存在或已被删除</p>
+        <button
+          onClick={() => router.push('/')}
+          className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          返回作品列表
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950">
+      {/* Top bar */}
+      <header className="h-14 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center px-4 gap-3 flex-shrink-0">
+        <button
+          onClick={() => router.push('/')}
+          className="text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center gap-1"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          返回
+        </button>
+        <h1 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+          {project.title}
+        </h1>
+        <span className="text-xs text-zinc-400 ml-auto">
+          {project.wordCount.toLocaleString()} 字 · {project.genre || '未分类'}
+        </span>
+      </header>
+      {/* Main workspace area */}
+      <div className="flex flex-1 overflow-hidden">
+        {children}
+      </div>
+    </div>
+  )
+}

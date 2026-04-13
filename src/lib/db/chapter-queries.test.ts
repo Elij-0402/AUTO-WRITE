@@ -15,14 +15,15 @@ import type { Chapter } from '../types'
 
 describe('chapter-queries', () => {
   let db: InkForgeProjectDB
+  let testCounter = 0
 
   beforeEach(async () => {
-    db = createProjectDB('test-chapter-queries')
-    // Clear chapters table
-    await db.chapters.clear()
+    // Use unique database name per test to avoid state leakage
+    testCounter++
+    db = createProjectDB(`test-chapter-queries-${testCounter}`)
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     await db.close()
   })
 
@@ -47,7 +48,7 @@ describe('chapter-queries', () => {
       await addChapter(db, 'proj-1', '第二章')
       await addChapter(db, 'proj-1', '第三章')
 
-      const chapters = await db.chapters.toArray()
+      const chapters = await getChapters(db) // Returns sorted by order
       expect(chapters).toHaveLength(3)
       expect(chapters[0].order).toBe(0)
       expect(chapters[1].order).toBe(1)
@@ -202,13 +203,20 @@ describe('chapter-queries', () => {
     it('should update content and wordCount', async () => {
       const id = await addChapter(db, 'proj-1', '第一章')
 
-      const content = { type: 'doc', content: [{ type: 'paragraph', content: '这是测试内容' }] }
+      // Tiptap document format: nodes with text content
+      const content = {
+        type: 'doc',
+        content: [
+          { type: 'paragraph', content: [{ type: 'text', text: '这是测试内容' }] }
+        ]
+      }
       await updateChapterContent(db, id, content)
 
       const chapter = await db.chapters.get(id)
       expect(chapter!.content).toEqual(content)
       // wordCount should be precomputed (count Chinese chars minus whitespace)
-      expect(chapter!.wordCount).toBeGreaterThan(0)
+      // "这是测试内容" has 6 non-whitespace characters
+      expect(chapter!.wordCount).toBe(6)
     })
   })
 

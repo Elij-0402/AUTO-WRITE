@@ -119,50 +119,50 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| AUTH-03 | — | Pending |
-| SYNC-01 | — | Pending |
-| SYNC-02 | — | Pending |
-| PROJ-01 | — | Pending |
-| PROJ-02 | — | Pending |
-| PROJ-03 | — | Pending |
-| PROJ-04 | — | Pending |
-| PROJ-05 | — | Pending |
-| EDIT-01 | — | Pending |
-| EDIT-02 | — | Pending |
-| EDIT-03 | — | Pending |
-| EDIT-04 | — | Pending |
-| WRLD-01 | — | Pending |
-| WRLD-02 | — | Pending |
-| WRLD-03 | — | Pending |
-| WRLD-04 | — | Pending |
-| WRLD-05 | — | Pending |
-| WRLD-06 | — | Pending |
-| WRLD-07 | — | Pending |
-| WRLD-08 | — | Pending |
-| OTLN-01 | — | Pending |
-| OTLN-02 | — | Pending |
-| AI-01 | — | Pending |
-| AI-02 | — | Pending |
-| AI-03 | — | Pending |
-| AI-04 | — | Pending |
-| AI-05 | — | Pending |
-| AI-06 | — | Pending |
-| WORK-01 | — | Pending |
-| WORK-02 | — | Pending |
-| WORK-03 | — | Pending |
-| EXPT-01 | — | Pending |
-| EXPT-02 | — | Pending |
-| EXPT-03 | — | Pending |
-| L10N-01 | — | Pending |
-| L10N-02 | — | Pending |
+| AUTH-01 | Phase 8 | Pending |
+| AUTH-02 | Phase 8 | Pending |
+| AUTH-03 | Phase 8 | Pending |
+| SYNC-01 | Phase 8 | Pending |
+| SYNC-02 | Phase 8 | Pending |
+| PROJ-01 | Phase 1 | Pending |
+| PROJ-02 | Phase 1 | Pending |
+| PROJ-03 | Phase 1 | Pending |
+| PROJ-04 | Phase 1 | Pending |
+| PROJ-05 | Phase 2 | Pending |
+| EDIT-01 | Phase 2 | Pending |
+| EDIT-02 | Phase 2 | Pending |
+| EDIT-03 | Phase 2 | Pending |
+| EDIT-04 | Phase 2 | Pending |
+| WRLD-01 | Phase 4 | Pending |
+| WRLD-02 | Phase 4 | Pending |
+| WRLD-03 | Phase 4 | Pending |
+| WRLD-04 | Phase 4 | Pending |
+| WRLD-05 | Phase 4 | Pending |
+| WRLD-06 | Phase 6 | Pending |
+| WRLD-07 | Phase 6 | Pending |
+| WRLD-08 | Phase 4 | Pending |
+| OTLN-01 | Phase 3 | Pending |
+| OTLN-02 | Phase 7 | Pending |
+| AI-01 | Phase 5 | Pending |
+| AI-02 | Phase 5 | Pending |
+| AI-03 | Phase 5 | Pending |
+| AI-04 | Phase 6 | Pending |
+| AI-05 | Phase 6 | Pending |
+| AI-06 | Phase 9 | Pending |
+| WORK-01 | Phase 5 | Pending |
+| WORK-02 | Phase 3 | Pending |
+| WORK-03 | Phase 3 | Pending |
+| EXPT-01 | Phase 7 | Pending |
+| EXPT-02 | Phase 7 | Pending |
+| EXPT-03 | Phase 7 | Pending |
+| L10N-01 | Phase 1 | Pending |
+| L10N-02 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 37 total
-- Mapped to phases: 0
-- Unmapped: 37 ⚠️
+- v1 requirements: 38 total
+- Mapped to phases: 38
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-13*
-*Last updated: 2026-04-13 after initial definition*
+*Last updated: 2026-04-13 after roadmap creation*

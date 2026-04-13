@@ -61,10 +61,13 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
   }, [db, chapterId])
   
   // Autosave hook with 500ms debounce
-  // We pass content as dependency but since we don't sync back on same chapter,
-  // this only triggers on actual content changes
+  // Wrap updateContent to capture current content from closure
   const { isSaving, lastSaved } = useAutoSave(
-    updateContent,
+    async () => {
+      if (content !== null) {
+        await updateContent(content)
+      }
+    },
     [content],
     500 // 500ms debounce per EDIT-02
   )

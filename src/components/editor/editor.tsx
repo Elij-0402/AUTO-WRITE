@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -20,6 +21,11 @@ import type { EditorProps } from './editor-types'
  * - Full height container, page scrolls
  * 
  * Placeholder per D-03: "开始写作..." in light gray
+ * 
+ * Content sync strategy:
+ * - useChapterEditor only updates content state when chapterId changes
+ * - This prevents autosave updates from resetting the editor
+ * - Editor tracks prevContentRef to detect genuine chapter switches
  */
 export function Editor({ content, onChange, className = '' }: EditorProps) {
   const editor = useEditor({
@@ -47,10 +53,43 @@ export function Editor({ content, onChange, className = '' }: EditorProps) {
     },
   })
 
-  // Update content when prop changes (e.g., chapter switch)
-  if (editor && content !== null && JSON.stringify(editor.getJSON()) !== JSON.stringify(content)) {
-    editor.commands.setContent(content ?? '')
-  }
+  // Track previous content to detect chapter switches
+  // Content only changes from hook when chapterId changes
+  const prevContentRef = useRef<object | null>(content)
+
+  // Handle content changes
+  useEffect(() => {
+    if (!editor) return
+
+    const prevContent = prevContentRef.current
+
+    // Case 1: Chapter deselected (content = null)
+    if (content === null) {
+      if (prevContent !== null) {
+        editor.commands.clearContent()
+        prevContentRef.current = null
+      }
+      return
+    }
+
+    // Case 2: New chapter selected (prev was null)
+    if (prevContent === null) {
+      editor.commands.setContent(content)
+      prevContentRef.current = content
+      return
+    }
+
+    // Case 3: Chapter switch (prev and current are both non-null but different)
+    // Compare JSON to detect genuine chapter switch vs autosave updates
+    const prevJson = JSON.stringify(prevContent)
+    const currJson = JSON.stringify(content)
+    if (prevJson !== currJson) {
+      // Different content - this is a chapter switch
+      editor.commands.setContent(content)
+      prevContentRef.current = content
+    }
+    // If JSON is same, it's probably the same content (no action needed)
+  }, [editor, content])
 
   return (
     <div className={`h-full flex flex-col ${className}`}>

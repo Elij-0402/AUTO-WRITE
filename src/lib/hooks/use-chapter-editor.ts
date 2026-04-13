@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { createProjectDB } from '../db/project-db'
 import { updateChapterContent as updateChapterContentQuery } from '../db/chapter-queries'
@@ -13,6 +13,7 @@ import { useAutoSave } from './use-autosave'
  * - Chapter content from IndexedDB (reactive)
  * - Content update function that triggers autosave
  * - Autosave status (isSaving, lastSaved)
+ * - chapterId for detecting chapter switches
  * 
  * Per D-05: autosave status displayed in editor bottom bar.
  * Per EDIT-02: autosave with 500ms debounce.
@@ -22,6 +23,9 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
   
   const [content, setContent] = useState<object | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  
+  // Track the previous chapterId to detect chapter switches
+  const prevChapterIdRef = useRef<string | null>(null)
   
   // Get the specific chapter reactively
   const chapter = useLiveQuery(
@@ -33,25 +37,35 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
     null
   )
   
-  // Sync content from chapter to local state when chapter changes
+  // Sync content from chapter to local state ONLY when chapterId changes (chapter switch)
+  // Don't sync on every content change (e.g., autosave updates) to avoid editor resets
   useEffect(() => {
-    if (chapter?.content !== undefined) {
-      setContent(chapter.content)
-    } else {
-      setContent(null)
+    // Detect chapter switch
+    if (chapterId !== prevChapterIdRef.current) {
+      // Chapter changed - update content
+      if (chapter?.content !== undefined) {
+        setContent(chapter.content)
+      } else {
+        setContent(null)
+      }
+      prevChapterIdRef.current = chapterId
     }
-  }, [chapter?.content])
+  }, [chapterId, chapter?.content])
   
   // Update function that will be called by autosave
+  // Note: This updates IndexedDB directly, which triggers the chapter query
+  // But we DON'T sync back to content state unless chapterId changes
   const updateContent = useCallback(async (newContent: object) => {
     if (!chapterId) return
     await updateChapterContentQuery(db, chapterId, newContent)
   }, [db, chapterId])
   
   // Autosave hook with 500ms debounce
+  // We pass content as dependency but since we don't sync back on same chapter,
+  // this only triggers on actual content changes
   const { isSaving, lastSaved } = useAutoSave(
     updateContent,
-    [content], // Trigger on content change
+    [content],
     500 // 500ms debounce per EDIT-02
   )
   

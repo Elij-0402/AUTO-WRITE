@@ -33,7 +33,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Author can create, edit, and delete chapters within a project
   3. Author can drag-reorder chapters in the chapter list
   4. All UI labels, buttons, and menus display in Simplified Chinese
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Scaffold, Dexie.js data layer, and project dashboard
+- [ ] 01-02-PLAN.md — Chapter sidebar with drag-reorder and context menu
 
 ### Phase 2: Writing Editor
 **Goal**: Authors can write chapters with a rich editor that handles Chinese text correctly and tracks their writing progress
@@ -141,7 +145,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Project & Chapter Foundation | 0/? | Not started | - |
+| 1. Project & Chapter Foundation | 0/2 | Planning complete | - |
 | 2. Writing Editor | 0/? | Not started | - |
 | 3. Workspace & Chapter Outline | 0/? | Not started | - |
 | 4. World Bible | 0/? | Not started | - |

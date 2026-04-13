@@ -35,6 +35,8 @@ export function useProjects() {
       synopsis: input.synopsis ?? '',
       coverImageId: null,
       wordCount: 0,
+      todayWordCount: 0,
+      todayDate: now.toISOString().split('T')[0],
       createdAt: now,
       updatedAt: now,
       deletedAt: null,

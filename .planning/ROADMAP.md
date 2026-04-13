@@ -53,7 +53,7 @@ Plans:
 - [x] 02-01-PLAN.md — Tiptap editor core with autosave
 - [x] 02-02-PLAN.md — Format toolbar and theme switching
 - [x] 02-03-PLAN.md — Word count display and focus mode
-- [ ] 02-04-PLAN.md — Fix today's word count update gap
+- [x] 02-04-PLAN.md — Fix today's word count update gap
 **UI hint**: yes
 
 ### Phase 3: Workspace & Chapter Outline

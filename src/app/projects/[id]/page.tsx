@@ -22,23 +22,27 @@ import { ThemeProvider, useTheme } from '@/components/editor/theme-provider'
 export default function ProjectPage() {
   const params = useParams<{ id: string }>()
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
+  const [focusMode, setFocusMode] = useState(false)
 
   return (
     <ThemeProvider>
-      {/* Top bar with theme toggle */}
+      {/* Top bar with theme toggle and focus mode */}
       <div className="h-12 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center justify-end px-4 gap-2">
+        <FocusModeToggle focusMode={focusMode} onToggle={() => setFocusMode(!focusMode)} />
         <ThemeToggle />
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside className="w-[280px] border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex-shrink-0 flex flex-col overflow-hidden">
-          <ChapterSidebar
-            projectId={params.id}
-            activeChapterId={activeChapterId}
-            onSelectChapter={setActiveChapterId}
-          />
-        </aside>
+        {/* Sidebar - hidden in focus mode */}
+        {!focusMode && (
+          <aside className="w-[280px] border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex-shrink-0 flex flex-col overflow-hidden">
+            <ChapterSidebar
+              projectId={params.id}
+              activeChapterId={activeChapterId}
+              onSelectChapter={setActiveChapterId}
+            />
+          </aside>
+        )}
 
         {/* Main content area */}
         <main className="flex-1 flex flex-col overflow-hidden">
@@ -50,6 +54,37 @@ export default function ProjectPage() {
         </main>
       </div>
     </ThemeProvider>
+  )
+}
+
+/**
+ * Focus mode toggle button per D-09:
+ * Hides the chapter sidebar for distraction-free writing.
+ * Icon: expand arrows or "⇱" symbol.
+ */
+function FocusModeToggle({ focusMode, onToggle }: { focusMode: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className={`p-2 rounded-lg transition-colors ${
+        focusMode
+          ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100'
+          : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+      }`}
+      title={focusMode ? '退出聚焦模式' : '进入聚焦模式'}
+    >
+      {focusMode ? (
+        // Compress icon - indicates exit focus mode
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+        </svg>
+      ) : (
+        // Expand icon - indicates enter focus mode
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+        </svg>
+      )}
+    </button>
   )
 }
 

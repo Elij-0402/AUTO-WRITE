@@ -5,6 +5,7 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Typography from '@tiptap/extension-typography'
+import { EditorToolbar } from './editor-toolbar'
 import './editor.css'
 import type { EditorProps } from './editor-types'
 
@@ -93,6 +94,7 @@ export function Editor({ content, onChange, className = '' }: EditorProps) {
 
   return (
     <div className={`h-full flex flex-col ${className}`}>
+      {editor && <EditorToolbar editor={editor} />}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-[640px] mx-auto px-4 py-8">
           <EditorContent

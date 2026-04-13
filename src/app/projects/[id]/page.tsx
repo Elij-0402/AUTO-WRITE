@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { ChapterSidebar } from '@/components/chapter/chapter-sidebar'
 import { Editor } from '@/components/editor/editor'
 import { useChapterEditor } from '@/lib/hooks/use-chapter-editor'
+import { ThemeProvider, useTheme } from '@/components/editor/theme-provider'
 
 /**
  * Project workspace page per D-04.
@@ -13,31 +14,79 @@ import { useChapterEditor } from '@/lib/hooks/use-chapter-editor'
  * Layout per D-01, D-04, D-05:
  * - Editor does NOT display chapter title (title only in sidebar)
  * - Save status displayed in editor bottom bar ("保存中..." / "已保存")
+ * 
+ * Theme per D-28 to D-33:
+ * - ThemeProvider wraps content for theme switching
+ * - Theme toggle button in top bar area per D-29
  */
 export default function ProjectPage() {
   const params = useParams<{ id: string }>()
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
 
   return (
-    <>
-      {/* Sidebar */}
-      <aside className="w-[280px] border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex-shrink-0 flex flex-col overflow-hidden">
-        <ChapterSidebar
-          projectId={params.id}
-          activeChapterId={activeChapterId}
-          onSelectChapter={setActiveChapterId}
-        />
-      </aside>
+    <ThemeProvider>
+      {/* Top bar with theme toggle */}
+      <div className="h-12 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center justify-end px-4 gap-2">
+        <ThemeToggle />
+      </div>
 
-      {/* Main content area */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {activeChapterId ? (
-          <EditorWithStatus projectId={params.id} chapterId={activeChapterId} />
-        ) : (
-          <Placeholder />
-        )}
-      </main>
-    </>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside className="w-[280px] border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex-shrink-0 flex flex-col overflow-hidden">
+          <ChapterSidebar
+            projectId={params.id}
+            activeChapterId={activeChapterId}
+            onSelectChapter={setActiveChapterId}
+          />
+        </aside>
+
+        {/* Main content area */}
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {activeChapterId ? (
+            <EditorWithStatus projectId={params.id} chapterId={activeChapterId} />
+          ) : (
+            <Placeholder />
+          )}
+        </main>
+      </div>
+    </ThemeProvider>
+  )
+}
+
+/**
+ * Theme toggle button per D-29:
+ * Shows sun icon for light mode, moon icon for dark mode
+ * Clicking cycles: system → light → dark → system (or just toggles light/dark)
+ */
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme()
+
+  const toggleTheme = () => {
+    if (resolvedTheme === 'dark') {
+      setTheme('light')
+    } else {
+      setTheme('dark')
+    }
+  }
+
+  return (
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+      title={resolvedTheme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
+    >
+      {resolvedTheme === 'dark' ? (
+        // Sun icon for light mode switch
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ) : (
+        // Moon icon for dark mode switch
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      )}
+    </button>
   )
 }
 

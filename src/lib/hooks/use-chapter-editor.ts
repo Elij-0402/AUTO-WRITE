@@ -3,8 +3,9 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { createProjectDB } from '../db/project-db'
-import { updateChapterContent as updateChapterContentQuery } from '../db/chapter-queries'
+import { updateChapterContent as updateChapterContentQuery, computeWordCount } from '../db/chapter-queries'
 import { useAutoSave } from './use-autosave'
+import { updateTodayWordCount } from './use-word-count'
 
 /**
  * Hook for chapter editing with autosave integration.
@@ -26,6 +27,8 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
   
   // Track the previous chapterId to detect chapter switches
   const prevChapterIdRef = useRef<string | null>(null)
+  // Track previous word count for delta computation (today's word count tracking)
+  const prevWordCountRef = useRef<number>(0)
   
   // Get the specific chapter reactively
   const chapter = useLiveQuery(
@@ -45,8 +48,11 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
       // Chapter changed - update content
       if (chapter?.content !== undefined) {
         setContent(chapter.content)
+        // Initialize previous word count for delta tracking
+        prevWordCountRef.current = chapter.wordCount || 0
       } else {
         setContent(null)
+        prevWordCountRef.current = 0
       }
       prevChapterIdRef.current = chapterId
     }
@@ -66,6 +72,14 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
     async () => {
       if (content !== null) {
         await updateContent(content)
+        // Compute delta and update today's word count (positive deltas only)
+        const newWordCount = computeWordCount(content)
+        const delta = newWordCount - prevWordCountRef.current
+        if (delta > 0) {
+          await updateTodayWordCount(projectId, delta)
+        }
+        // Update previous word count for next delta calculation
+        prevWordCountRef.current = newWordCount
       }
     },
     [content],

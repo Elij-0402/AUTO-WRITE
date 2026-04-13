@@ -49,7 +49,11 @@ Plans:
   3. Author can switch between dark and light themes
   4. Chinese IME composition works correctly without spurious actions during input
   5. Author can see total word count (字数), per-chapter word count, and today's writing word count
-**Plans**: TBD
+**Plans**: 4 plans
+- [x] 02-01-PLAN.md — Tiptap editor core with autosave
+- [x] 02-02-PLAN.md — Format toolbar and theme switching
+- [x] 02-03-PLAN.md — Word count display and focus mode
+- [ ] 02-04-PLAN.md — Fix today's word count update gap
 **UI hint**: yes
 
 ### Phase 3: Workspace & Chapter Outline
@@ -146,7 +150,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Project & Chapter Foundation | 0/2 | Planning complete | - |
-| 2. Writing Editor | 0/? | Not started | - |
+| 2. Writing Editor | 0/3 | Planning complete | - |
 | 3. Workspace & Chapter Outline | 0/? | Not started | - |
 | 4. World Bible | 0/? | Not started | - |
 | 5. BYOK & AI Chat | 0/? | Not started | - |

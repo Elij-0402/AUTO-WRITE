@@ -181,7 +181,7 @@ export function getChapterNumber(order: number): string {
  * Compute word count from content.
  * Per D-25: count all characters minus whitespace for Chinese text.
  */
-function computeWordCount(content: object): number {
+export function computeWordCount(content: object): number {
   const text = extractTextFromContent(content)
   // Count all non-whitespace characters
   return text.replace(/\s/g, '').length
@@ -191,7 +191,7 @@ function computeWordCount(content: object): number {
  * Extract plain text from structured content (ProseMirror/Tiptap format).
  * Falls back to JSON.stringify for unknown formats.
  */
-function extractTextFromContent(content: object): string {
+export function extractTextFromContent(content: object): string {
   if (!content) return ''
 
   // If it's a Tiptap document structure, extract text from nodes

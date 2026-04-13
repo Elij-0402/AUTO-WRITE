@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useProjects } from '@/lib/hooks/use-projects'
+import { useTotalWordCount, useTodayWordCount } from '@/lib/hooks/use-word-count'
 import { ProjectSettingsForm } from '@/components/project/project-settings-form'
 import {
   Dialog,
@@ -28,6 +29,8 @@ export default function ProjectLayout({
   const [showSettings, setShowSettings] = useState(false)
 
   const project = projects.find((p) => p.id === params.id)
+  const totalWordCount = useTotalWordCount(params.id)
+  const todayWordCount = useTodayWordCount(params.id)
 
   if (loading) {
     return (
@@ -82,8 +85,7 @@ export default function ProjectLayout({
           {project.title}
         </h1>
         <span className="text-xs text-zinc-400">
-          {project.wordCount.toLocaleString()} 字 ·{' '}
-          {project.genre || '未分类'}
+          {totalWordCount.toLocaleString()}字 | 今日{todayWordCount}字
         </span>
         <button
           onClick={() => setShowSettings(true)}

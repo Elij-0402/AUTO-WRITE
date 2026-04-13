@@ -17,8 +17,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Project & Chapter
 
-- [ ] **PROJ-01**: 用户可以创建小说项目（一本小说一个项目）
-- [ ] **PROJ-02**: 用户可以查看、管理项目列表
+- [x] **PROJ-01**: 用户可以创建小说项目（一本小说一个项目）
+- [x] **PROJ-02**: 用户可以查看、管理项目列表
 - [ ] **PROJ-03**: 用户可以创建、编辑、删除章节
 - [ ] **PROJ-04**: 用户可以拖拽排序章节
 - [ ] **PROJ-05**: 用户可以查看章节字数、总字数、今日写作字数
@@ -69,7 +69,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Localization
 
-- [ ] **L10N-01**: 所有UI标签、按钮、菜单使用简体中文
+- [x] **L10N-01**: 所有UI标签、按钮、菜单使用简体中文
 - [ ] **L10N-02**: AI提示词针对中文网文场景优化
 
 ## v2 Requirements
@@ -124,8 +124,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-03 | Phase 8 | Pending |
 | SYNC-01 | Phase 8 | Pending |
 | SYNC-02 | Phase 8 | Pending |
-| PROJ-01 | Phase 1 | Pending |
-| PROJ-02 | Phase 1 | Pending |
+| PROJ-01 | Phase 1 | Complete |
+| PROJ-02 | Phase 1 | Complete |
 | PROJ-03 | Phase 1 | Pending |
 | PROJ-04 | Phase 1 | Pending |
 | PROJ-05 | Phase 2 | Pending |
@@ -155,7 +155,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXPT-01 | Phase 7 | Pending |
 | EXPT-02 | Phase 7 | Pending |
 | EXPT-03 | Phase 7 | Pending |
-| L10N-01 | Phase 1 | Pending |
+| L10N-01 | Phase 1 | Complete |
 | L10N-02 | Phase 5 | Pending |
 
 **Coverage:**

@@ -36,7 +36,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Scaffold, Dexie.js data layer, and project dashboard
+- [x] 01-01-PLAN.md — Scaffold, Dexie.js data layer, and project dashboard
 - [ ] 01-02-PLAN.md — Chapter sidebar with drag-reorder and context menu
 
 ### Phase 2: Writing Editor

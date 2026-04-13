@@ -37,7 +37,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — Scaffold, Dexie.js data layer, and project dashboard
-- [ ] 01-02-PLAN.md — Chapter sidebar with drag-reorder and context menu
+- [x] 01-02-PLAN.md — Chapter sidebar with drag-reorder and context menu
 
 ### Phase 2: Writing Editor
 **Goal**: Authors can write chapters with a rich editor that handles Chinese text correctly and tracks their writing progress

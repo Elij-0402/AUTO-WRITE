@@ -19,8 +19,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **PROJ-01**: 用户可以创建小说项目（一本小说一个项目）
 - [x] **PROJ-02**: 用户可以查看、管理项目列表
-- [ ] **PROJ-03**: 用户可以创建、编辑、删除章节
-- [ ] **PROJ-04**: 用户可以拖拽排序章节
+- [x] **PROJ-03**: 用户可以创建、编辑、删除章节
+- [x] **PROJ-04**: 用户可以拖拽排序章节
 - [ ] **PROJ-05**: 用户可以查看章节字数、总字数、今日写作字数
 
 ### Editor
@@ -126,8 +126,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SYNC-02 | Phase 8 | Pending |
 | PROJ-01 | Phase 1 | Complete |
 | PROJ-02 | Phase 1 | Complete |
-| PROJ-03 | Phase 1 | Pending |
-| PROJ-04 | Phase 1 | Pending |
+| PROJ-03 | Phase 1 | Complete |
+| PROJ-04 | Phase 1 | Complete |
 | PROJ-05 | Phase 2 | Pending |
 | EDIT-01 | Phase 2 | Pending |
 | EDIT-02 | Phase 2 | Pending |

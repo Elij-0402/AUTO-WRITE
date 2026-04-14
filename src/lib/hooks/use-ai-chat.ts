@@ -1,6 +1,14 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { createProjectDB } from '../db/project-db'
 import { useAIConfig } from './use-ai-config'
+import { useWorldEntries } from './use-world-entries'
+import {
+  extractKeywords,
+  findRelevantEntries,
+  trimToTokenBudget,
+  buildContextPrompt,
+  injectContext,
+} from './use-context-injection'
 
 export interface ChatMessage {
   id: string
@@ -12,7 +20,15 @@ export interface ChatMessage {
   draftId?: string
 }
 
-const SYSTEM_PROMPT = `你是一位专业的中文网文写作助手，熟悉中文小说创作技巧。
+export interface UseAIChatOptions {
+  /** Callback when draft is generated */
+  onDraftGenerated?: (draft: string) => void
+  /** Selected text for discussion — per D-08: text selection discussion */
+  selectedText?: string
+}
+
+/** Base system prompt without world bible context — context injected per D-25, D-27 */
+const BASE_SYSTEM_PROMPT = `你是一位专业的中文网文写作助手，熟悉中文小说创作技巧。
 
 当前功能：
 - 续写：根据给定内容续写小说章节
@@ -23,11 +39,11 @@ const SYSTEM_PROMPT = `你是一位专业的中文网文写作助手，熟悉中
 风格要求：
 - 使用自然流畅的中文
 - 符合网文读者的阅读习惯
-- 适当使用对话和动作描写
-`
+- 适当使用对话和动作描写`
 
-export function useAIChat(projectId: string) {
+export function useAIChat(projectId: string, options?: UseAIChatOptions) {
   const { config } = useAIConfig(projectId)
+  const { entriesByType } = useWorldEntries(projectId)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [streamingContent, setStreamingContent] = useState('')
@@ -49,6 +65,28 @@ export function useAIChat(projectId: string) {
       throw new Error('请先配置 AI 设置')
     }
 
+    // Build system prompt with world bible context injection — per D-01, D-25, D-27
+    const keywords = extractKeywords(content)
+    const matchedEntries = findRelevantEntries(keywords, entriesByType)
+    const trimmedEntries = trimToTokenBudget(matchedEntries, 4000)
+    
+    // Build current discussion section — per D-08: text selection discussion
+    let currentDiscussion = content
+    if (options?.selectedText) {
+      currentDiscussion = `【选中文段】\n${options.selectedText}\n\n【用户问题】\n${content}`
+    }
+    
+    // Construct full system prompt with all sections — per D-27
+    const systemPromptWithContext = `【世界观百科】
+${trimmedEntries.length > 0 ? buildContextPrompt(trimmedEntries) : '(暂无相关世界观条目)'}
+
+【当前讨论】
+${currentDiscussion}
+
+【你的任务】
+你是一个专业的网文写作助手，熟悉中文小说创作技巧。当作者选择文段讨论时，基于世界观百科分析文段。当作者询问时，提供写作建议。
+使用简体中文回复。`
+
     // Create user message
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
@@ -68,9 +106,9 @@ export function useAIChat(projectId: string) {
     setLoading(true)
     setStreamingContent('')
     
-    // Build messages for API
+    // Build messages for API with world bible context injected
     const apiMessages = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: systemPromptWithContext },
       ...messages.map(m => ({ role: m.role, content: m.content })),
       { role: 'user', content }
     ]
@@ -168,7 +206,7 @@ export function useAIChat(projectId: string) {
       setStreamingContent('')
       abortControllerRef.current = null
     }
-  }, [config, messages, projectId])
+  }, [config, messages, projectId, entriesByType, options?.selectedText])
 
   const cancelStream = useCallback(() => {
     abortControllerRef.current?.abort()

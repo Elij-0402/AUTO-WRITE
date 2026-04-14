@@ -64,8 +64,12 @@ Plans:
   1. Author can drag panel borders to resize panels in the workspace
   2. Workspace panel layout persists between sessions
   3. Author can create and manage chapter/plot outlines in an outline panel visible alongside the editor
-**Plans**: TBD
+**Plans**: 2 plans
 **UI hint**: yes
+
+Plans:
+- [x] 03-01-PLAN.md — ResizablePanel, Chapter outline data model, and layout persistence
+- [x] 03-02-PLAN.md — Sidebar tabs, outline tab list, and outline editing form
 
 ### Phase 4: World Bible
 **Goal**: Authors can define their story world with structured entries for characters, locations, rules, and timelines, and manually link them together

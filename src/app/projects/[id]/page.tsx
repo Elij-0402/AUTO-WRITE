@@ -10,7 +10,9 @@ import { ThemeProvider, useTheme } from '@/components/editor/theme-provider'
 import { ResizablePanelGroup, DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
 import { useLayout } from '@/lib/hooks/use-layout'
 import { useChapters } from '@/lib/hooks/use-chapters'
+import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
+import type { WorldEntryType } from '@/lib/types'
 
 /**
  * Project workspace page per D-04.
@@ -34,6 +36,8 @@ export default function ProjectPage() {
   const [focusMode, setFocusMode] = useState(false)
   // Per D-14: active tab persists via useLayout
   const [activeOutlineId, setActiveOutlineId] = useState<string | null>(null)
+  // World bible state per D-13
+  const [activeWorldEntryId, setActiveWorldEntryId] = useState<string | null>(null)
 
   // Layout persistence per D-24, D-25, D-14
   const { sidebarWidth, activeTab, saveSidebarWidth, saveActiveTab } = useLayout(params.id)
@@ -47,11 +51,38 @@ export default function ProjectPage() {
     setActiveOutlineId(chapterId)
   }, [])
 
+  // Per D-13: world bible entry selection
+  const handleSelectWorldEntry = useCallback((entryId: string) => {
+    setActiveWorldEntryId(entryId)
+  }, [])
+
+  const handleEditWorldEntry = useCallback((entryId: string) => {
+    // Direct edit mode on selection per D-14
+    setActiveWorldEntryId(entryId)
+  }, [])
+
+  const handleCreateWorldEntry = useCallback((type: import('@/lib/types').WorldEntryType) => {
+    // Entry creation will be handled via WorldBibleTab's internal logic
+    // This callback is for parent-level handling if needed
+  }, [])
+
+  const handleDeleteWorldEntry = useCallback((entryId: string) => {
+    // Deletion confirmation handled by WorldBibleTab
+    // Clear selection if deleting the active entry
+    if (entryId === activeWorldEntryId) {
+      setActiveWorldEntryId(null)
+    }
+  }, [activeWorldEntryId])
+
   // Per D-13: instant tab switching, no animation
   const handleTabChange = useCallback((tab: ActiveTab) => {
     saveActiveTab(tab)
-    // When switching from outline tab to chapters, clear outline editing per plan
+    // When switching away from tabs, clear the editing state
     if (tab === 'chapters') {
+      setActiveOutlineId(null)
+    } else if (tab === 'outline') {
+      setActiveWorldEntryId(null)
+    } else if (tab === 'world') {
       setActiveOutlineId(null)
     }
   }, [saveActiveTab])
@@ -76,16 +107,21 @@ export default function ProjectPage() {
     saveSidebarWidth(newWidth)
   }
 
-  // Escape key to close outline editing form
+  // Escape key to close outline or world bible editing form
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && activeOutlineId) {
-        setActiveOutlineId(null)
+      if (e.key === 'Escape') {
+        if (activeOutlineId) {
+          setActiveOutlineId(null)
+        }
+        if (activeWorldEntryId) {
+          setActiveWorldEntryId(null)
+        }
       }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [activeOutlineId])
+  }, [activeOutlineId, activeWorldEntryId])
 
   // Handle double-click reset — resets to default 280px per D-03
   const handleDoubleClickReset = () => {
@@ -109,6 +145,13 @@ export default function ProjectPage() {
         hasPrevious={hasPrevious}
         hasNext={hasNext}
       />
+    ) : activeTab === 'world' && activeWorldEntryId ? (
+      <div className="flex-1 flex items-center justify-center text-zinc-400 dark:text-zinc-500">
+        <div className="text-center">
+          <p className="text-lg mb-1">世界观编辑器</p>
+          <p className="text-sm text-zinc-300 dark:text-zinc-600">世界观编辑器将在 Plan 03 中实现</p>
+        </div>
+      </div>
     ) : activeChapterId ? (
       <EditorWithStatus projectId={params.id} chapterId={activeChapterId} />
     ) : (
@@ -137,6 +180,11 @@ export default function ProjectPage() {
             onTabChange={handleTabChange}
             activeOutlineId={activeOutlineId}
             onSelectOutline={handleSelectOutline}
+            activeWorldEntryId={activeWorldEntryId}
+            onSelectWorldEntry={handleSelectWorldEntry}
+            onEditWorldEntry={handleEditWorldEntry}
+            onDeleteWorldEntry={handleDeleteWorldEntry}
+            onCreateWorldEntry={handleCreateWorldEntry}
           />
         }
         mainContent={mainContent}
@@ -247,6 +295,11 @@ function Placeholder({ activeTab }: { activeTab: ActiveTab }) {
           <>
             <p className="text-lg mb-1">选择一个章节查看大纲</p>
             <p className="text-sm text-zinc-300 dark:text-zinc-600">从左侧大纲列表中选择章节</p>
+          </>
+        ) : activeTab === 'world' ? (
+          <>
+            <p className="text-lg mb-1">选择一个世界观条目</p>
+            <p className="text-sm text-zinc-300 dark:text-zinc-600">从左侧世界观列表中选择条目或创建新条目</p>
           </>
         ) : (
           <>

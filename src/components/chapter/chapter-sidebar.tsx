@@ -15,20 +15,24 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { BookOpen } from 'lucide-react'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { ChapterRow } from './chapter-row'
 import { CreateChapterInput } from './create-chapter-input'
 import { DeleteChapterDialog } from './delete-chapter-dialog'
 import { OutlineTab } from '@/components/outline/outline-tab'
+import { WorldBibleTab } from '@/components/world-bible/world-bible-tab'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
+import type { WorldEntryType } from '@/lib/types'
 
 /**
- * ChapterSidebar per D-09, D-12, D-13.
+ * ChapterSidebar per D-09, D-12, D-13, D-08.
  * Per D-09: always visible alongside the editor.
  * Per D-12: drag-reorder using @dnd-kit.
- * Per D-13: two tabs — "章节" (chapters) and "大纲" (outline), instant switching, no animation.
+ * Per D-13: three tabs — "章节" (chapters), "大纲" (outline), "世界观" (world bible), instant switching, no animation.
  * Per D-14: tab state persists via useLayout (passed from parent).
  * Per D-15: creating a chapter stays on current tab.
+ * Per D-08: third tab "世界观" for world bible entries.
  */
 interface ChapterSidebarProps {
   projectId: string
@@ -38,6 +42,11 @@ interface ChapterSidebarProps {
   onTabChange: (tab: ActiveTab) => void
   activeOutlineId: string | null
   onSelectOutline: (chapterId: string) => void
+  activeWorldEntryId: string | null
+  onSelectWorldEntry: (id: string) => void
+  onEditWorldEntry: (id: string) => void
+  onDeleteWorldEntry: (id: string) => void
+  onCreateWorldEntry: (type: WorldEntryType) => void
 }
 
 export function ChapterSidebar({
@@ -48,6 +57,11 @@ export function ChapterSidebar({
   onTabChange,
   activeOutlineId,
   onSelectOutline,
+  activeWorldEntryId,
+  onSelectWorldEntry,
+  onEditWorldEntry,
+  onDeleteWorldEntry,
+  onCreateWorldEntry,
 }: ChapterSidebarProps) {
   const {
     chapters,
@@ -132,7 +146,7 @@ export function ChapterSidebar({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Tab bar per D-13: "章节" and "大纲" tabs */}
+      {/* Tab bar per D-13: "章节", "大纲", and "世界观" tabs per D-08 */}
       <div className="flex border-b border-zinc-200 dark:border-zinc-800 px-3">
         <button
           className={tabClasses('chapters')}
@@ -148,6 +162,13 @@ export function ChapterSidebar({
           onClick={() => onTabChange('outline')}
         >
           大纲
+        </button>
+        <button
+          className={tabClasses('world')}
+          onClick={() => onTabChange('world')}
+        >
+          <BookOpen className="h-4 w-4 inline mr-1" />
+          世界观
         </button>
       </div>
 
@@ -201,12 +222,22 @@ export function ChapterSidebar({
             />
           )}
         </>
-      ) : (
+      ) : activeTab === 'outline' ? (
         /* Outline tab per D-16, D-17 */
         <OutlineTab
           projectId={projectId}
           onSelectOutline={onSelectOutline}
           activeOutlineId={activeOutlineId}
+        />
+      ) : (
+        /* World bible tab per D-08 */
+        <WorldBibleTab
+          projectId={projectId}
+          activeEntryId={activeWorldEntryId}
+          onSelectEntry={onSelectWorldEntry}
+          onEditEntry={onEditWorldEntry}
+          onDeleteEntry={onDeleteWorldEntry}
+          onCreateEntry={onCreateWorldEntry}
         />
       )}
     </div>

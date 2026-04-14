@@ -5,6 +5,7 @@ import { User, MapPin, BookOpen, Clock } from 'lucide-react'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useAutoSave } from '@/lib/hooks/use-autosave'
 import { TagInput } from './tag-input'
+import { RelationshipSection } from './relationship-section'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 
 /**
@@ -111,6 +112,7 @@ interface WorldEntryEditFormProps {
   hasPrevious: boolean
   hasNext: boolean
   onSelectEntry: (id: string) => void
+  allEntries: WorldEntry[]
 }
 
 /**
@@ -129,6 +131,7 @@ export function WorldEntryEditForm({
   hasPrevious,
   hasNext,
   onSelectEntry,
+  allEntries,
 }: WorldEntryEditFormProps) {
   const { entries, entriesByType, renameEntry, updateEntryFields } = useWorldEntries(projectId)
   const entry = entries?.find(e => e.id === entryId)
@@ -462,14 +465,14 @@ export function WorldEntryEditForm({
           />
         </div>
 
-        {/* 关联 per D-21 - placeholder for Task 2 */}
+        {/* 关联 per D-21 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-            关联
-          </label>
-          <div className="text-sm text-zinc-400 italic">
-            关联关系将在下个任务中实现
-          </div>
+          <RelationshipSection
+            projectId={projectId}
+            sourceEntry={entry}
+            allEntries={allEntries}
+            onSelectEntry={onSelectEntry}
+          />
         </div>
 
         {/* Timestamps per D-22 */}

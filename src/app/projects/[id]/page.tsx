@@ -178,6 +178,7 @@ export default function ProjectPage() {
         hasPrevious={hasWorldPrevious}
         hasNext={hasWorldNext}
         onSelectEntry={handleSelectWorldEntry}
+        allEntries={entries || []}
       />
     ) : activeChapterId ? (
       <EditorWithStatus projectId={params.id} chapterId={activeChapterId} />

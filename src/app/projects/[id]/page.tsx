@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef, type RefObject } from 'react'
 import { useParams } from 'next/navigation'
 import { Group, Panel, Separator } from '@/components/workspace/resizable-panel'
 import { ChapterSidebar } from '@/components/chapter/chapter-sidebar'
 import { OutlineEditForm } from '@/components/outline/outline-edit-form'
 import { Editor } from '@/components/editor/editor'
+import { FloatingToolbar } from '@/components/editor/floating-toolbar'
 import { useChapterEditor } from '@/lib/hooks/use-chapter-editor'
 import { ThemeProvider, useTheme } from '@/components/editor/theme-provider'
 import { DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
@@ -17,6 +18,7 @@ import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
 import type { WorldEntryType } from '@/lib/types'
+import type { EditorHandle } from '@/components/editor/editor-types'
 
 /** Default chat panel width per D-09 */
 const DEFAULT_CHAT_PANEL_WIDTH = 320
@@ -52,6 +54,12 @@ export default function ProjectPage() {
   const [activeWorldEntryId, setActiveWorldEntryId] = useState<string | null>(null)
   // AI config dialog state
   const [aiConfigOpen, setAiConfigOpen] = useState(false)
+  // Editor ref for draft insertion per AI-03
+  const editorRef = useRef<EditorHandle>(null)
+  // Ref to the editor content div for text selection tracking
+  const editorContentRef = useRef<HTMLDivElement>(null)
+  // Selected text for AI discussion per D-08
+  const [selectedText, setSelectedText] = useState<string | null>(null)
 
   // Layout persistence per D-24, D-25, D-14, D-12
   const { sidebarWidth, activeTab, chatPanelWidth, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(params.id)
@@ -174,6 +182,16 @@ export default function ProjectPage() {
     saveChatPanelWidth(DEFAULT_CHAT_PANEL_WIDTH)
   }
 
+  // Draft insertion callback per AI-03
+  const handleInsertDraft = useCallback((content: string) => {
+    editorRef.current?.insertText(content)
+  }, [])
+
+  // Handle text selection for discussion per D-02, D-08
+  const handleDiscuss = useCallback((text: string) => {
+    setSelectedText(text)
+  }, [])
+
   // Determine main content per D-17:
   // When editing outline → OutlineEditForm
   // When editing chapter → Editor
@@ -203,7 +221,7 @@ export default function ProjectPage() {
         allEntries={entries || []}
       />
     ) : activeChapterId ? (
-      <EditorWithStatus projectId={params.id} chapterId={activeChapterId} />
+      <EditorWithStatus projectId={params.id} chapterId={activeChapterId} editorRef={editorRef} editorContentRef={editorContentRef} onDiscuss={handleDiscuss} />
     ) : (
       <Placeholder activeTab={activeTab} />
     )
@@ -303,7 +321,7 @@ export default function ProjectPage() {
               maxSize={MAX_CHAT_PANEL_WIDTH}
               groupResizeBehavior="preserve-pixel-size"
             >
-              <AIChatPanel projectId={params.id} />
+              <AIChatPanel projectId={params.id} onInsertDraft={handleInsertDraft} selectedText={selectedText} onDiscussComplete={() => setSelectedText(null)} />
             </Panel>
           </Group>
         </Group>
@@ -385,12 +403,20 @@ function ThemeToggle() {
  * "保存中..." when isSaving is true, "已保存" when false.
  * Light gray text, small font, positioned bottom-right of editor area.
  */
-function EditorWithStatus({ projectId, chapterId }: { projectId: string; chapterId: string }) {
+function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, onDiscuss }: { 
+  projectId: string; 
+  chapterId: string; 
+  editorRef: RefObject<EditorHandle | null>
+  editorContentRef: RefObject<HTMLDivElement | null>
+  onDiscuss: (text: string) => void
+}) {
   const { content, isSaving, updateContent } = useChapterEditor(projectId, chapterId)
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex-1 flex flex-col overflow-hidden relative">
+      <FloatingToolbar onDiscuss={onDiscuss} editorRef={editorContentRef} />
       <Editor
+        ref={editorRef}
         content={content}
         onChange={updateContent}
         className="flex-1"

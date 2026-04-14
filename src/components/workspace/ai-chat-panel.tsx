@@ -8,10 +8,14 @@ import { Send, Loader2 } from 'lucide-react'
 interface AIChatPanelProps {
   projectId: string
   onInsertDraft?: (content: string) => void
+  /** Selected text from editor for discussion per D-08 */
+  selectedText?: string | null
+  /** Callback when discussion is complete (text sent or cleared) */
+  onDiscussComplete?: () => void
 }
 
-export function AIChatPanel({ projectId, onInsertDraft }: AIChatPanelProps) {
-  const { messages, loading, sendMessage } = useAIChat(projectId)
+export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete }: AIChatPanelProps) {
+  const { messages, loading, sendMessage } = useAIChat(projectId, { selectedText: selectedText || undefined })
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -27,6 +31,8 @@ export function AIChatPanel({ projectId, onInsertDraft }: AIChatPanelProps) {
     setInput('')
     try {
       await sendMessage(text)
+      // Clear selected text after sending per D-08
+      onDiscussComplete?.()
     } catch (err) {
       console.error('Failed to send message:', err)
       alert(err instanceof Error ? err.message : '发送失败')

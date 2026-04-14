@@ -11,9 +11,12 @@ import { useMemo, useCallback } from 'react'
  */
 export type ActiveTab = 'chapters' | 'outline' | 'world'
 
+/** Default chat panel width in pixels per D-09 */
+const DEFAULT_CHAT_PANEL_WIDTH = 320
+
 /**
  * Hook for per-project layout persistence per D-24, D-25, D-26.
- * Stores sidebar width and active tab in IndexedDB layoutSettings table.
+ * Stores sidebar width, active tab, and chat panel width in IndexedDB layoutSettings table.
  *
  * Per D-24: Layout data stored per-project in the project's IndexedDB via Dexie.
  * Per D-25: Auto-save on drag end (no explicit save button).
@@ -26,7 +29,7 @@ export function useLayout(projectId: string) {
   const layout = useLiveQuery(
     () => db.layoutSettings.get('default'),
     [db],
-    { id: 'default', sidebarWidth: 280, activeTab: 'chapters' as ActiveTab }
+    { id: 'default', sidebarWidth: 280, activeTab: 'chapters' as ActiveTab, chatPanelWidth: DEFAULT_CHAT_PANEL_WIDTH }
   )
 
   // Auto-save sidebar width on change per D-25
@@ -35,6 +38,7 @@ export function useLayout(projectId: string) {
       id: 'default',
       sidebarWidth: width,
       activeTab: layout?.activeTab ?? 'chapters',
+      chatPanelWidth: layout?.chatPanelWidth ?? DEFAULT_CHAT_PANEL_WIDTH,
     })
   }, [db, layout])
 
@@ -44,13 +48,26 @@ export function useLayout(projectId: string) {
       id: 'default',
       sidebarWidth: layout?.sidebarWidth ?? 280,
       activeTab: tab,
+      chatPanelWidth: layout?.chatPanelWidth ?? DEFAULT_CHAT_PANEL_WIDTH,
+    })
+  }, [db, layout])
+
+  // Auto-save chat panel width on change per D-12
+  const saveChatPanelWidth = useCallback(async (width: number) => {
+    await db.layoutSettings.put({
+      id: 'default',
+      sidebarWidth: layout?.sidebarWidth ?? 280,
+      activeTab: layout?.activeTab ?? 'chapters',
+      chatPanelWidth: width,
     })
   }, [db, layout])
 
   return {
     sidebarWidth: layout?.sidebarWidth ?? 280,
     activeTab: (layout?.activeTab ?? 'chapters') as ActiveTab,
+    chatPanelWidth: layout?.chatPanelWidth ?? DEFAULT_CHAT_PANEL_WIDTH,
     saveSidebarWidth,
     saveActiveTab,
+    saveChatPanelWidth,
   }
 }

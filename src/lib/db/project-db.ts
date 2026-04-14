@@ -30,11 +30,13 @@ export interface ChatMessage {
  * Layout settings stored per-project in IndexedDB per D-24.
  * sidebarWidth: persisted sidebar width in pixels per D-25
  * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world') per D-08, D-14
+ * chatPanelWidth: persisted right chat panel width in pixels per D-12 (320 default)
  */
 export interface LayoutSettings {
   id: string // 'default' for per-project default layout
   sidebarWidth: number
   activeTab: 'chapters' | 'outline' | 'world'
+  chatPanelWidth?: number // default 320, made optional for existing projects
 }
 
 /**

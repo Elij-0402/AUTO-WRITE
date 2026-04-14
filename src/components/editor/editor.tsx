@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { forwardRef, useImperativeHandle } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Typography from '@tiptap/extension-typography'
 import { EditorToolbar } from './editor-toolbar'
 import './editor.css'
-import type { EditorProps } from './editor-types'
+import type { EditorProps, EditorHandle } from './editor-types'
 
 /**
  * Tiptap rich text editor component with Chinese IME support.
@@ -27,8 +28,11 @@ import type { EditorProps } from './editor-types'
  * - useChapterEditor only updates content state when chapterId changes
  * - This prevents autosave updates from resetting the editor
  * - Editor tracks prevContentRef to detect genuine chapter switches
+ * 
+ * Draft insertion per D-07:
+ * - Editor exposes insertText method via ref for draft insertion at cursor position
  */
-export function Editor({ content, onChange, className = '' }: EditorProps) {
+export const Editor = forwardRef<EditorHandle, EditorProps>(({ content, onChange, className = '' }, ref) => {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -53,6 +57,14 @@ export function Editor({ content, onChange, className = '' }: EditorProps) {
       },
     },
   })
+
+  // Expose insertText method via ref for draft insertion
+  useImperativeHandle(ref, () => ({
+    insertText: (text: string, position?: number) => {
+      if (!editor) return
+      editor.commands.insertContentAt(position ?? editor.state.selection.head, text)
+    }
+  }), [editor])
 
   // Track previous content to detect chapter switches
   // Content only changes from hook when chapterId changes
@@ -105,4 +117,4 @@ export function Editor({ content, onChange, className = '' }: EditorProps) {
       </div>
     </div>
   )
-}
+})

@@ -7,3 +7,8 @@ export interface EditorProps {
   /** Additional CSS classes */
   className?: string
 }
+
+/** Editor component handle - exposed methods via ref */
+export interface EditorHandle {
+  insertText: (text: string, position?: number) => void
+}

@@ -84,9 +84,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Data layer: types, Dexie v3 schema, queries, hooks
-- [ ] 04-02-PLAN.md — World bible sidebar tab: type-grouped entries, search, creation, deletion
-- [ ] 04-03-PLAN.md — Entry edit form with relationships: type-specific fields, auto-save, bidirectional linking
+- [x] 04-01-PLAN.md — Data layer: types, Dexie v3 schema, queries, hooks
+- [x] 04-02-PLAN.md — World bible sidebar tab: type-grouped entries, search, creation, deletion
+- [x] 04-03-PLAN.md — Entry edit form with relationships: type-specific fields, auto-save, bidirectional linking
 
 **UI hint**: yes
 
@@ -100,7 +100,12 @@ Plans:
   3. AI generates drafts in the chat panel that the author can accept into the editor
   4. All four workspace panels (world bible, outline, editor, AI chat) are visible simultaneously
   5. AI prompts are optimized for Chinese novel writing contexts
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Data layer: IndexedDB schema (aiConfig, messages), useAIConfig hook
+- [ ] 05-02-PLAN.md — 4-panel layout: workspace restructuring, AIChatPanel, AIConfigDialog
+- [ ] 05-03-PLAN.md — Chat + drafts: useAIChat streaming, draft insertion, Chinese prompts
 **UI hint**: yes
 
 ### Phase 6: Context Assembly & Smart AI

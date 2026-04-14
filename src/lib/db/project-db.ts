@@ -2,6 +2,31 @@ import Dexie, { type Table } from 'dexie'
 import type { Chapter, ProjectMeta, WorldEntry, Relation } from '../types'
 
 /**
+ * AI configuration stored per-project in IndexedDB.
+ * BYOK model: API Key and Base URL are user-provided, stored locally only.
+ */
+export interface AIConfig {
+  id: 'config'  // singleton
+  apiKey: string
+  baseUrl: string
+  model?: string
+}
+
+/**
+ * Chat message stored per-project in IndexedDB.
+ * Used for AI chat history and draft management.
+ */
+export interface ChatMessage {
+  id: string
+  projectId: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: number
+  hasDraft?: boolean
+  draftId?: string
+}
+
+/**
  * Layout settings stored per-project in IndexedDB per D-24.
  * sidebarWidth: persisted sidebar width in pixels per D-25
  * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world') per D-08, D-14
@@ -25,6 +50,8 @@ export class InkForgeProjectDB extends Dexie {
   layoutSettings!: Table<LayoutSettings, string>
   worldEntries!: Table<WorldEntry, string>
   relations!: Table<Relation, string>
+  aiConfig!: Table<AIConfig, string>
+  messages!: Table<ChatMessage, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -58,6 +85,15 @@ export class InkForgeProjectDB extends Dexie {
       layoutSettings: 'id',
       worldEntries: 'id, projectId, type, name, deletedAt',
       relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+    })
+    this.version(4).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+      aiConfig: 'id',
+      messages: 'id, projectId, role, timestamp',
     })
   }
 }

@@ -6,10 +6,10 @@ import type { LayoutSettings } from '../db/project-db'
 import { useMemo, useCallback } from 'react'
 
 /**
- * Active sidebar tab type per D-13, D-14.
- * 'chapters' = chapter list, 'outline' = outline list
+ * Active sidebar tab type per D-13, D-14, D-08.
+ * 'chapters' = chapter list, 'outline' = outline list, 'world' = world bible
  */
-export type ActiveTab = 'chapters' | 'outline'
+export type ActiveTab = 'chapters' | 'outline' | 'world'
 
 /**
  * Hook for per-project layout persistence per D-24, D-25, D-26.

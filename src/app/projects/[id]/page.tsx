@@ -11,6 +11,7 @@ import { ResizablePanelGroup, DEFAULT_SIDEBAR_WIDTH } from '@/components/workspa
 import { useLayout } from '@/lib/hooks/use-layout'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
+import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
 import type { WorldEntryType } from '@/lib/types'
 
@@ -44,6 +45,9 @@ export default function ProjectPage() {
 
   // Chapters data for outline prev/next navigation per D-20
   const { chapters } = useChapters(params.id)
+
+  // World entries data for prev/next navigation per D-19
+  const { entries, entriesByType } = useWorldEntries(params.id)
 
   // Per D-18: sidebar stays visible when editing outline
   // Per D-17: clicking outline entry sets editingOutlineId
@@ -102,6 +106,26 @@ export default function ProjectPage() {
     }
   }, [currentOutlineIndex, sortedChapters])
 
+  // World entry prev/next navigation per D-19
+  const currentWorldEntry = entries?.find(e => e.id === activeWorldEntryId)
+  const currentEntryType = currentWorldEntry?.type
+  const sameTypeEntries = currentEntryType ? entriesByType[currentEntryType] || [] : []
+  const currentWorldIndex = sameTypeEntries.findIndex(e => e.id === activeWorldEntryId)
+  const hasWorldPrevious = currentWorldIndex > 0
+  const hasWorldNext = currentWorldIndex < sameTypeEntries.length - 1
+
+  const handleWorldPrevious = useCallback(() => {
+    if (currentWorldIndex > 0) {
+      setActiveWorldEntryId(sameTypeEntries[currentWorldIndex - 1].id)
+    }
+  }, [currentWorldIndex, sameTypeEntries])
+
+  const handleWorldNext = useCallback(() => {
+    if (currentWorldIndex < sameTypeEntries.length - 1) {
+      setActiveWorldEntryId(sameTypeEntries[currentWorldIndex + 1].id)
+    }
+  }, [currentWorldIndex, sameTypeEntries])
+
   // Handle resize end — persists new width per D-25
   const handleResizeEnd = (newWidth: number) => {
     saveSidebarWidth(newWidth)
@@ -146,12 +170,15 @@ export default function ProjectPage() {
         hasNext={hasNext}
       />
     ) : activeTab === 'world' && activeWorldEntryId ? (
-      <div className="flex-1 flex items-center justify-center text-zinc-400 dark:text-zinc-500">
-        <div className="text-center">
-          <p className="text-lg mb-1">世界观编辑器</p>
-          <p className="text-sm text-zinc-300 dark:text-zinc-600">世界观编辑器将在 Plan 03 中实现</p>
-        </div>
-      </div>
+      <WorldEntryEditForm
+        projectId={params.id}
+        entryId={activeWorldEntryId}
+        onPrevious={handleWorldPrevious}
+        onNext={handleWorldNext}
+        hasPrevious={hasWorldPrevious}
+        hasNext={hasWorldNext}
+        onSelectEntry={handleSelectWorldEntry}
+      />
     ) : activeChapterId ? (
       <EditorWithStatus projectId={params.id} chapterId={activeChapterId} />
     ) : (

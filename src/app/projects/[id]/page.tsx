@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { ChapterSidebar } from '@/components/chapter/chapter-sidebar'
 import { OutlineEditForm } from '@/components/outline/outline-edit-form'
@@ -75,6 +75,17 @@ export default function ProjectPage() {
   const handleResizeEnd = (newWidth: number) => {
     saveSidebarWidth(newWidth)
   }
+
+  // Escape key to close outline editing form
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && activeOutlineId) {
+        setActiveOutlineId(null)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [activeOutlineId])
 
   // Handle double-click reset — resets to default 280px per D-03
   const handleDoubleClickReset = () => {

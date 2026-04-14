@@ -19,24 +19,35 @@ import { useChapters } from '@/lib/hooks/use-chapters'
 import { ChapterRow } from './chapter-row'
 import { CreateChapterInput } from './create-chapter-input'
 import { DeleteChapterDialog } from './delete-chapter-dialog'
+import { OutlineTab } from '@/components/outline/outline-tab'
+import type { ActiveTab } from '@/lib/hooks/use-layout'
 
 /**
- * ChapterSidebar per D-09, D-12.
+ * ChapterSidebar per D-09, D-12, D-13.
  * Per D-09: always visible alongside the editor.
  * Per D-12: drag-reorder using @dnd-kit.
- * Per D-11: inline creation at the bottom.
- * Per D-16: auto-numbering with 第N章 prefix.
+ * Per D-13: two tabs — "章节" (chapters) and "大纲" (outline), instant switching, no animation.
+ * Per D-14: tab state persists via useLayout (passed from parent).
+ * Per D-15: creating a chapter stays on current tab.
  */
 interface ChapterSidebarProps {
   projectId: string
   activeChapterId: string | null
   onSelectChapter: (id: string) => void
+  activeTab: ActiveTab
+  onTabChange: (tab: ActiveTab) => void
+  activeOutlineId: string | null
+  onSelectOutline: (chapterId: string) => void
 }
 
 export function ChapterSidebar({
   projectId,
   activeChapterId,
   onSelectChapter,
+  activeTab,
+  onTabChange,
+  activeOutlineId,
+  onSelectOutline,
 }: ChapterSidebarProps) {
   const {
     chapters,
@@ -81,7 +92,11 @@ export function ChapterSidebar({
 
   const handleCreateChapter = async (title: string) => {
     const newId = await addChapter(title)
-    onSelectChapter(newId)
+    // Per D-15: creating a chapter stays on current tab
+    // If on chapters tab, select the new chapter; on outline tab, stay
+    if (activeTab === 'chapters') {
+      onSelectChapter(newId)
+    }
   }
 
   const handleDeleteConfirm = async () => {
@@ -107,62 +122,91 @@ export function ChapterSidebar({
     )
   }
 
+  // Per D-13: instant tab switching, no animation
+  const tabClasses = (tab: ActiveTab) =>
+    `flex-1 py-2 text-center text-sm font-medium transition-colors border-b-2 ${
+      activeTab === tab
+        ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
+        : 'border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
+    }`
+
   return (
     <div className="flex flex-col h-full">
-      {/* Sidebar header per D-09 */}
-      <div className="px-3 py-2 border-b border-zinc-200 dark:border-zinc-800">
-        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+      {/* Tab bar per D-13: "章节" and "大纲" tabs */}
+      <div className="flex border-b border-zinc-200 dark:border-zinc-800 px-3">
+        <button
+          className={tabClasses('chapters')}
+          onClick={() => onTabChange('chapters')}
+        >
           章节
-          <span className="ml-1.5 text-xs text-zinc-400 font-normal">
+          <span className="ml-1 text-xs font-normal text-zinc-400">
             {chapters.length}
           </span>
-        </h2>
+        </button>
+        <button
+          className={tabClasses('outline')}
+          onClick={() => onTabChange('outline')}
+        >
+          大纲
+        </button>
       </div>
 
-      {/* Chapter list with DnD per D-12 */}
-      <div className="flex-1 overflow-y-auto">
-        {chapters.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-zinc-400 text-sm gap-2">
-            <p>还没有章节</p>
-            <p className="text-xs">点击下方按钮创建第一个章节</p>
+      {/* Tab content — per D-13: no animation, instant switch */}
+      {activeTab === 'chapters' ? (
+        <>
+          {/* Chapter list with DnD per D-12 */}
+          <div className="flex-1 overflow-y-auto">
+            {chapters.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-zinc-400 text-sm gap-2">
+                <p>还没有章节</p>
+                <p className="text-xs">点击下方按钮创建第一个章节</p>
+              </div>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+                modifiers={[restrictToVerticalAxis]}
+              >
+                <SortableContext
+                  items={chapters.map((c) => c.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {chapters.map((chapter) => (
+                    <ChapterRow
+                      key={chapter.id}
+                      chapter={chapter}
+                      isActive={activeChapterId === chapter.id}
+                      onSelect={() => onSelectChapter(chapter.id)}
+                      onRename={renameChapter}
+                      onDuplicate={duplicateChapter}
+                      onDelete={(id) => setDeleteTargetId(id)}
+                      onStatusToggle={updateChapterStatus}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            )}
           </div>
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-            modifiers={[restrictToVerticalAxis]}
-          >
-            <SortableContext
-              items={chapters.map((c) => c.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {chapters.map((chapter) => (
-                <ChapterRow
-                  key={chapter.id}
-                  chapter={chapter}
-                  isActive={activeChapterId === chapter.id}
-                  onSelect={() => onSelectChapter(chapter.id)}
-                  onRename={renameChapter}
-                  onDuplicate={duplicateChapter}
-                  onDelete={(id) => setDeleteTargetId(id)}
-                  onStatusToggle={updateChapterStatus}
-                />
-              ))}
-            </SortableContext>
-          </DndContext>
-        )}
-      </div>
 
-      {/* Inline creation per D-11 */}
-      <CreateChapterInput onCreate={handleCreateChapter} />
+          {/* Inline creation per D-11 — stays on current tab per D-15 */}
+          <CreateChapterInput onCreate={handleCreateChapter} />
 
-      {/* Delete confirmation per D-15 */}
-      {deleteTarget && (
-        <DeleteChapterDialog
-          chapterTitle={deleteTarget.title}
-          onConfirm={handleDeleteConfirm}
-          onCancel={() => setDeleteTargetId(null)}
+          {/* Delete confirmation per D-15 */}
+          {deleteTarget && (
+            <DeleteChapterDialog
+              chapterTitle={deleteTarget.title}
+              onConfirm={handleDeleteConfirm}
+              onCancel={() => setDeleteTargetId(null)}
+            />
+          )}
+        </>
+      ) : (
+        /* Outline tab per D-16, D-17 */
+        <OutlineTab
+          projectId={projectId}
+          onSelectOutline={onSelectOutline}
+          activeOutlineId={activeOutlineId}
         />
       )}
     </div>

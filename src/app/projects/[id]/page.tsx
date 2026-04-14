@@ -1,19 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { ChapterSidebar } from '@/components/chapter/chapter-sidebar'
+import { OutlineEditForm } from '@/components/outline/outline-edit-form'
 import { Editor } from '@/components/editor/editor'
 import { useChapterEditor } from '@/lib/hooks/use-chapter-editor'
 import { ThemeProvider, useTheme } from '@/components/editor/theme-provider'
 import { ResizablePanelGroup, DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
 import { useLayout } from '@/lib/hooks/use-layout'
+import { useChapters } from '@/lib/hooks/use-chapters'
+import type { ActiveTab } from '@/lib/hooks/use-layout'
 
 /**
  * Project workspace page per D-04.
  * Renders ChapterSidebar in sidebar area, editor in main area.
  * Uses ResizablePanelGroup for drag-to-resize sidebar per D-01.
  * Uses useLayout for per-project layout persistence per D-24, D-25.
+ * Per D-13: tab switching between chapters and outline.
+ * Per D-17: clicking outline entry shows outline editing form in editor area.
  * 
  * Layout per D-01, D-04, D-05:
  * - Editor does NOT display chapter title (title only in sidebar)
@@ -27,9 +32,44 @@ export default function ProjectPage() {
   const params = useParams<{ id: string }>()
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
   const [focusMode, setFocusMode] = useState(false)
+  // Per D-14: active tab persists via useLayout
+  const [activeOutlineId, setActiveOutlineId] = useState<string | null>(null)
 
-  // Layout persistence per D-24, D-25
-  const { sidebarWidth, saveSidebarWidth } = useLayout(params.id)
+  // Layout persistence per D-24, D-25, D-14
+  const { sidebarWidth, activeTab, saveSidebarWidth, saveActiveTab } = useLayout(params.id)
+
+  // Chapters data for outline prev/next navigation per D-20
+  const { chapters } = useChapters(params.id)
+
+  // Per D-18: sidebar stays visible when editing outline
+  // Per D-17: clicking outline entry sets editingOutlineId
+  const handleSelectOutline = useCallback((chapterId: string) => {
+    setActiveOutlineId(chapterId)
+  }, [])
+
+  // Per D-13: instant tab switching, no animation
+  const handleTabChange = useCallback((tab: ActiveTab) => {
+    saveActiveTab(tab)
+    // When switching from outline tab to chapters, clear outline editing per plan
+    if (tab === 'chapters') {
+      setActiveOutlineId(null)
+    }
+  }, [saveActiveTab])
+
+  // Per D-20: Previous/Next navigation in outline editing
+  const sortedChapters = chapters.filter(c => !c.deletedAt)
+  const currentOutlineIndex = sortedChapters.findIndex(c => c.id === activeOutlineId)
+  const handleOutlinePrevious = useCallback(() => {
+    if (currentOutlineIndex > 0) {
+      setActiveOutlineId(sortedChapters[currentOutlineIndex - 1].id)
+    }
+  }, [currentOutlineIndex, sortedChapters])
+
+  const handleOutlineNext = useCallback(() => {
+    if (currentOutlineIndex < sortedChapters.length - 1 && currentOutlineIndex !== -1) {
+      setActiveOutlineId(sortedChapters[currentOutlineIndex + 1].id)
+    }
+  }, [currentOutlineIndex, sortedChapters])
 
   // Handle resize end — persists new width per D-25
   const handleResizeEnd = (newWidth: number) => {
@@ -40,6 +80,29 @@ export default function ProjectPage() {
   const handleDoubleClickReset = () => {
     saveSidebarWidth(DEFAULT_SIDEBAR_WIDTH)
   }
+
+  // Determine main content per D-17:
+  // When editing outline → OutlineEditForm
+  // When editing chapter → Editor
+  // When nothing selected → Placeholder
+  const hasPrevious = currentOutlineIndex > 0
+  const hasNext = currentOutlineIndex < sortedChapters.length - 1 && currentOutlineIndex !== -1
+
+  const mainContent =
+    activeTab === 'outline' && activeOutlineId ? (
+      <OutlineEditForm
+        projectId={params.id}
+        chapterId={activeOutlineId}
+        onPrevious={handleOutlinePrevious}
+        onNext={handleOutlineNext}
+        hasPrevious={hasPrevious}
+        hasNext={hasNext}
+      />
+    ) : activeChapterId ? (
+      <EditorWithStatus projectId={params.id} chapterId={activeChapterId} />
+    ) : (
+      <Placeholder activeTab={activeTab} />
+    )
 
   return (
     <ThemeProvider>
@@ -59,15 +122,13 @@ export default function ProjectPage() {
             projectId={params.id}
             activeChapterId={activeChapterId}
             onSelectChapter={setActiveChapterId}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            activeOutlineId={activeOutlineId}
+            onSelectOutline={handleSelectOutline}
           />
         }
-        mainContent={
-          activeChapterId ? (
-            <EditorWithStatus projectId={params.id} chapterId={activeChapterId} />
-          ) : (
-            <Placeholder />
-          )
-        }
+        mainContent={mainContent}
       />
     </ThemeProvider>
   )
@@ -165,13 +226,23 @@ function EditorWithStatus({ projectId, chapterId }: { projectId: string; chapter
 
 /**
  * Placeholder shown when no chapter is selected.
+ * Per D-17: shows appropriate message based on active tab.
  */
-function Placeholder() {
+function Placeholder({ activeTab }: { activeTab: ActiveTab }) {
   return (
     <div className="flex-1 flex items-center justify-center text-zinc-400 dark:text-zinc-500">
       <div className="text-center">
-        <p className="text-lg mb-1">选择一个章节开始写作</p>
-        <p className="text-sm text-zinc-300 dark:text-zinc-600">从左侧章节列表中选择或创建章节</p>
+        {activeTab === 'outline' ? (
+          <>
+            <p className="text-lg mb-1">选择一个章节查看大纲</p>
+            <p className="text-sm text-zinc-300 dark:text-zinc-600">从左侧大纲列表中选择章节</p>
+          </>
+        ) : (
+          <>
+            <p className="text-lg mb-1">选择一个章节开始写作</p>
+            <p className="text-sm text-zinc-300 dark:text-zinc-600">从左侧章节列表中选择或创建章节</p>
+          </>
+        )}
       </div>
     </div>
   )

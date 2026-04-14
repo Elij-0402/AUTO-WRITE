@@ -81,7 +81,13 @@ Plans:
   3. Author can create timeline entries for story events
   4. Author can manually establish relationships between entries (e.g., character ↔ location, character ↔ character)
   5. Author can search and browse world bible entries by category and keyword
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Data layer: types, Dexie v3 schema, queries, hooks
+- [ ] 04-02-PLAN.md — World bible sidebar tab: type-grouped entries, search, creation, deletion
+- [ ] 04-03-PLAN.md — Entry edit form with relationships: type-specific fields, auto-save, bidirectional linking
+
 **UI hint**: yes
 
 ### Phase 5: BYOK & AI Chat
@@ -156,7 +162,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Project & Chapter Foundation | 0/2 | Planning complete | - |
 | 2. Writing Editor | 0/3 | Planning complete | - |
 | 3. Workspace & Chapter Outline | 0/? | Not started | - |
-| 4. World Bible | 0/? | Not started | - |
+| 4. World Bible | 0/3 | Planning complete | - |
 | 5. BYOK & AI Chat | 0/? | Not started | - |
 | 6. Context Assembly & Smart AI | 0/? | Not started | - |
 | 7. Chapter Generation & Export | 0/? | Not started | - |

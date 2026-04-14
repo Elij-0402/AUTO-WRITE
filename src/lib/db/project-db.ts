@@ -1,15 +1,15 @@
 import Dexie, { type Table } from 'dexie'
-import type { Chapter, ProjectMeta } from '../types'
+import type { Chapter, ProjectMeta, WorldEntry, Relation } from '../types'
 
 /**
  * Layout settings stored per-project in IndexedDB per D-24.
  * sidebarWidth: persisted sidebar width in pixels per D-25
- * activeTab: which sidebar tab is shown ('chapters' | 'outline') per D-14
+ * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world') per D-08, D-14
  */
 export interface LayoutSettings {
   id: string // 'default' for per-project default layout
   sidebarWidth: number
-  activeTab: 'chapters' | 'outline'
+  activeTab: 'chapters' | 'outline' | 'world'
 }
 
 /**
@@ -23,6 +23,8 @@ export class InkForgeProjectDB extends Dexie {
   projects!: Table<ProjectMeta, string>
   chapters!: Table<Chapter, string>
   layoutSettings!: Table<LayoutSettings, string>
+  worldEntries!: Table<WorldEntry, string>
+  relations!: Table<Relation, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -49,6 +51,13 @@ export class InkForgeProjectDB extends Dexie {
           chapter.outlineTargetWordCount = null
         }
       })
+    })
+    this.version(3).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
     })
   }
 }

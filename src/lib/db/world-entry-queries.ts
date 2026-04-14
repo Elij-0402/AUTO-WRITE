@@ -149,3 +149,84 @@ export async function getWorldEntryById(
 ): Promise<WorldEntry | undefined> {
   return db.worldEntries.get(id)
 }
+
+/**
+ * Search entries by keyword matching against name and core fields.
+ * Per D-11: searches name + type-specific core fields (personality, appearance, etc).
+ * Used by context injection for relevance matching.
+ */
+export async function queryEntriesByKeyword(
+  db: InkForgeProjectDB,
+  keyword: string,
+  projectId: string
+): Promise<WorldEntry[]> {
+  const lowerKeyword = keyword.toLowerCase()
+
+  const entries = await db.worldEntries
+    .filter(entry => {
+      if (entry.projectId !== projectId || entry.deletedAt !== null) {
+        return false
+      }
+
+      // Name match
+      const nameMatch = entry.name.toLowerCase().includes(lowerKeyword)
+      if (nameMatch) return true
+
+      // Core fields based on type
+      if (entry.type === 'character') {
+        return Boolean(
+          entry.personality?.toLowerCase().includes(lowerKeyword) ||
+          entry.appearance?.toLowerCase().includes(lowerKeyword) ||
+          entry.background?.toLowerCase().includes(lowerKeyword) ||
+          entry.alias?.toLowerCase().includes(lowerKeyword)
+        )
+      }
+      if (entry.type === 'location') {
+        return Boolean(
+          entry.description?.toLowerCase().includes(lowerKeyword) ||
+          entry.features?.toLowerCase().includes(lowerKeyword)
+        )
+      }
+      if (entry.type === 'rule') {
+        return Boolean(
+          entry.content?.toLowerCase().includes(lowerKeyword) ||
+          entry.scope?.toLowerCase().includes(lowerKeyword)
+        )
+      }
+      if (entry.type === 'timeline') {
+        return Boolean(
+          entry.eventDescription?.toLowerCase().includes(lowerKeyword) ||
+          entry.timePoint?.toLowerCase().includes(lowerKeyword)
+        )
+      }
+      return false
+    })
+    .toArray()
+
+  return entries.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
+}
+
+/**
+ * Get all entries grouped by type for context injection.
+ * Used by use-context-injection hook to get entriesByType structure.
+ */
+export async function getEntriesByTypeForContext(
+  db: InkForgeProjectDB,
+  projectId: string
+): Promise<{
+  character: WorldEntry[]
+  location: WorldEntry[]
+  rule: WorldEntry[]
+  timeline: WorldEntry[]
+}> {
+  const entries = await db.worldEntries
+    .filter(entry => entry.projectId === projectId && entry.deletedAt === null)
+    .toArray()
+
+  return {
+    character: entries.filter(e => e.type === 'character'),
+    location: entries.filter(e => e.type === 'location'),
+    rule: entries.filter(e => e.type === 'rule'),
+    timeline: entries.filter(e => e.type === 'timeline'),
+  }
+}

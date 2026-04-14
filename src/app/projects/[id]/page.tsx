@@ -7,11 +7,13 @@ import { Editor } from '@/components/editor/editor'
 import { useChapterEditor } from '@/lib/hooks/use-chapter-editor'
 import { ThemeProvider, useTheme } from '@/components/editor/theme-provider'
 import { ResizablePanelGroup, DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
+import { useLayout } from '@/lib/hooks/use-layout'
 
 /**
  * Project workspace page per D-04.
  * Renders ChapterSidebar in sidebar area, editor in main area.
  * Uses ResizablePanelGroup for drag-to-resize sidebar per D-01.
+ * Uses useLayout for per-project layout persistence per D-24, D-25.
  * 
  * Layout per D-01, D-04, D-05:
  * - Editor does NOT display chapter title (title only in sidebar)
@@ -25,18 +27,18 @@ export default function ProjectPage() {
   const params = useParams<{ id: string }>()
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
   const [focusMode, setFocusMode] = useState(false)
-  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH)
+
+  // Layout persistence per D-24, D-25
+  const { sidebarWidth, saveSidebarWidth } = useLayout(params.id)
 
   // Handle resize end — persists new width per D-25
   const handleResizeEnd = (newWidth: number) => {
-    setSidebarWidth(newWidth)
-    // Note: Will be wired to useLayout.saveSidebarWidth in Task 3
+    saveSidebarWidth(newWidth)
   }
 
   // Handle double-click reset — resets to default 280px per D-03
   const handleDoubleClickReset = () => {
-    setSidebarWidth(DEFAULT_SIDEBAR_WIDTH)
-    // Note: Will also persist via useLayout in Task 3
+    saveSidebarWidth(DEFAULT_SIDEBAR_WIDTH)
   }
 
   return (

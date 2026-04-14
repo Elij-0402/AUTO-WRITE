@@ -1,11 +1,12 @@
 'use client'
 
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useEffect } from 'react'
 import {
   Group,
   Panel,
   Separator,
   type GroupImperativeHandle,
+  type PanelImperativeHandle,
 } from 'react-resizable-panels'
 
 /**
@@ -25,9 +26,9 @@ export const MIN_SIDEBAR_WIDTH = 200
 export interface ResizablePanelGroupProps {
   /** The sidebar width in pixels (from persisted layout or default) */
   sidebarWidth: number
-  /** Called when drag ends with new sidebar width in pixels */
+  /** Called when drag ends with new sidebar width in pixels per D-25 */
   onResizeEnd?: (sidebarWidthPx: number) => void
-  /** Called on double-click to reset sidebar to default width */
+  /** Called on double-click to reset sidebar to default width per D-03 */
   onDoubleClickReset?: () => void
   /** Sidebar panel content */
   sidebarContent: React.ReactNode
@@ -35,8 +36,6 @@ export interface ResizablePanelGroupProps {
   mainContent: React.ReactNode
   /** Minimum sidebar width in pixels (default: MIN_SIDEBAR_WIDTH) */
   minSidebarWidth?: number
-  /** Default sidebar width in pixels (default: DEFAULT_SIDEBAR_WIDTH) */
-  defaultSidebarWidth?: number
   /** Whether to show the sidebar (false = focus mode) */
   showSidebar?: boolean
   /** Additional CSS class for the panel group container */
@@ -47,8 +46,9 @@ export interface ResizablePanelGroupProps {
  * ResizablePanelGroup - Two-panel layout with draggable splitter.
  *
  * Uses react-resizable-panels under the hood for smooth real-time drag.
- * Exposes callbacks for layout persistence.
  * Per D-27: designed for reusability (Phase 5 four-panel layout will reuse).
+ * Per D-25: layout saved on drag end via onResizeEnd callback.
+ * Per D-03: double-click resets to 280px (not the persisted width).
  */
 export function ResizablePanelGroup({
   sidebarWidth,
@@ -57,45 +57,41 @@ export function ResizablePanelGroup({
   sidebarContent,
   mainContent,
   minSidebarWidth = MIN_SIDEBAR_WIDTH,
-  defaultSidebarWidth = DEFAULT_SIDEBAR_WIDTH,
   showSidebar = true,
   className,
 }: ResizablePanelGroupProps) {
   const groupRef = useRef<GroupImperativeHandle>(null)
+  const sidebarPanelRef = useRef<PanelImperativeHandle>(null)
 
-  // Double-click handler: reset sidebar to default size
+  // When sidebarWidth changes externally (e.g., loaded from IndexedDB),
+  // update the panel size to match. This prevents the "flash to default" issue
+  // where the panel renders at defaultSize and then jumps to persisted size.
+  useEffect(() => {
+    if (sidebarPanelRef.current && sidebarWidth !== DEFAULT_SIDEBAR_WIDTH) {
+      // Only resize if not already at the target size
+      const current = sidebarPanelRef.current.getSize()
+      if (Math.abs(current.inPixels - sidebarWidth) > 2) {
+        sidebarPanelRef.current.resize(sidebarWidth)
+      }
+    }
+  }, [sidebarWidth])
+
+  // Double-click handler: reset sidebar to default 280px per D-03
   const handleDoubleClick = useCallback(() => {
+    if (sidebarPanelRef.current) {
+      sidebarPanelRef.current.resize(DEFAULT_SIDEBAR_WIDTH)
+    }
     if (onDoubleClickReset) {
       onDoubleClickReset()
     }
   }, [onDoubleClickReset])
 
-  // onLayoutChanged fires after pointer release — perfect for persisting layout
-  const handleLayoutChanged = useCallback(
-    (layout: { [id: string]: number }) => {
-      if (!onResizeEnd) return
-      // layout maps panel id -> flex-grow value
-      // We need to compute the actual sidebar width from the layout
-      // The library uses flex-grow, so we need to calculate from DOM
-      // Use groupRef to get actual sizes
-      if (groupRef.current) {
-        const currentLayout = groupRef.current.getLayout()
-        // currentLayout maps panel id -> flexGrow value
-        // We need to compute pixels from the ratio
-        const ids = Object.keys(currentLayout)
-        if (ids.length >= 2) {
-          const sidebarFlex = Object.values(currentLayout)[0]
-          const totalFlex = Object.values(currentLayout).reduce((a: number, b: number) => a + b, 0) as number
-          if (totalFlex > 0 && typeof window !== 'undefined') {
-            const viewportWidth = window.innerWidth
-            const sidebarPx = Math.round((sidebarFlex / totalFlex) * viewportWidth)
-            onResizeEnd(sidebarPx)
-          }
-        }
-      }
-    },
-    [onResizeEnd]
-  )
+  // onLayoutChanged fires after pointer release — save layout persistence per D-25
+  const handleLayoutChanged = useCallback(() => {
+    if (!onResizeEnd || !sidebarPanelRef.current) return
+    const size = sidebarPanelRef.current.getSize()
+    onResizeEnd(Math.round(size.inPixels))
+  }, [onResizeEnd])
 
   if (!showSidebar) {
     // Focus mode: only show main content
@@ -116,18 +112,24 @@ export function ResizablePanelGroup({
       {/* Sidebar panel per D-01, D-04 */}
       <Panel
         id="sidebar"
-        defaultSize={sidebarWidth}
+        panelRef={sidebarPanelRef}
+        defaultSize={DEFAULT_SIDEBAR_WIDTH}
         minSize={minSidebarWidth}
+        groupResizeBehavior="preserve-pixel-size"
       >
         <div className="h-full flex flex-col overflow-hidden">
           {sidebarContent}
         </div>
       </Panel>
 
-      {/* Resize handle per D-01, D-06 */}
-      <Separator onDoubleClick={handleDoubleClick} className="group relative flex items-center justify-center w-1 shrink-0" >
+      {/* Resize handle per D-01, D-03, D-06
+          disableDoubleClick: we handle it ourselves to always reset to 280px */}
+      <Separator
+        onDoubleClick={handleDoubleClick}
+        className="group relative flex items-center justify-center w-1 shrink-0 cursor-col-resize"
+      >
         <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400/20 group-active:bg-blue-500/30 transition-colors" />
-        <div className="w-1 h-full bg-zinc-200 group-hover:bg-blue-400 dark:bg-zinc-800 group-hover:dark:bg-blue-500 group-active:bg-blue-500 group-active:dark:bg-blue-400 transition-colors cursor-col-resize" />
+        <div className="w-1 h-full bg-zinc-200 group-hover:bg-blue-400 dark:bg-zinc-800 group-hover:dark:bg-blue-500 group-active:bg-blue-500 group-active:dark:bg-blue-400 transition-colors" />
       </Separator>
 
       {/* Main content panel */}

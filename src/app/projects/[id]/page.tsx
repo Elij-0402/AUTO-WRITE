@@ -2,31 +2,42 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import { Group, Panel, Separator } from '@/components/workspace/resizable-panel'
 import { ChapterSidebar } from '@/components/chapter/chapter-sidebar'
 import { OutlineEditForm } from '@/components/outline/outline-edit-form'
 import { Editor } from '@/components/editor/editor'
 import { useChapterEditor } from '@/lib/hooks/use-chapter-editor'
 import { ThemeProvider, useTheme } from '@/components/editor/theme-provider'
-import { ResizablePanelGroup, DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
+import { DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
 import { useLayout } from '@/lib/hooks/use-layout'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
+import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
+import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
 import type { WorldEntryType } from '@/lib/types'
 
+/** Default chat panel width per D-09 */
+const DEFAULT_CHAT_PANEL_WIDTH = 320
+/** Minimum chat panel width per D-09 */
+const MIN_CHAT_PANEL_WIDTH = 280
+/** Maximum chat panel width per D-09 */
+const MAX_CHAT_PANEL_WIDTH = 500
+
 /**
  * Project workspace page per D-04.
- * Renders ChapterSidebar in sidebar area, editor in main area.
- * Uses ResizablePanelGroup for drag-to-resize sidebar per D-01.
- * Uses useLayout for per-project layout persistence per D-24, D-25.
+ * Four-panel layout: sidebar (3 tabs) + editor + AI chat panel per D-02, D-03.
+ * Uses nested Group components for three-column layout per D-09.
+ * Uses useLayout for per-project layout persistence per D-24, D-25, D-12.
  * Per D-13: tab switching between chapters and outline.
  * Per D-17: clicking outline entry shows outline editing form in editor area.
- * 
- * Layout per D-01, D-04, D-05:
- * - Editor does NOT display chapter title (title only in sidebar)
- * - Save status displayed in editor bottom bar ("保存中..." / "已保存")
- * 
+ *
+ * Layout per D-09:
+ * - Left sidebar: 280px default, min 200px, max 400px
+ * - Editor: flex-1 (takes remaining space)
+ * - Right chat panel: 320px default, min 280px, max 500px
+ *
  * Theme per D-28 to D-33:
  * - ThemeProvider wraps content for theme switching
  * - Theme toggle button in top bar area per D-29
@@ -39,9 +50,11 @@ export default function ProjectPage() {
   const [activeOutlineId, setActiveOutlineId] = useState<string | null>(null)
   // World bible state per D-13
   const [activeWorldEntryId, setActiveWorldEntryId] = useState<string | null>(null)
+  // AI config dialog state
+  const [aiConfigOpen, setAiConfigOpen] = useState(false)
 
-  // Layout persistence per D-24, D-25, D-14
-  const { sidebarWidth, activeTab, saveSidebarWidth, saveActiveTab } = useLayout(params.id)
+  // Layout persistence per D-24, D-25, D-14, D-12
+  const { sidebarWidth, activeTab, chatPanelWidth, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(params.id)
 
   // Chapters data for outline prev/next navigation per D-20
   const { chapters } = useChapters(params.id)
@@ -126,9 +139,14 @@ export default function ProjectPage() {
     }
   }, [currentWorldIndex, sameTypeEntries])
 
-  // Handle resize end — persists new width per D-25
-  const handleResizeEnd = (newWidth: number) => {
+  // Handle sidebar resize end — persists new width per D-25
+  const handleSidebarResizeEnd = (newWidth: number) => {
     saveSidebarWidth(newWidth)
+  }
+
+  // Handle chat panel resize end — persists new width per D-12
+  const handleChatPanelResizeEnd = (newWidth: number) => {
+    saveChatPanelWidth(newWidth)
   }
 
   // Escape key to close outline or world bible editing form
@@ -147,9 +165,13 @@ export default function ProjectPage() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [activeOutlineId, activeWorldEntryId])
 
-  // Handle double-click reset — resets to default 280px per D-03
-  const handleDoubleClickReset = () => {
+  // Handle double-click reset — resets to default widths per D-03
+  const handleSidebarDoubleClickReset = () => {
     saveSidebarWidth(DEFAULT_SIDEBAR_WIDTH)
+  }
+
+  const handleChatPanelDoubleClickReset = () => {
+    saveChatPanelWidth(DEFAULT_CHAT_PANEL_WIDTH)
   }
 
   // Determine main content per D-17:
@@ -188,35 +210,104 @@ export default function ProjectPage() {
 
   return (
     <ThemeProvider>
-      {/* Top bar with theme toggle and focus mode */}
+      {/* AI Config Dialog */}
+      <AIConfigDialog
+        projectId={params.id}
+        open={aiConfigOpen}
+        onClose={() => setAiConfigOpen(false)}
+      />
+
+      {/* Top bar with AI settings, focus mode, and theme toggle */}
       <div className="h-12 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center justify-end px-4 gap-2">
+        <button
+          onClick={() => setAiConfigOpen(true)}
+          className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+          title="AI 设置"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
         <FocusModeToggle focusMode={focusMode} onToggle={() => setFocusMode(!focusMode)} />
         <ThemeToggle />
       </div>
 
-      <ResizablePanelGroup
-        sidebarWidth={sidebarWidth}
-        onResizeEnd={handleResizeEnd}
-        onDoubleClickReset={handleDoubleClickReset}
-        showSidebar={!focusMode}
-        sidebarContent={
-          <ChapterSidebar
-            projectId={params.id}
-            activeChapterId={activeChapterId}
-            onSelectChapter={setActiveChapterId}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            activeOutlineId={activeOutlineId}
-            onSelectOutline={handleSelectOutline}
-            activeWorldEntryId={activeWorldEntryId}
-            onSelectWorldEntry={handleSelectWorldEntry}
-            onEditWorldEntry={handleEditWorldEntry}
-            onDeleteWorldEntry={handleDeleteWorldEntry}
-            onCreateWorldEntry={handleCreateWorldEntry}
-          />
-        }
-        mainContent={mainContent}
-      />
+      {/* Four-panel workspace layout: sidebar | (editor | chat panel) per D-02, D-03, D-09 */}
+      {focusMode ? (
+        /* Focus mode: editor only */
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {mainContent}
+        </div>
+      ) : (
+        /* Full four-panel layout using nested Group per D-09 */
+        <Group orientation="horizontal" className="flex-1 flex overflow-hidden">
+          {/* Left sidebar panel per D-09 */}
+          <Panel
+            id="sidebar"
+            defaultSize={DEFAULT_SIDEBAR_WIDTH}
+            minSize={200}
+            maxSize={400}
+            groupResizeBehavior="preserve-pixel-size"
+          >
+            <div className="h-full flex flex-col overflow-hidden">
+              <ChapterSidebar
+                projectId={params.id}
+                activeChapterId={activeChapterId}
+                onSelectChapter={setActiveChapterId}
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                activeOutlineId={activeOutlineId}
+                onSelectOutline={handleSelectOutline}
+                activeWorldEntryId={activeWorldEntryId}
+                onSelectWorldEntry={handleSelectWorldEntry}
+                onEditWorldEntry={handleEditWorldEntry}
+                onDeleteWorldEntry={handleDeleteWorldEntry}
+                onCreateWorldEntry={handleCreateWorldEntry}
+              />
+            </div>
+          </Panel>
+
+          {/* Sidebar resize handle */}
+          <Separator
+            onDoubleClick={handleSidebarDoubleClickReset}
+            className="group relative flex items-center justify-center w-1 shrink-0 cursor-col-resize"
+          >
+            <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400/20 group-active:bg-blue-500/30 transition-colors" />
+            <div className="w-1 h-full bg-zinc-200 group-hover:bg-blue-400 dark:bg-zinc-800 group-hover:dark:bg-blue-500 group-active:bg-blue-500 group-active:dark:bg-blue-400 transition-colors" />
+          </Separator>
+
+          {/* Right side: editor + chat panel */}
+          <Group orientation="horizontal" className="flex-1 overflow-hidden">
+            {/* Editor panel (flex-1) */}
+            <Panel id="editor" groupResizeBehavior="preserve-relative-size">
+              <div className="h-full flex flex-col overflow-hidden">
+                {mainContent}
+              </div>
+            </Panel>
+
+            {/* Editor/Chat resize handle */}
+            <Separator
+              onDoubleClick={handleChatPanelDoubleClickReset}
+              className="group relative flex items-center justify-center w-1 shrink-0 cursor-col-resize"
+            >
+              <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400/20 group-active:bg-blue-500/30 transition-colors" />
+              <div className="w-1 h-full bg-zinc-200 group-hover:bg-blue-400 dark:bg-zinc-800 group-hover:dark:bg-blue-500 group-active:bg-blue-500 group-active:dark:bg-blue-400 transition-colors" />
+            </Separator>
+
+            {/* AI Chat panel per D-09 */}
+            <Panel
+              id="chat"
+              defaultSize={DEFAULT_CHAT_PANEL_WIDTH}
+              minSize={MIN_CHAT_PANEL_WIDTH}
+              maxSize={MAX_CHAT_PANEL_WIDTH}
+              groupResizeBehavior="preserve-pixel-size"
+            >
+              <AIChatPanel projectId={params.id} />
+            </Panel>
+          </Group>
+        </Group>
+      )}
     </ThemeProvider>
   )
 }

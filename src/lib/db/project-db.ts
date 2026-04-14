@@ -2,19 +2,53 @@ import Dexie, { type Table } from 'dexie'
 import type { Chapter, ProjectMeta } from '../types'
 
 /**
+ * Layout settings stored per-project in IndexedDB per D-24.
+ * sidebarWidth: persisted sidebar width in pixels per D-25
+ * activeTab: which sidebar tab is shown ('chapters' | 'outline') per D-14
+ */
+export interface LayoutSettings {
+  id: string // 'default' for per-project default layout
+  sidebarWidth: number
+  activeTab: 'chapters' | 'outline'
+}
+
+/**
  * Per-project database for InkForge.
  * Per D-19: each project gets its own IndexedDB database for clean isolation.
  * Database name: inkforge-project-{projectId}
+ *
+ * Version 2: Added layoutSettings table and outline fields on Chapter per D-07, D-24.
  */
 export class InkForgeProjectDB extends Dexie {
   projects!: Table<ProjectMeta, string>
   chapters!: Table<Chapter, string>
+  layoutSettings!: Table<LayoutSettings, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
     this.version(1).stores({
       projects: 'id, updatedAt, deletedAt',
       chapters: 'id, projectId, order, deletedAt',
+    })
+    this.version(2).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+    }).upgrade(tx => {
+      // Backfill outline defaults for existing chapter records per T-03-02
+      // Dexie migration: existing chapters get undefined for new fields
+      // We set defaults for outlineStatus, outlineSummary, outlineTargetWordCount
+      return tx.table('chapters').toCollection().modify(chapter => {
+        if (chapter.outlineStatus === undefined) {
+          chapter.outlineStatus = 'not_started'
+        }
+        if (chapter.outlineSummary === undefined) {
+          chapter.outlineSummary = ''
+        }
+        if (chapter.outlineTargetWordCount === undefined) {
+          chapter.outlineTargetWordCount = null
+        }
+      })
     })
   }
 }

@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { createProjectDB, type InkForgeProjectDB } from '../db/project-db'
 import { metaDb } from '../db/meta-db'
-import type { ChapterStatus } from '../types'
+import type { ChapterStatus, OutlineStatus } from '../types'
 import {
   getChapters,
   addChapter as addChapterQuery,
@@ -14,6 +14,7 @@ import {
   duplicateChapter as duplicateChapterQuery,
   updateChapterContent as updateChapterContentQuery,
   updateChapterStatus as updateChapterStatusQuery,
+  updateOutlineFields as updateOutlineFieldsQuery,
 } from '../db/chapter-queries'
 
 /**
@@ -75,6 +76,14 @@ export function useChapters(projectId: string) {
     await updateProjectTimestamp()
   }, [db, updateProjectTimestamp])
 
+  const updateOutlineFields = useCallback(async (
+    id: string,
+    fields: { outlineSummary?: string; outlineTargetWordCount?: number | null; outlineStatus?: OutlineStatus }
+  ): Promise<void> => {
+    await updateOutlineFieldsQuery(db, id, fields)
+    await updateProjectTimestamp()
+  }, [db, updateProjectTimestamp])
+
   return {
     db,
     chapters,
@@ -86,5 +95,6 @@ export function useChapters(projectId: string) {
     duplicateChapter,
     updateChapterContent,
     updateChapterStatus,
+    updateOutlineFields,
   }
 }

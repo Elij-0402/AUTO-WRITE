@@ -1,4 +1,4 @@
-import type { Chapter, ChapterStatus } from '../types'
+import type { Chapter, ChapterStatus, OutlineStatus } from '../types'
 import type { InkForgeProjectDB } from './project-db'
 
 /**
@@ -39,6 +39,9 @@ export async function addChapter(
     content: null,
     wordCount: 0,
     status: 'draft',
+    outlineSummary: '',
+    outlineTargetWordCount: null,
+    outlineStatus: 'not_started',
     createdAt: now,
     updatedAt: now,
     deletedAt: null,
@@ -129,6 +132,9 @@ export async function duplicateChapter(
     content: original.content,
     wordCount: original.wordCount,
     status: 'draft',
+    outlineSummary: original.outlineSummary,
+    outlineTargetWordCount: original.outlineTargetWordCount,
+    outlineStatus: original.outlineStatus,
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
@@ -175,6 +181,18 @@ export async function updateChapterStatus(
  */
 export function getChapterNumber(order: number): string {
   return `第${order + 1}章`
+}
+
+/**
+ * Update outline fields on a chapter per D-07, D-08.
+ * Accepts partial updates — only specified fields are modified.
+ */
+export async function updateOutlineFields(
+  db: InkForgeProjectDB,
+  id: string,
+  fields: { outlineSummary?: string; outlineTargetWordCount?: number | null; outlineStatus?: OutlineStatus }
+): Promise<void> {
+  await db.chapters.update(id, { ...fields, updatedAt: new Date() })
 }
 
 /**

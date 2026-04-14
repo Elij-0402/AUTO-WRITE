@@ -100,12 +100,13 @@ Plans:
   3. AI generates drafts in the chat panel that the author can accept into the editor
   4. All four workspace panels (world bible, outline, editor, AI chat) are visible simultaneously
   5. AI prompts are optimized for Chinese novel writing contexts
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Data layer: IndexedDB schema (aiConfig, messages), useAIConfig hook
-- [ ] 05-02-PLAN.md — 4-panel layout: workspace restructuring, AIChatPanel, AIConfigDialog
-- [ ] 05-03-PLAN.md — Chat + drafts: useAIChat streaming, draft insertion, Chinese prompts
+- [x] 05-01-PLAN.md — Data layer: IndexedDB schema (aiConfig, messages), useAIConfig hook
+- [x] 05-02-PLAN.md — 4-panel layout: workspace restructuring, AIChatPanel, AIConfigDialog
+- [x] 05-03-PLAN.md — Chat + drafts: useAIChat streaming, draft insertion, Chinese prompts
+- [x] 05-04-PLAN.md — Gap closure: wire Editor ref and onInsertDraft callback in page.tsx
 **UI hint**: yes
 
 ### Phase 6: Context Assembly & Smart AI
@@ -117,8 +118,13 @@ Plans:
   2. Author can select text in the editor and open a discussion about it in the AI chat panel
   3. AI suggests relationships between world bible entries based on content analysis
   4. AI suggests new world bible entries based on draft content
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 06-01-PLAN.md — Context injection core: use-context-injection hook, keyword matching, token budgeting, system prompt extension
+- [ ] 06-02-PLAN.md — Text selection & suggestion UI: floating toolbar, suggestion cards, adoption dialogs
+- [ ] 06-03-PLAN.md — Integration: AI suggestion parsing, dismissed tracking, full flow wiring
 
 ### Phase 7: Chapter Generation & Export
 **Goal**: Authors can generate complete chapters from outlines and export their work in standard formats

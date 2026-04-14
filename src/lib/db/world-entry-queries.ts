@@ -19,19 +19,14 @@ export async function getWorldEntries(
   projectId: string,
   type?: WorldEntryType
 ): Promise<WorldEntry[]> {
-  let collection = db.worldEntries
-    .filter(entry => entry.projectId === projectId && entry.deletedAt === null)
+  const entries = await db.worldEntries
+    .filter(entry =>
+      entry.projectId === projectId &&
+      entry.deletedAt === null &&
+      (type === undefined || entry.type === type)
+    )
+    .toArray()
 
-  if (type) {
-    collection = db.worldEntries
-      .filter(entry =>
-        entry.projectId === projectId &&
-        entry.type === type &&
-        entry.deletedAt === null
-      )
-  }
-
-  const entries = await collection.toArray()
   return entries.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
 }
 
@@ -130,30 +125,18 @@ export async function searchWorldEntries(
 ): Promise<WorldEntry[]> {
   const lowerQuery = query.toLowerCase()
 
-  let collection = db.worldEntries
+  const entries = await db.worldEntries
     .filter(entry =>
       entry.projectId === projectId &&
       entry.deletedAt === null &&
+      (type === undefined || entry.type === type) &&
       (
         entry.name.toLowerCase().includes(lowerQuery) ||
         entry.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
       )
     )
+    .toArray()
 
-  if (type) {
-    collection = db.worldEntries
-      .filter(entry =>
-        entry.projectId === projectId &&
-        entry.type === type &&
-        entry.deletedAt === null &&
-        (
-          entry.name.toLowerCase().includes(lowerQuery) ||
-          entry.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
-        )
-      )
-  }
-
-  const entries = await collection.toArray()
   return entries.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
 }
 

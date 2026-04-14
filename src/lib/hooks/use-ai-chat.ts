@@ -9,6 +9,7 @@ import {
   buildContextPrompt,
   injectContext,
 } from './use-context-injection'
+import { parseAISuggestions, type Suggestion } from '../ai/suggestion-parser'
 
 export interface ChatMessage {
   id: string
@@ -47,7 +48,10 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [streamingContent, setStreamingContent] = useState('')
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const entriesByTypeRef = useRef(entriesByType)
 
   // Load messages on mount
   useEffect(() => {
@@ -59,6 +63,11 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
       .then(msgs => setMessages(msgs as ChatMessage[]))
       .catch(console.error)
   }, [projectId])
+
+  // Keep entriesByTypeRef updated
+  useEffect(() => {
+    entriesByTypeRef.current = entriesByType
+  }, [entriesByType])
 
   const sendMessage = useCallback(async (content: string) => {
     if (!config.apiKey || !config.baseUrl) {
@@ -194,6 +203,15 @@ ${currentDiscussion}
       
       // Update in database
       await db.table('messages').update(assistantMsgId, finalMsg)
+
+      // Parse suggestions from AI response — per D-06: auto-analyze after AI response completes
+      setIsAnalyzing(true)
+      try {
+        const parsedSuggestions = parseAISuggestions(fullContent, entriesByTypeRef.current)
+        setSuggestions(parsedSuggestions)
+      } finally {
+        setIsAnalyzing(false)
+      }
       
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
@@ -212,7 +230,41 @@ ${currentDiscussion}
     abortControllerRef.current?.abort()
   }, [])
 
-  return { messages, loading, streamingContent, sendMessage, cancelStream }
+  /**
+   * Dismiss a suggestion so it doesn't reappear.
+   * Per D-17: Dismissed suggestions won't appear again in current conversation.
+   */
+  const dismissSuggestion = useCallback((suggestion: Suggestion) => {
+    setSuggestions(prev => prev.filter(s => {
+      // Simple content comparison for dismissal
+      if (s.type === 'relationship' && suggestion.type === 'relationship') {
+        return s.entry1Name !== suggestion.entry1Name || s.entry2Name !== suggestion.entry2Name
+      }
+      if (s.type === 'newEntry' && suggestion.type === 'newEntry') {
+        return s.suggestedName !== suggestion.suggestedName
+      }
+      return true
+    }))
+  }, [])
+
+  /**
+   * Clear all suggestions (e.g., when starting a new conversation).
+   */
+  const clearSuggestions = useCallback(() => {
+    setSuggestions([])
+  }, [])
+
+  return {
+    messages,
+    loading,
+    streamingContent,
+    sendMessage,
+    cancelStream,
+    suggestions,
+    isAnalyzing,
+    dismissSuggestion,
+    clearSuggestions
+  }
 }
 
 function detectDraft(content: string): boolean {

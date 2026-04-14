@@ -6,10 +6,12 @@ import { ChapterSidebar } from '@/components/chapter/chapter-sidebar'
 import { Editor } from '@/components/editor/editor'
 import { useChapterEditor } from '@/lib/hooks/use-chapter-editor'
 import { ThemeProvider, useTheme } from '@/components/editor/theme-provider'
+import { ResizablePanelGroup, DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
 
 /**
  * Project workspace page per D-04.
  * Renders ChapterSidebar in sidebar area, editor in main area.
+ * Uses ResizablePanelGroup for drag-to-resize sidebar per D-01.
  * 
  * Layout per D-01, D-04, D-05:
  * - Editor does NOT display chapter title (title only in sidebar)
@@ -23,6 +25,19 @@ export default function ProjectPage() {
   const params = useParams<{ id: string }>()
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
   const [focusMode, setFocusMode] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH)
+
+  // Handle resize end — persists new width per D-25
+  const handleResizeEnd = (newWidth: number) => {
+    setSidebarWidth(newWidth)
+    // Note: Will be wired to useLayout.saveSidebarWidth in Task 3
+  }
+
+  // Handle double-click reset — resets to default 280px per D-03
+  const handleDoubleClickReset = () => {
+    setSidebarWidth(DEFAULT_SIDEBAR_WIDTH)
+    // Note: Will also persist via useLayout in Task 3
+  }
 
   return (
     <ThemeProvider>
@@ -32,27 +47,26 @@ export default function ProjectPage() {
         <ThemeToggle />
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar - hidden in focus mode */}
-        {!focusMode && (
-          <aside className="w-[280px] border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex-shrink-0 flex flex-col overflow-hidden">
-            <ChapterSidebar
-              projectId={params.id}
-              activeChapterId={activeChapterId}
-              onSelectChapter={setActiveChapterId}
-            />
-          </aside>
-        )}
-
-        {/* Main content area */}
-        <main className="flex-1 flex flex-col overflow-hidden">
-          {activeChapterId ? (
+      <ResizablePanelGroup
+        sidebarWidth={sidebarWidth}
+        onResizeEnd={handleResizeEnd}
+        onDoubleClickReset={handleDoubleClickReset}
+        showSidebar={!focusMode}
+        sidebarContent={
+          <ChapterSidebar
+            projectId={params.id}
+            activeChapterId={activeChapterId}
+            onSelectChapter={setActiveChapterId}
+          />
+        }
+        mainContent={
+          activeChapterId ? (
             <EditorWithStatus projectId={params.id} chapterId={activeChapterId} />
           ) : (
             <Placeholder />
-          )}
-        </main>
-      </div>
+          )
+        }
+      />
     </ThemeProvider>
   )
 }

@@ -1,8 +1,7 @@
 'use client'
 
 import { useLiveQuery } from 'dexie-react-hooks'
-import { createProjectDB, type InkForgeProjectDB } from '../db/project-db'
-import type { LayoutSettings } from '../db/project-db'
+import { createProjectDB } from '../db/project-db'
 import { useMemo, useCallback } from 'react'
 
 /**

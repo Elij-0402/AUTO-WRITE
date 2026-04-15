@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useAIChat, ChatMessage } from '@/lib/hooks/use-ai-chat'
+import { createProjectDB } from '@/lib/db/project-db'
 import { useDismissedSuggestions } from '@/lib/hooks/use-dismissed-suggestions'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
@@ -175,9 +176,9 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     ]
     const existing = allEntries.find(e => e.name === name)
     if (existing) {
-      // Fetch full entry
-      const { getEntryById } = useWorldEntries(projectId)
-      return await getEntryById(existing.id) || null
+      const db = createProjectDB(projectId)
+      const entry = await db.table('worldEntries').get(existing.id)
+      return entry || null
     }
     return null
   }

@@ -17,18 +17,17 @@ const DEFAULT_CONFIG: AIConfig = {
 
 export function useAIConfig(projectId: string) {
   const [config, setConfig] = useState<AIConfig>(DEFAULT_CONFIG)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!!projectId)
 
   // Load config on mount or projectId change
   useEffect(() => {
-    if (!projectId) {
-      setLoading(false)
-      return
-    }
-    
+    if (!projectId) return
+
+    let cancelled = false
     setLoading(true)
     const db = createProjectDB(projectId)
     db.table('aiConfig').get('config').then(found => {
+      if (cancelled) return
       if (found) {
         setConfig(found as AIConfig)
       } else {
@@ -36,10 +35,12 @@ export function useAIConfig(projectId: string) {
       }
       setLoading(false)
     }).catch(err => {
+      if (cancelled) return
       console.error('Failed to load AI config:', err)
       setConfig(DEFAULT_CONFIG)
       setLoading(false)
     })
+    return () => { cancelled = true }
   }, [projectId])
 
   const saveConfig = useCallback(async (newConfig: Partial<AIConfig>) => {

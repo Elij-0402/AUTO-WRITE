@@ -6,9 +6,8 @@ export default async function AuthenticatedLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // Verify auth — middleware handles redirects, but we validate here too
+  await createClient()
 
-  // This layout is only reached for authenticated users (middleware handles redirects)
   return <AuthenticatedLayoutClient>{children}</AuthenticatedLayoutClient>
 }

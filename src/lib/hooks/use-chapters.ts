@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { createProjectDB, type InkForgeProjectDB } from '../db/project-db'
+import { createProjectDB } from '../db/project-db'
 import { metaDb } from '../db/meta-db'
 import { enqueueChange } from '../sync/sync-queue'
 import { createClient } from '../supabase/client'

@@ -44,3 +44,6 @@ next-env.d.ts
 .claude/
 .opencode/
 .planning/
+
+# MCP configuration (local tooling)
+.mcp.json

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { createProjectDB } from '../db/project-db'
 import { useAIConfig } from './use-ai-config'
 import { useWorldEntries } from './use-world-entries'
 import { useChapters } from './use-chapters'

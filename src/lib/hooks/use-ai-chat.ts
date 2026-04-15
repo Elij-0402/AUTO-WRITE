@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { createProjectDB } from '../db/project-db'
 import { useAIConfig } from './use-ai-config'
 import { useWorldEntries } from './use-world-entries'
@@ -7,7 +7,6 @@ import {
   findRelevantEntries,
   trimToTokenBudget,
   buildContextPrompt,
-  injectContext,
 } from './use-context-injection'
 import { parseAISuggestions, type Suggestion } from '../ai/suggestion-parser'
 
@@ -27,20 +26,6 @@ export interface UseAIChatOptions {
   /** Selected text for discussion — per D-08: text selection discussion */
   selectedText?: string
 }
-
-/** Base system prompt without world bible context — context injected per D-25, D-27 */
-const BASE_SYSTEM_PROMPT = `你是一位专业的中文网文写作助手，熟悉中文小说创作技巧。
-
-当前功能：
-- 续写：根据给定内容续写小说章节
-- 润色：修改和优化已有文本
-- 大纲：根据章节标题生成详细大纲
-- 讨论：就写作相关问题提供建议
-
-风格要求：
-- 使用自然流畅的中文
-- 符合网文读者的阅读习惯
-- 适当使用对话和动作描写`
 
 export function useAIChat(projectId: string, options?: UseAIChatOptions) {
   const { config } = useAIConfig(projectId)

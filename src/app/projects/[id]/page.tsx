@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef, type RefObject } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo, type RefObject } from 'react'
 import { useParams } from 'next/navigation'
 import { Group, Panel, Separator } from '@/components/workspace/resizable-panel'
 import { ChapterSidebar } from '@/components/chapter/chapter-sidebar'
@@ -18,7 +18,6 @@ import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import { SyncStatusIcon } from '@/components/sync/SyncStatusIcon'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
-import type { WorldEntryType } from '@/lib/types'
 import type { EditorHandle } from '@/components/editor/editor-types'
 
 /** Default chat panel width per D-09 */
@@ -63,7 +62,7 @@ export default function ProjectPage() {
   const [selectedText, setSelectedText] = useState<string | null>(null)
 
   // Layout persistence per D-24, D-25, D-14, D-12
-  const { sidebarWidth, activeTab, chatPanelWidth, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(params.id)
+  const { activeTab, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(params.id)
 
   // Chapters data for outline prev/next navigation per D-20
   const { chapters } = useChapters(params.id)
@@ -87,7 +86,7 @@ export default function ProjectPage() {
     setActiveWorldEntryId(entryId)
   }, [])
 
-  const handleCreateWorldEntry = useCallback((type: import('@/lib/types').WorldEntryType) => {
+  const handleCreateWorldEntry = useCallback((_type: import('@/lib/types').WorldEntryType) => {
     // Entry creation will be handled via WorldBibleTab's internal logic
     // This callback is for parent-level handling if needed
   }, [])
@@ -131,7 +130,10 @@ export default function ProjectPage() {
   // World entry prev/next navigation per D-19
   const currentWorldEntry = entries?.find(e => e.id === activeWorldEntryId)
   const currentEntryType = currentWorldEntry?.type
-  const sameTypeEntries = currentEntryType ? entriesByType[currentEntryType] || [] : []
+  const sameTypeEntries = useMemo(
+    () => currentEntryType ? entriesByType[currentEntryType] || [] : [],
+    [currentEntryType, entriesByType]
+  )
   const currentWorldIndex = sameTypeEntries.findIndex(e => e.id === activeWorldEntryId)
   const hasWorldPrevious = currentWorldIndex > 0
   const hasWorldNext = currentWorldIndex < sameTypeEntries.length - 1
@@ -147,16 +149,6 @@ export default function ProjectPage() {
       setActiveWorldEntryId(sameTypeEntries[currentWorldIndex + 1].id)
     }
   }, [currentWorldIndex, sameTypeEntries])
-
-  // Handle sidebar resize end — persists new width per D-25
-  const handleSidebarResizeEnd = (newWidth: number) => {
-    saveSidebarWidth(newWidth)
-  }
-
-  // Handle chat panel resize end — persists new width per D-12
-  const handleChatPanelResizeEnd = (newWidth: number) => {
-    saveChatPanelWidth(newWidth)
-  }
 
   // Escape key to close outline or world bible editing form
   useEffect(() => {
@@ -174,7 +166,7 @@ export default function ProjectPage() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [activeOutlineId, activeWorldEntryId])
 
-  // Handle double-click reset — resets to default widths per D-03
+  // Handle sidebar resize end — persists new width per D-25
   const handleSidebarDoubleClickReset = () => {
     saveSidebarWidth(DEFAULT_SIDEBAR_WIDTH)
   }

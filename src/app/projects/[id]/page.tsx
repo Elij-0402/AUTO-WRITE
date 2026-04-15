@@ -237,11 +237,11 @@ export default function ProjectPage() {
       />
 
       {/* Top bar with AI settings, focus mode, theme toggle, and sync status */}
-      <div className="h-12 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center justify-end px-4 gap-2">
+      <div className="h-12 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 flex items-center justify-end px-4 gap-2">
         <SyncStatusIcon />
         <button
           onClick={() => setAiConfigOpen(true)}
-          className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+          className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-stone-500 hover:text-stone-900 dark:hover:text-stone-100"
           title="AI 设置"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -293,8 +293,8 @@ export default function ProjectPage() {
             onDoubleClick={handleSidebarDoubleClickReset}
             className="group relative flex items-center justify-center w-1 shrink-0 cursor-col-resize"
           >
-            <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400/20 group-active:bg-blue-500/30 transition-colors" />
-            <div className="w-1 h-full bg-zinc-200 group-hover:bg-blue-400 dark:bg-zinc-800 group-hover:dark:bg-blue-500 group-active:bg-blue-500 group-active:dark:bg-blue-400 transition-colors" />
+            <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400/10 group-active:bg-blue-500/15 transition-colors" />
+            <div className="w-px h-full bg-stone-200 group-hover:bg-blue-300 dark:bg-stone-800 group-hover:dark:bg-blue-500/50 group-active:bg-blue-400 group-active:dark:bg-blue-400/60 transition-colors" />
           </Separator>
 
           {/* Right side: editor + chat panel */}
@@ -311,8 +311,8 @@ export default function ProjectPage() {
               onDoubleClick={handleChatPanelDoubleClickReset}
               className="group relative flex items-center justify-center w-1 shrink-0 cursor-col-resize"
             >
-              <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400/20 group-active:bg-blue-500/30 transition-colors" />
-              <div className="w-1 h-full bg-zinc-200 group-hover:bg-blue-400 dark:bg-zinc-800 group-hover:dark:bg-blue-500 group-active:bg-blue-500 group-active:dark:bg-blue-400 transition-colors" />
+              <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400/10 group-active:bg-blue-500/15 transition-colors" />
+              <div className="w-px h-full bg-stone-200 group-hover:bg-blue-300 dark:bg-stone-800 group-hover:dark:bg-blue-500/50 group-active:bg-blue-400 group-active:dark:bg-blue-400/60 transition-colors" />
             </Separator>
 
             {/* AI Chat panel per D-09 */}
@@ -343,8 +343,8 @@ function FocusModeToggle({ focusMode, onToggle }: { focusMode: boolean; onToggle
       onClick={onToggle}
       className={`p-2 rounded-lg transition-colors ${
         focusMode
-          ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100'
-          : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+          ? 'bg-stone-200 dark:bg-stone-700 text-stone-900 dark:text-stone-100'
+          : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100'
       }`}
       title={focusMode ? '退出聚焦模式' : '进入聚焦模式'}
     >
@@ -382,7 +382,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+      className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
       title={resolvedTheme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
     >
       {resolvedTheme === 'dark' ? (
@@ -423,7 +423,7 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
         onChange={updateContent}
         className="flex-1"
       />
-      <div className="text-xs text-zinc-400 p-2 text-right dark:text-zinc-500">
+      <div className="text-xs text-stone-400 p-2 text-right dark:text-stone-500">
         {isSaving ? '保存中...' : '已保存'}
       </div>
     </div>
@@ -436,22 +436,22 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
  */
 function Placeholder({ activeTab }: { activeTab: ActiveTab }) {
   return (
-    <div className="flex-1 flex items-center justify-center text-zinc-400 dark:text-zinc-500">
+    <div className="flex-1 flex items-center justify-center text-stone-400 dark:text-stone-500">
       <div className="text-center">
         {activeTab === 'outline' ? (
           <>
             <p className="text-lg mb-1">选择一个章节查看大纲</p>
-            <p className="text-sm text-zinc-300 dark:text-zinc-600">从左侧大纲列表中选择章节</p>
+            <p className="text-sm text-stone-300 dark:text-stone-600">从左侧大纲列表中选择章节</p>
           </>
         ) : activeTab === 'world' ? (
           <>
             <p className="text-lg mb-1">选择一个世界观条目</p>
-            <p className="text-sm text-zinc-300 dark:text-zinc-600">从左侧世界观列表中选择条目或创建新条目</p>
+            <p className="text-sm text-stone-300 dark:text-stone-600">从左侧世界观列表中选择条目或创建新条目</p>
           </>
         ) : (
           <>
             <p className="text-lg mb-1">选择一个章节开始写作</p>
-            <p className="text-sm text-zinc-300 dark:text-zinc-600">从左侧章节列表中选择或创建章节</p>
+            <p className="text-sm text-stone-300 dark:text-stone-600">从左侧章节列表中选择或创建章节</p>
           </>
         )}
       </div>

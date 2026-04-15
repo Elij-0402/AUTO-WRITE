@@ -115,7 +115,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
 
   return (
     <div
-      className="group relative flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 dark:border-stone-800 dark:bg-stone-900 cursor-pointer"
+      className="group relative flex flex-col overflow-hidden rounded-2xl bg-[var(--surface-0)] border border-[var(--border-subtle)] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.2)] transition-all duration-500 hover:shadow-[0_8px_30px_-4px_rgba(79,70,229,0.15)] dark:hover:shadow-[0_8px_30px_-4px_rgba(99,102,241,0.2)] hover:-translate-y-1 cursor-pointer"
       onClick={handleCardClick}
     >
       {/* Cover image placeholder — gradient based on project ID */}
@@ -137,11 +137,11 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
               onKeyDown={handleTitleKeyDown}
               onCompositionEnd={handleTitleSave}
               onClick={(e) => e.stopPropagation()}
-              className="w-full rounded border border-stone-300 px-1 py-0.5 text-sm font-semibold text-stone-900 dark:text-stone-50 dark:border-stone-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full rounded-lg border border-[var(--primary)] px-2 py-1 text-sm font-semibold text-[var(--foreground)] bg-[var(--surface-1)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 transition-all"
             />
           ) : (
             <h3
-              className="text-sm font-semibold text-stone-900 dark:text-stone-50 truncate hover:text-stone-600 dark:hover:text-stone-300"
+              className="text-base font-bold text-[var(--foreground)] truncate hover:text-[var(--primary)] transition-colors duration-200"
               onClick={(e) => {
                 e.stopPropagation()
                 setIsEditingTitle(true)
@@ -155,13 +155,13 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
 
         {/* Genre badge */}
         {project.genre && (
-          <span className="mb-2 inline-flex w-fit rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-700 dark:bg-stone-800 dark:text-stone-300">
+          <span className="mb-3 inline-flex w-fit rounded-full bg-[var(--primary)]/10 px-3 py-1 text-xs font-semibold text-[var(--primary)] border border-[var(--primary)]/20">
             {GENRE_LABELS[project.genre] ?? project.genre}
           </span>
         )}
 
         {/* Metadata */}
-        <div className="mt-auto flex items-center justify-between text-xs text-stone-500 dark:text-stone-400">
+        <div className="mt-auto flex items-center justify-between text-xs text-[var(--foreground)]/50 font-medium">
           <span>字数：{project.wordCount.toLocaleString()}</span>
           <span>{formatRelativeTime(project.updatedAt)}</span>
         </div>
@@ -174,33 +174,33 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
             e.stopPropagation()
             setMenuOpen(!menuOpen)
           }}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/50 text-stone-700 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white/80 dark:bg-stone-800/50 dark:text-stone-300 dark:hover:bg-stone-800/80"
+          className="flex h-8 w-8 items-center justify-center rounded-full glass-panel text-[var(--foreground)] opacity-0 shadow-sm transition-all duration-300 group-hover:opacity-100 hover:scale-105 active:scale-95"
         >
           <MoreVertical className="h-4 w-4" />
         </button>
 
         {menuOpen && (
           <div
-            className="absolute right-0 top-full z-10 mt-1 w-36 rounded-lg border border-stone-200 bg-white py-1 shadow-lg dark:border-stone-700 dark:bg-stone-800"
+            className="absolute right-0 top-full z-10 mt-2 w-36 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-0)] py-1.5 shadow-xl glass-panel origin-top-right transition-all"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => { setMenuOpen(false); onEdit() }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-700"
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-1)] transition-colors"
             >
               <Pencil className="h-4 w-4" />
               编辑
             </button>
             <button
               onClick={() => { setMenuOpen(false) }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-700"
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-1)] transition-colors"
             >
               <Settings className="h-4 w-4" />
               设置
             </button>
             <button
               onClick={() => { setMenuOpen(false); onDelete() }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
             >
               <Trash2 className="h-4 w-4" />
               删除

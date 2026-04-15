@@ -78,11 +78,11 @@ function WorldEntryRow({ entry, isActive, onSelect, onEdit, onDelete }: WorldEnt
   return (
     <div
       className={`
-        group flex items-center gap-2 px-2 py-2 border-b border-stone-100 dark:border-stone-800
+        group flex items-center gap-2 px-2 py-2 border-b border-border-subtle
         cursor-pointer transition-colors
         ${isActive
-          ? 'bg-stone-100 dark:bg-stone-800'
-          : 'hover:bg-stone-50 dark:hover:bg-stone-850'}
+          ? 'bg-surface-hover'
+          : 'hover:bg-surface-hover dark:hover:bg-stone-850'}
       `}
       onClick={onSelect}
     >
@@ -91,11 +91,11 @@ function WorldEntryRow({ entry, isActive, onSelect, onEdit, onDelete }: WorldEnt
 
       {/* Name and tags */}
       <div className="flex-1 min-w-0">
-        <span className="block truncate text-sm text-stone-700 dark:text-stone-300">
+        <span className="block truncate text-sm text-foreground">
           {entry.name}
         </span>
         {tagPreview && (
-          <span className="block truncate text-xs text-stone-400">
+          <span className="block truncate text-xs text-text-tertiary">
             {tagPreview}
           </span>
         )}
@@ -104,7 +104,7 @@ function WorldEntryRow({ entry, isActive, onSelect, onEdit, onDelete }: WorldEnt
       {/* Three-dot menu per D-31 */}
       <div className="relative">
         <button
-          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-stone-200 dark:hover:bg-stone-700 transition-opacity"
+          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface-hover dark:hover:bg-stone-700 transition-opacity"
           onClick={(e) => {
             e.stopPropagation()
             setMenuOpen(!menuOpen)
@@ -122,7 +122,7 @@ function WorldEntryRow({ entry, isActive, onSelect, onEdit, onDelete }: WorldEnt
             />
             <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-lg py-1 min-w-24">
               <button
-                className="w-full px-3 py-1.5 text-left text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700"
+                className="w-full px-3 py-1.5 text-left text-sm text-foreground hover:bg-stone-100 dark:hover:bg-stone-700"
                 onClick={(e) => {
                   e.stopPropagation()
                   setMenuOpen(false)
@@ -132,7 +132,7 @@ function WorldEntryRow({ entry, isActive, onSelect, onEdit, onDelete }: WorldEnt
                 编辑
               </button>
               <button
-                className="w-full px-3 py-1.5 text-left text-sm text-red-600 hover:bg-stone-100 dark:hover:bg-stone-700"
+                className="w-full px-3 py-1.5 text-left text-sm text-danger hover:bg-danger-muted"
                 onClick={(e) => {
                   e.stopPropagation()
                   setMenuOpen(false)
@@ -260,7 +260,7 @@ export function WorldBibleTab({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-stone-400 text-sm">
+      <div className="flex items-center justify-center h-full text-text-tertiary text-sm">
         加载中...
       </div>
     )
@@ -271,20 +271,20 @@ export function WorldBibleTab({
     return (
       <div className="flex flex-col h-full">
         {/* Search bar per D-11 */}
-        <div className="px-3 py-2 border-b border-stone-100 dark:border-stone-800">
+        <div className="px-3 py-2 border-b border-border-subtle">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索世界观..."
-            className="w-full rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:border-stone-600 dark:text-stone-100 dark:placeholder:text-stone-500"
+            className="w-full rounded-lg border border-border-subtle px-3 py-1.5 text-sm text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-surface-0"
           />
         </div>
 
         {/* Filtered results */}
         <div className="flex-1 overflow-y-auto">
           {filteredEntries.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-stone-400 text-sm">
+            <div className="flex items-center justify-center h-full text-text-tertiary text-sm">
               没有找到匹配的结果
             </div>
           ) : (
@@ -318,13 +318,13 @@ export function WorldBibleTab({
   return (
     <div className="flex flex-col h-full">
       {/* Search bar per D-11 */}
-      <div className="px-3 py-2 border-b border-stone-100 dark:border-stone-800">
+      <div className="px-3 py-2 border-b border-border-subtle">
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="搜索世界观..."
-          className="w-full rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:border-stone-600 dark:text-stone-100 dark:placeholder:text-stone-500"
+          className="w-full rounded-lg border border-border-subtle px-3 py-1.5 text-sm text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-surface-0"
         />
       </div>
 
@@ -339,7 +339,7 @@ export function WorldBibleTab({
           return (
             <div key={type}>
               {/* Section header per D-09 */}
-              <div className="flex items-center gap-1 px-3 py-2 bg-stone-50 dark:bg-stone-900 border-b border-stone-100 dark:border-stone-800">
+              <div className="flex items-center gap-1 px-3 py-2 bg-surface-1 border-b border-border-subtle">
                 <button
                   onClick={() => toggleSection(type)}
                   className="flex items-center gap-1 flex-1 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
@@ -349,11 +349,11 @@ export function WorldBibleTab({
                   ) : (
                     <ChevronDown className="h-4 w-4 text-stone-400" />
                   )}
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4 text-text-tertiary" />
                   <span className="text-sm font-medium text-stone-700 dark:text-stone-300">
                     {typeName}
                   </span>
-                  <span className="text-xs text-stone-400 ml-1">
+                  <span className="text-xs text-text-tertiary ml-1">
                     ({sectionEntries.length})
                   </span>
                 </button>
@@ -361,7 +361,7 @@ export function WorldBibleTab({
                 {/* + button per D-15 - calls internal creation */}
                 <button
                   onClick={() => handleCreateEntryInternal(type)}
-                  className="p-1 rounded hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+                  className="p-1 rounded hover:bg-surface-hover dark:hover:bg-stone-700 transition-colors"
                   aria-label={`添加${typeName}`}
                 >
                   <Plus className="h-4 w-4 text-stone-400" />
@@ -371,7 +371,7 @@ export function WorldBibleTab({
               {/* Section content */}
               {!isCollapsed && (
                 sectionEntries.length === 0 ? (
-                  <div className="flex items-center justify-center py-4 text-stone-400 text-sm">
+                  <div className="flex items-center justify-center py-4 text-text-tertiary text-sm">
                     <button
                       onClick={() => handleCreateEntryInternal(type)}
                       className="hover:text-blue-500 transition-colors"

@@ -74,27 +74,27 @@ export function RelationshipSuggestionCard({
   return (
     <div
       className={`
-        border border-l-4 border-l-blue-500 rounded-lg p-3 
-        bg-stone-50 dark:bg-stone-800
+        border border-l-4 border-l-blue-500 rounded-lg p-3
+        bg-surface-1
         ${dismissed ? 'opacity-50 grayscale' : ''}
       `}
     >
       {/* Header with entry names */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="font-semibold text-stone-900 dark:text-stone-100">{entry1Name}</span>
-        <span className="text-stone-400">—</span>
-        <span className="font-semibold text-stone-900 dark:text-stone-100">{entry2Name}</span>
+        <span className="font-semibold text-foreground">{entry1Name}</span>
+        <span className="text-text-tertiary">—</span>
+        <span className="font-semibold text-foreground">{entry2Name}</span>
       </div>
 
       {/* Relationship type badge */}
       <div className="mb-2">
-        <span className="inline-block px-2 py-0.5 text-xs font-medium bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-300 rounded">
+        <span className="inline-block px-2 py-0.5 text-xs font-medium bg-surface-2 text-text-secondary rounded">
           {relationshipType}
         </span>
       </div>
 
       {/* Bidirectional description per D-13, D-23 */}
-      <p className="text-sm text-stone-600 dark:text-stone-400 mb-3">
+      <p className="text-sm text-text-secondary mb-3">
         {bidirectionalDescription}
       </p>
 
@@ -155,8 +155,8 @@ export function NewEntrySuggestionCard({
   return (
     <div
       className={`
-        border border-l-4 rounded-lg p-3 
-        bg-stone-50 dark:bg-stone-800
+        border border-l-4 rounded-lg p-3
+        bg-surface-1
         ${colors.border}
         ${dismissed ? 'opacity-50 grayscale' : ''}
       `}
@@ -166,11 +166,11 @@ export function NewEntrySuggestionCard({
         <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded ${colors.bg} ${colors.text}`}>
           {TYPE_LABELS[entryType]}
         </span>
-        <span className="font-semibold text-stone-900 dark:text-stone-100">{suggestedName}</span>
+        <span className="font-semibold text-foreground">{suggestedName}</span>
       </div>
 
       {/* Description preview */}
-      <p className="text-sm text-stone-600 dark:text-stone-400 mb-3">
+      <p className="text-sm text-text-secondary mb-3">
         {description}
       </p>
 

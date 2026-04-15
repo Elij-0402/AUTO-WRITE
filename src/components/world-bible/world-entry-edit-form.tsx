@@ -212,7 +212,7 @@ export function WorldEntryEditForm({
 
   if (!entry) {
     return (
-      <div className="flex-1 flex items-center justify-center text-stone-400 dark:text-stone-500">
+      <div className="flex-1 flex items-center justify-center text-text-tertiary">
         <p>条目未找到</p>
       </div>
     )
@@ -229,68 +229,68 @@ export function WorldEntryEditForm({
           <>
             {/* 姓名 per D-02 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 姓名
               </label>
               <input
                 type="text"
                 value={localName}
                 onChange={(e) => setLocalName(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="角色姓名"
               />
             </div>
 
             {/* 别名 per D-02 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 别名
               </label>
               <input
                 type="text"
                 value={localAlias}
                 onChange={(e) => setLocalAlias(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="角色的别名或称号"
               />
             </div>
 
             {/* 外貌 per D-02, D-16 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 外貌
               </label>
               <AutoGrowTextarea
                 value={localAppearance}
                 onChange={setLocalAppearance}
                 placeholder="描述角色的外貌特征..."
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 resize-none"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
               />
             </div>
 
             {/* 性格 per D-02, D-16 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 性格
               </label>
               <AutoGrowTextarea
                 value={localPersonality}
                 onChange={setLocalPersonality}
                 placeholder="描述角色的性格特点..."
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 resize-none"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
               />
             </div>
 
             {/* 背景 per D-02, D-16, D-25 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 背景
               </label>
               <AutoGrowTextarea
                 value={localBackground}
                 onChange={setLocalBackground}
                 placeholder="描述角色的背景故事和经历..."
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 resize-none"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
               />
             </div>
           </>
@@ -301,41 +301,41 @@ export function WorldEntryEditForm({
           <>
             {/* 名称 per D-03 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 名称
               </label>
               <input
                 type="text"
                 value={localName}
                 onChange={(e) => setLocalName(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="地点名称"
               />
             </div>
 
             {/* 描述 per D-03, D-16 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 描述
               </label>
               <AutoGrowTextarea
                 value={localDescription}
                 onChange={setLocalDescription}
                 placeholder="描述地点的样貌和环境..."
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 resize-none"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
               />
             </div>
 
             {/* 特征 per D-03, D-16 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 特征
               </label>
               <AutoGrowTextarea
                 value={localFeatures}
                 onChange={setLocalFeatures}
                 placeholder="描述地点的特殊或标志性特征..."
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 resize-none"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
               />
             </div>
           </>
@@ -346,41 +346,41 @@ export function WorldEntryEditForm({
           <>
             {/* 名称 per D-04 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 名称
               </label>
               <input
                 type="text"
                 value={localName}
                 onChange={(e) => setLocalName(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="规则或设定名称"
               />
             </div>
 
             {/* 内容 per D-04, D-16 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 内容
               </label>
               <AutoGrowTextarea
                 value={localContent}
                 onChange={setLocalContent}
                 placeholder="描述规则或设定的具体内容..."
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 resize-none"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
               />
             </div>
 
             {/* 适用范围 per D-04 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 适用范围
               </label>
               <input
                 type="text"
                 value={localScope}
                 onChange={(e) => setLocalScope(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="这个规则适用于哪些场景或角色"
               />
             </div>
@@ -392,42 +392,42 @@ export function WorldEntryEditForm({
           <>
             {/* 名称 per D-05 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 名称
               </label>
               <input
                 type="text"
                 value={localName}
                 onChange={(e) => setLocalName(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="时间线事件名称"
               />
             </div>
 
             {/* 时间点 per D-05 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 时间点
               </label>
               <input
                 type="text"
                 value={localTimePoint}
                 onChange={(e) => setLocalTimePoint(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="例如：第三年春、百年前"
               />
             </div>
 
             {/* 事件描述 per D-05, D-16 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 事件描述
               </label>
               <AutoGrowTextarea
                 value={localEventDescription}
                 onChange={setLocalEventDescription}
                 placeholder="描述在这个时间点发生的事件..."
-                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 resize-none"
+                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
               />
             </div>
           </>
@@ -438,14 +438,14 @@ export function WorldEntryEditForm({
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header with type indicator and save status */}
-      <div className="px-6 py-3 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
+      <div className="px-6 py-3 border-b border-border-subtle flex items-center justify-between">
         {/* Type indicator per D-16 */}
         <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${typeBadgeColor}`}>
           <Icon className="h-3.5 w-3.5" />
           <span>{getTypeName(entry.type)}</span>
         </div>
         {/* Save status per D-18 */}
-        <span className="text-xs text-stone-400">{isSaving ? '保存中...' : '已保存'}</span>
+        <span className="text-xs text-text-tertiary">{isSaving ? '保存中...' : '已保存'}</span>
       </div>
 
       {/* Scrollable form content */}
@@ -455,7 +455,7 @@ export function WorldEntryEditForm({
 
         {/* 标签 per D-06 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+          <label className="block text-sm font-medium text-text-secondary mb-1">
             标签
           </label>
           <TagInput
@@ -476,18 +476,18 @@ export function WorldEntryEditForm({
         </div>
 
         {/* Timestamps per D-22 */}
-        <div className="text-xs text-stone-400 dark:text-stone-500 space-y-1">
+        <div className="text-xs text-text-tertiary space-y-1">
           <p>创建于 {formatDateCN(entry.createdAt)}</p>
           <p>更新于 {formatDateCN(entry.updatedAt)}</p>
         </div>
       </div>
 
       {/* Previous/Next navigation per D-19 */}
-      <div className="flex gap-2 px-6 py-3 border-t border-stone-200 dark:border-stone-800">
+      <div className="flex gap-2 px-6 py-3 border-t border-border-subtle">
         <button
           onClick={onPrevious}
           disabled={!hasPrevious}
-          className="px-4 py-2 text-sm rounded-lg border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 text-sm rounded-lg border border-border-subtle text-text-secondary hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           ← 上一条
         </button>

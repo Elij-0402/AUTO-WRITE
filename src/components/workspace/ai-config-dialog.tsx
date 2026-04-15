@@ -145,10 +145,10 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
           {showModels && modelList.length > 0 && (
             <div className="grid grid-cols-4 items-start gap-4">
               <label className="text-right text-sm">模型列表</label>
-              <div className="col-span-3 border border-stone-300 dark:border-stone-700 rounded-lg p-2 max-h-48 overflow-y-auto">
+              <div className="col-span-3 border border-border-subtle rounded-lg p-2 max-h-48 overflow-y-auto">
                 {modelList.map((model) => (
                   <div key={model} className="py-1">
-                    <label className="flex items-center gap-2 cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-800 px-2 py-1 rounded">
+                    <label className="flex items-center gap-2 cursor-pointer hover:bg-surface-hover px-2 py-1 rounded">
                       <input
                         type="radio"
                         name="model"
@@ -187,14 +187,14 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
             type="button"
             onClick={handleDetectModels}
             disabled={testing || !formData.apiKey || !formData.baseUrl}
-            className="px-4 py-2 text-sm border border-stone-300 dark:border-stone-700 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-50"
+            className="px-4 py-2 text-sm border border-border-subtle rounded-lg hover:bg-surface-hover disabled:opacity-50 transition-colors"
           >
             {testing ? '探测中...' : '自动探测模型'}
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary-hover transition-colors"
           >
             保存
           </button>

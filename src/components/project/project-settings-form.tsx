@@ -71,7 +71,7 @@ export function ProjectSettingsForm({
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       {/* 标题 */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
+        <label className="text-sm font-medium text-text-secondary">
           标题 <span className="text-red-500">*</span>
         </label>
         <Input
@@ -86,7 +86,7 @@ export function ProjectSettingsForm({
 
       {/* 类型 */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
+        <label className="text-sm font-medium text-text-secondary">
           类型
         </label>
         <Select
@@ -108,7 +108,7 @@ export function ProjectSettingsForm({
 
       {/* 简介 */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
+        <label className="text-sm font-medium text-text-secondary">
           简介
         </label>
         <Textarea
@@ -124,10 +124,10 @@ export function ProjectSettingsForm({
 
       {/* 封面 (placeholder for now) */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
+        <label className="text-sm font-medium text-text-secondary">
           封面图片
         </label>
-        <div className="flex h-32 items-center justify-center rounded-lg border-2 border-dashed border-stone-300 text-sm text-stone-400 dark:border-stone-700">
+        <div className="flex h-32 items-center justify-center rounded-lg border-2 border-dashed border-border-subtle text-sm text-text-tertiary">
           封面功能即将推出
         </div>
       </div>

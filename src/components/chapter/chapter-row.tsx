@@ -92,7 +92,7 @@ export function ChapterRow({
 
   const statusLabel = chapter.status === 'draft' ? '草稿' : '已完成'
   const statusColor = chapter.status === 'draft'
-    ? 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
+    ? 'bg-surface-2 text-text-secondary'
     : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
 
   return (
@@ -100,11 +100,11 @@ export function ChapterRow({
       ref={setNodeRef}
       style={style}
       className={`
-        group flex items-center gap-1 px-2 py-2 border-b border-stone-100 dark:border-stone-800
+        group flex items-center gap-1 px-2 py-2 border-b border-border-subtle
         cursor-pointer transition-colors
         ${isActive
-          ? 'bg-blue-50 border-l-[3px] border-l-blue-500 dark:bg-blue-500/10 dark:border-l-blue-400'
-          : 'hover:bg-stone-50 dark:hover:bg-stone-800/50'}
+          ? 'bg-primary-muted border-l-[3px] border-l-primary'
+          : 'hover:bg-surface-hover'}
         ${isDragging ? 'opacity-50 shadow-lg z-50' : ''}
       `}
       onClick={() => {
@@ -113,7 +113,7 @@ export function ChapterRow({
     >
       {/* Drag handle */}
       <button
-        className="flex-shrink-0 cursor-grab text-stone-300 hover:text-stone-500 dark:text-stone-600 dark:hover:text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="flex-shrink-0 cursor-grab text-text-muted hover:text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity"
         {...attributes}
         {...listeners}
         aria-label="拖动排序"
@@ -122,7 +122,7 @@ export function ChapterRow({
       </button>
 
       {/* Chapter number */}
-      <span className="flex-shrink-0 text-xs text-stone-400 min-w-[3rem]">
+      <span className="flex-shrink-0 text-xs text-text-tertiary min-w-[3rem]">
         {getChapterNumber(chapter.order)}
       </span>
 
@@ -140,10 +140,10 @@ export function ChapterRow({
               isComposingRef.current = false
             }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full rounded border border-stone-300 px-1 py-0 text-sm text-stone-900 dark:text-stone-100 dark:border-stone-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            className="w-full rounded border border-border-strong px-1 py-0 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
           />
         ) : (
-          <span className="block truncate text-sm text-stone-700 dark:text-stone-300">
+          <span className="block truncate text-sm text-foreground">
             {chapter.title}
           </span>
         )}
@@ -151,7 +151,7 @@ export function ChapterRow({
 
       {/* Word count */}
       {chapter.wordCount > 0 && (
-        <span className={`flex-shrink-0 text-xs ${isActive ? 'text-blue-500 dark:text-blue-400' : 'text-stone-400'}`}>
+        <span className={`flex-shrink-0 text-xs ${isActive ? 'text-primary' : 'text-text-tertiary'}`}>
           {chapter.wordCount.toLocaleString()}字
         </span>
       )}
@@ -168,7 +168,7 @@ export function ChapterRow({
             e.stopPropagation()
             setMenuOpen(!menuOpen)
           }}
-          className="flex h-6 w-6 items-center justify-center rounded text-stone-400 hover:text-stone-600 hover:bg-stone-200 dark:hover:bg-stone-700 dark:hover:text-stone-300 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="flex h-6 w-6 items-center justify-center rounded text-text-tertiary hover:text-foreground hover:bg-surface-hover opacity-0 group-hover:opacity-100 transition-opacity"
           aria-label="章节操作"
         >
           <MoreHorizontal className="h-4 w-4" />

@@ -34,10 +34,10 @@ export function SyncProgress() {
   if (status === 'done') {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 max-w-sm w-full text-center">
+        <div className="glass-panel-elevated rounded-xl p-6 max-w-sm w-full text-center">
           <div className="text-green-500 text-4xl mb-2">✓</div>
           <h3 className="text-lg font-semibold mb-2">同步完成</h3>
-          <p className="text-stone-600 text-sm">正在跳转...</p>
+          <p className="text-text-secondary text-sm">正在跳转...</p>
         </div>
       </div>
     )
@@ -46,13 +46,13 @@ export function SyncProgress() {
   if (status === 'error') {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 max-w-sm w-full text-center">
+        <div className="glass-panel-elevated rounded-xl p-6 max-w-sm w-full text-center">
           <div className="text-yellow-500 text-4xl mb-2">⚠</div>
           <h3 className="text-lg font-semibold mb-2">同步遇到问题</h3>
-          <p className="text-stone-600 text-sm mb-4">部分数据未能同步，将在下次连接时重试</p>
+          <p className="text-text-secondary text-sm mb-4">部分数据未能同步，将在下次连接时重试</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover transition-colors"
           >
             继续
           </button>
@@ -63,16 +63,16 @@ export function SyncProgress() {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-sm w-full text-center">
+      <div className="glass-panel-elevated rounded-xl p-6 max-w-sm w-full text-center">
         <h3 className="text-lg font-semibold mb-4">首次同步</h3>
-        <div className="w-full bg-stone-200 rounded-full h-2 mb-2">
+        <div className="w-full bg-surface-2 rounded-full h-2 mb-2">
           <div
-            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+            className="bg-primary h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <p className="text-stone-600 text-sm">{progress}%</p>
-        <p className="text-stone-500 text-xs mt-2">正在同步您的项目数据...</p>
+        <p className="text-text-secondary text-sm">{progress}%</p>
+        <p className="text-text-tertiary text-xs mt-2">正在同步您的项目数据...</p>
       </div>
     </div>
   )

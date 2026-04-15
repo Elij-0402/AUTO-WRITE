@@ -130,7 +130,7 @@ export function ChapterSidebar({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-stone-400 text-sm">
+      <div className="flex items-center justify-center h-full text-text-tertiary text-sm">
         加载中...
       </div>
     )
@@ -140,20 +140,20 @@ export function ChapterSidebar({
   const tabClasses = (tab: ActiveTab) =>
     `flex-1 py-2 text-center text-sm font-medium transition-colors border-b-2 ${
       activeTab === tab
-        ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-        : 'border-transparent text-stone-400 hover:text-stone-600 dark:hover:text-stone-300'
+        ? 'border-primary text-primary'
+        : 'border-transparent text-text-tertiary hover:text-foreground'
     }`
 
   return (
     <div className="flex flex-col h-full">
       {/* Tab bar per D-13: "章节", "大纲", and "世界观" tabs per D-08 */}
-      <div className="flex border-b border-stone-200 dark:border-stone-800 px-3">
+      <div className="flex border-b border-border-subtle px-3">
         <button
           className={tabClasses('chapters')}
           onClick={() => onTabChange('chapters')}
         >
           章节
-          <span className="ml-1 text-xs font-normal text-stone-400">
+          <span className="ml-1 text-xs font-normal text-text-tertiary">
             {chapters.length}
           </span>
         </button>
@@ -178,7 +178,7 @@ export function ChapterSidebar({
           {/* Chapter list with DnD per D-12 */}
           <div className="flex-1 overflow-y-auto">
             {chapters.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-stone-400 text-sm gap-2">
+              <div className="flex flex-col items-center justify-center h-full text-text-tertiary text-sm gap-2">
                 <p>还没有章节</p>
                 <p className="text-xs">点击下方按钮创建第一个章节</p>
               </div>

@@ -26,13 +26,13 @@ export function ChapterContextMenu({
 }: ChapterContextMenuProps) {
   return (
     <div
-      className="absolute right-0 top-full z-20 mt-1 w-44 rounded-lg border border-stone-200 bg-white py-1 shadow-lg dark:border-stone-700 dark:bg-stone-800"
+      className="absolute right-0 top-full z-20 mt-1 w-44 rounded-xl border border-border-subtle bg-surface-0 py-1 shadow-lg glass-panel"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Rename */}
       <button
         onClick={onRename}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-700"
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
       >
         <Pencil className="h-4 w-4" />
         重命名
@@ -41,7 +41,7 @@ export function ChapterContextMenu({
       {/* Duplicate */}
       <button
         onClick={onDuplicate}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-700"
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
       >
         <Copy className="h-4 w-4" />
         复制
@@ -50,7 +50,7 @@ export function ChapterContextMenu({
       {/* Status toggle */}
       <button
         onClick={onStatusToggle}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-700"
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-surface-hover"
       >
         {chapter.status === 'draft' ? (
           <>
@@ -66,12 +66,12 @@ export function ChapterContextMenu({
       </button>
 
       {/* Separator */}
-      <div className="my-1 border-t border-stone-200 dark:border-stone-700" />
+      <div className="my-1 border-t border-border-subtle" />
 
       {/* Delete */}
       <button
         onClick={onDelete}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-danger hover:bg-danger-muted"
       >
         <Trash2 className="h-4 w-4" />
         删除

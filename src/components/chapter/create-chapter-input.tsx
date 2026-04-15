@@ -50,7 +50,7 @@ export function CreateChapterInput({ onCreate }: CreateChapterInputProps) {
     return (
       <button
         onClick={handleExpand}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:text-stone-400 dark:hover:text-stone-200 dark:hover:bg-stone-800 transition-colors"
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-text-tertiary hover:text-foreground hover:bg-surface-hover transition-colors"
       >
         <Plus className="h-4 w-4" />
         新章节
@@ -59,7 +59,7 @@ export function CreateChapterInput({ onCreate }: CreateChapterInputProps) {
   }
 
   return (
-    <div className="px-3 py-2 border-t border-stone-100 dark:border-stone-800">
+    <div className="px-3 py-2 border-t border-border-subtle">
       <input
         ref={inputRef}
         value={title}
@@ -74,7 +74,7 @@ export function CreateChapterInput({ onCreate }: CreateChapterInputProps) {
           }
         }}
         placeholder="输入章节标题"
-        className="w-full rounded-lg border border-dashed border-blue-300 bg-blue-50/50 px-3 py-1.5 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-500 dark:border-blue-500/30 dark:bg-blue-500/5 dark:text-stone-100 dark:placeholder:text-stone-500"
+        className="w-full rounded-lg border border-dashed border-primary/30 bg-primary-muted px-3 py-1.5 text-sm text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
         autoFocus
       />
     </div>

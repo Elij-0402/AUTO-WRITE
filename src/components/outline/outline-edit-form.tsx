@@ -162,7 +162,7 @@ export function OutlineEditForm({
 
   if (!chapter) {
     return (
-      <div className="flex-1 flex items-center justify-center text-stone-400">
+      <div className="flex-1 flex items-center justify-center text-text-tertiary">
         <p>章节未找到</p>
       </div>
     )
@@ -178,42 +178,42 @@ export function OutlineEditForm({
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header with save status */}
-      <div className="px-6 py-3 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
-        <span className="text-xs text-stone-400">{isSaving ? '保存中...' : '已保存'}</span>
+      <div className="px-6 py-3 border-b border-border-subtle flex items-center justify-between">
+        <span className="text-xs text-text-tertiary">{isSaving ? '保存中...' : '已保存'}</span>
       </div>
 
       {/* Scrollable form content */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
         {/* Title per D-22 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+          <label className="block text-sm font-medium text-text-secondary mb-1">
             标题
           </label>
           <input
             type="text"
             value={localTitle}
             onChange={(e) => setLocalTitle(e.target.value)}
-            className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
+            className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             placeholder="章节标题"
           />
         </div>
 
         {/* Summary — auto-growing textarea per D-21 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+          <label className="block text-sm font-medium text-text-secondary mb-1">
             大纲摘要
           </label>
           <AutoGrowTextarea
             value={localSummary}
             onChange={setLocalSummary}
             placeholder="输入章节大纲摘要..."
-            className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 resize-none"
+            className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
           />
         </div>
 
         {/* Target word count per D-22, D-23 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+          <label className="block text-sm font-medium text-text-secondary mb-1">
             目标字数
           </label>
           <div className="flex items-center gap-2">
@@ -225,11 +225,11 @@ export function OutlineEditForm({
               className="w-32 rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
               placeholder="不设定"
             />
-            <span className="text-sm text-stone-400">字</span>
+            <span className="text-sm text-text-tertiary">字</span>
             {localTargetWordCount && (
               <button
                 onClick={() => setLocalTargetWordCount('')}
-                className="text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
+                className="text-xs text-text-tertiary hover:text-foreground"
                 title="清除目标字数"
               >
                 ✕
@@ -240,13 +240,13 @@ export function OutlineEditForm({
 
         {/* Status dropdown per D-07, D-22 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+          <label className="block text-sm font-medium text-text-secondary mb-1">
             状态
           </label>
           <select
             value={localOutlineStatus}
             onChange={(e) => setLocalOutlineStatus(e.target.value as OutlineStatus)}
-            className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
+            className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           >
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -257,19 +257,19 @@ export function OutlineEditForm({
         </div>
 
         {/* Word count comparison per D-23 */}
-        <div className="mb-4 px-3 py-2 rounded-lg bg-stone-50 dark:bg-stone-800/50 text-sm">
-          <span className="text-stone-600 dark:text-stone-400">{wordCountDisplay}</span>
+        <div className="mb-4 px-3 py-2 rounded-lg bg-surface-1 text-sm">
+          <span className="text-text-secondary">{wordCountDisplay}</span>
         </div>
 
         {/* Timestamps per D-22 */}
-        <div className="text-xs text-stone-400 dark:text-stone-500 space-y-1">
+        <div className="text-xs text-text-tertiary space-y-1">
           <p>创建于 {formatDateCN(chapter.createdAt)}</p>
           <p>更新于 {formatDateCN(chapter.updatedAt)}</p>
         </div>
 
         {/* Generation panel per D-01, D-02 */}
         {showGenerationPanel && (
-          <div className="mt-4 pt-4 border-t border-stone-200 dark:border-stone-700">
+          <div className="mt-4 pt-4 border-t border-border-subtle">
             <GenerationPanel
               projectId={projectId}
               chapterId={chapterId}
@@ -280,12 +280,12 @@ export function OutlineEditForm({
       </div>
 
       {/* Footer with generation button and navigation per D-01, D-20 */}
-      <div className="flex gap-2 px-6 py-3 border-t border-stone-200 dark:border-stone-800">
+      <div className="flex gap-2 px-6 py-3 border-t border-border-subtle">
         {/* 生成章节 button per D-01 */}
         <button
           onClick={() => setShowGenerationPanel(true)}
           disabled={!localSummary}
-          className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+          className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
           title={!localSummary ? '请先填写大纲摘要' : '基于大纲生成章节内容'}
         >
           生成章节
@@ -294,7 +294,7 @@ export function OutlineEditForm({
         <button
           onClick={onPrevious}
           disabled={!hasPrevious}
-          className="px-4 py-2 text-sm rounded-lg border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 text-sm rounded-lg border border-border-subtle text-text-secondary hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           ← 上一章
         </button>

@@ -13,16 +13,16 @@ interface EmptyDashboardProps {
  */
 export function EmptyDashboard({ onCreateProject }: EmptyDashboardProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 px-4">
-      <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800">
-        <BookOpen className="h-16 w-16 text-stone-400 dark:text-stone-500" />
+    <div className="flex flex-col items-center justify-center py-24 px-4 animate-fade-up">
+      <div className="mb-8 flex h-32 w-32 items-center justify-center rounded-full bg-surface-2">
+        <BookOpen className="h-16 w-16 text-text-tertiary" />
       </div>
 
-      <h2 className="mb-2 text-2xl font-semibold text-stone-900 dark:text-stone-50">
+      <h2 className="mb-2 text-2xl font-semibold text-foreground">
         创建你的第一本小说
       </h2>
 
-      <p className="mb-8 text-stone-500 dark:text-stone-400">
+      <p className="mb-8 text-text-secondary">
         开始你的写作之旅
       </p>
 

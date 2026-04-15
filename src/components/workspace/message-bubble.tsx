@@ -19,11 +19,11 @@ export function MessageBubble({ message, onInsertDraft }: MessageBubbleProps) {
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-2`}>
       <div className={`max-w-[80%] p-3 ${
         isUser
-          ? 'bg-blue-500 text-white rounded-[12px_12px_4px_12px]'
-          : 'bg-white dark:bg-stone-800 shadow-sm rounded-[12px_12px_12px_4px]'
+          ? 'bg-primary text-primary-foreground rounded-[12px_12px_4px_12px]'
+          : 'bg-surface-1 shadow-sm rounded-[12px_12px_12px_4px]'
       }`}>
         <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-        <div className={`text-xs mt-1 ${isUser ? 'text-blue-100' : 'text-stone-400'}`}>
+        <div className={`text-xs mt-1 ${isUser ? 'text-primary-foreground/60' : 'text-text-tertiary'}`}>
           {time}
         </div>
         

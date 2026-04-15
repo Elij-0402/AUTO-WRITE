@@ -1,0 +1,110 @@
+<h2>InkForge 设计方向</h2>
+<p class="subtitle">选择你喜欢的整体视觉风格 — 这将决定配色、排版、组件样式</p>
+
+<div class="cards">
+  <!-- Option A: 墨韵文学风 -->
+  <div class="card" data-choice="ink-literary" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 24px; min-height: 260px; font-family: serif;">
+        <div style="color: #e2d1c3; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px;">INKFORGE</div>
+        <div style="display: flex; gap: 16px; height: 180px;">
+          <!-- Sidebar -->
+          <div style="width: 180px; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 12px; border: 1px solid rgba(255,255,255,0.06);">
+            <div style="color: #c9a96e; font-size: 10px; margin-bottom: 12px; letter-spacing: 1px;">章节</div>
+            <div style="color: rgba(255,255,255,0.3); font-size: 10px; padding: 6px 8px; border-radius: 4px; margin-bottom: 4px;">第一章 缘起</div>
+            <div style="color: rgba(255,255,255,0.7); font-size: 10px; padding: 6px 8px; border-radius: 4px; background: rgba(201,169,110,0.12); border-left: 2px solid #c9a96e;">第二章 风云</div>
+            <div style="color: rgba(255,255,255,0.3); font-size: 10px; padding: 6px 8px; border-radius: 4px; margin-top: 4px;">第三章 离别</div>
+          </div>
+          <!-- Editor -->
+          <div style="flex: 1; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 16px; border: 1px solid rgba(255,255,255,0.04);">
+            <div style="color: rgba(255,255,255,0.8); font-size: 11px; line-height: 1.8; font-family: 'Noto Serif SC', serif;">
+              <span style="color: #c9a96e; font-size: 13px;">第二章 风云</span><br><br>
+              <span style="color: rgba(255,255,255,0.5);">夜色如墨，月光透过窗棂洒在案前的宣纸上。他提笔凝神，墨痕随意挥洒间...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. 墨韵文学 — 深色沉浸</h3>
+      <p>深邃的深蓝底色 + 金色点缀，衬线字体标题，文学感和高级感并存。灵感来自传统书房的沉静与优雅。适合长时间沉浸式写作。</p>
+    </div>
+  </div>
+
+  <!-- Option B: 现代简约风 -->
+  <div class="card" data-choice="modern-minimal" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: #fafaf9; padding: 24px; min-height: 260px;">
+        <div style="color: #1c1917; font-size: 11px; font-weight: 600; letter-spacing: 1px; margin-bottom: 20px;">InkForge</div>
+        <div style="display: flex; gap: 16px; height: 180px;">
+          <!-- Sidebar -->
+          <div style="width: 180px; background: #ffffff; border-radius: 12px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+            <div style="color: #a8a29e; font-size: 10px; margin-bottom: 12px; font-weight: 500;">章节</div>
+            <div style="color: #78716c; font-size: 10px; padding: 6px 8px; border-radius: 6px; margin-bottom: 4px;">第一章 缘起</div>
+            <div style="color: #1c1917; font-size: 10px; padding: 6px 8px; border-radius: 6px; background: #f5f5f4; font-weight: 500;">第二章 风云</div>
+            <div style="color: #78716c; font-size: 10px; padding: 6px 8px; border-radius: 6px; margin-top: 4px;">第三章 离别</div>
+          </div>
+          <!-- Editor -->
+          <div style="flex: 1; background: #ffffff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+            <div style="color: #1c1917; font-size: 11px; line-height: 1.8;">
+              <span style="font-size: 13px; font-weight: 600;">第二章 风云</span><br><br>
+              <span style="color: #57534e;">夜色如墨，月光透过窗棂洒在案前的宣纸上。他提笔凝神，墨痕随意挥洒间...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. 现代简约 — 浅色清新</h3>
+      <p>纯白/暖灰底色，大量留白，圆角卡片，柔和阴影。类似 Notion / Linear 的现代 SaaS 风格。干净、克制、专注内容。</p>
+    </div>
+  </div>
+
+  <!-- Option C: 双模式高对比 -->
+  <div class="card" data-choice="dual-contrast" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: linear-gradient(to right, #0c0c0c 50%, #fffbf5 50%); padding: 24px; min-height: 260px;">
+        <!-- Dark side -->
+        <div style="display: flex; height: 210px;">
+          <div style="width: 50%; padding-right: 12px;">
+            <div style="color: #a78bfa; font-size: 10px; letter-spacing: 2px; margin-bottom: 12px;">DARK MODE</div>
+            <div style="background: #18181b; border-radius: 10px; padding: 12px; height: 170px; border: 1px solid #27272a;">
+              <div style="display: flex; gap: 8px; height: 100%;">
+                <div style="width: 60px; border-right: 1px solid #27272a; padding-right: 8px;">
+                  <div style="width: 100%; height: 8px; background: #a78bfa; border-radius: 4px; margin-bottom: 8px; opacity: 0.3;"></div>
+                  <div style="width: 100%; height: 8px; background: #a78bfa; border-radius: 4px; margin-bottom: 8px;"></div>
+                  <div style="width: 100%; height: 8px; background: #a78bfa; border-radius: 4px; opacity: 0.3;"></div>
+                </div>
+                <div style="flex: 1; padding: 4px;">
+                  <div style="color: #fafafa; font-size: 10px; margin-bottom: 8px; font-weight: 500;">第二章</div>
+                  <div style="color: #71717a; font-size: 9px; line-height: 1.6;">夜色如墨，月光透过窗棂...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Light side -->
+          <div style="width: 50%; padding-left: 12px;">
+            <div style="color: #7c3aed; font-size: 10px; letter-spacing: 2px; margin-bottom: 12px;">LIGHT MODE</div>
+            <div style="background: #ffffff; border-radius: 10px; padding: 12px; height: 170px; border: 1px solid #e5e7eb;">
+              <div style="display: flex; gap: 8px; height: 100%;">
+                <div style="width: 60px; border-right: 1px solid #e5e7eb; padding-right: 8px;">
+                  <div style="width: 100%; height: 8px; background: #7c3aed; border-radius: 4px; margin-bottom: 8px; opacity: 0.2;"></div>
+                  <div style="width: 100%; height: 8px; background: #7c3aed; border-radius: 4px; margin-bottom: 8px;"></div>
+                  <div style="width: 100%; height: 8px; background: #7c3aed; border-radius: 4px; opacity: 0.2;"></div>
+                </div>
+                <div style="flex: 1; padding: 4px;">
+                  <div style="color: #1c1917; font-size: 10px; margin-bottom: 8px; font-weight: 500;">第二章</div>
+                  <div style="color: #78716c; font-size: 9px; line-height: 1.6;">夜色如墨，月光透过窗棂...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. 双模式 — 高对比紫色调</h3>
+      <p>深色/浅色双模式都精心设计。紫色作为品牌强调色，暗色模式深黑 + 亮紫，亮色模式暖白 + 深紫。现代、有品牌辨识度。</p>
+    </div>
+  </div>
+</div>

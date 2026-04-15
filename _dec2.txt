@@ -1,0 +1,1 @@
+Installed @dnd-kit/modifiers separately for restrictToVerticalAxis

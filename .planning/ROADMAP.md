@@ -148,7 +148,12 @@ Plans:
   3. Author can log out from any page
   4. Project data (chapters, world bible, settings) automatically syncs to the cloud
   5. Author can access the same project data from a different device
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [x] 08-01-PLAN.md — Supabase Auth: client setup, /auth page, middleware, session management
+- [x] 08-02-PLAN.md — Cloud Sync: sync queue, sync engine, status UI, offline support
+- [ ] 08-03-PLAN.md — Gap closure: wire enqueueChange into hooks, render SyncManager, fix performInitialSync, render SyncProgress
 **UI hint**: yes
 
 ### Phase 9: AI Consistency Guardian

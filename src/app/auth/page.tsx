@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { signIn, signUp } from './actions'
 
 export default function AuthPage() {
@@ -10,6 +11,7 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   // D-08: Tab toggle between login/register
   // D-06: Full-screen, clean, focused Notion-style layout
@@ -32,6 +34,8 @@ export default function AuthPage() {
 
     if (result?.error) {
       setError(result.error)
+    } else if (result?.success && mode === 'login') {
+      router.push('/')
     } else if (result?.success && mode === 'register') {
       // D-10: Show verification sent message
       setSuccess('验证邮件已发送，请查看邮箱')

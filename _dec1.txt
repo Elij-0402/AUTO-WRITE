@@ -1,0 +1,1 @@
+Used getChapters sorted query instead of toArray for test reliability

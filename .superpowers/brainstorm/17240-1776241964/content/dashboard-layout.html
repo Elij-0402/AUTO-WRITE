@@ -1,0 +1,100 @@
+<h2>项目仪表盘 — 布局方案</h2>
+<p class="subtitle">进入应用后看到的第一个页面，展示所有小说项目</p>
+
+<div class="cards">
+  <!-- Option A: 带侧边导航的仪表盘 -->
+  <div class="card" data-choice="sidebar-dashboard" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: #fafaf9; padding: 0; min-height: 280px; display: flex; overflow: hidden; border-radius: 8px;">
+        <!-- Left sidebar nav -->
+        <div style="width: 220px; background: #ffffff; border-right: 1px solid #f0eeeb; padding: 20px 16px; display: flex; flex-direction: column;">
+          <div style="font-size: 14px; font-weight: 700; color: #1c1917; margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
+            <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 6px;"></div>
+            InkForge
+          </div>
+          <div style="font-size: 11px; color: #1c1917; padding: 8px 10px; border-radius: 8px; background: #f5f5f4; margin-bottom: 4px; font-weight: 500;">我的作品</div>
+          <div style="font-size: 11px; color: #a8a29e; padding: 8px 10px; border-radius: 8px; margin-bottom: 4px;">最近编辑</div>
+          <div style="font-size: 11px; color: #a8a29e; padding: 8px 10px; border-radius: 8px; margin-bottom: 4px;">回收站</div>
+          <div style="flex: 1;"></div>
+          <div style="font-size: 10px; color: #a8a29e; padding: 8px 10px; border-top: 1px solid #f0eeeb; margin-top: 12px;">设置</div>
+        </div>
+        <!-- Main content -->
+        <div style="flex: 1; padding: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="font-size: 16px; font-weight: 600; color: #1c1917;">我的作品</div>
+            <div style="background: #3b82f6; color: white; font-size: 10px; padding: 6px 12px; border-radius: 8px;">+ 新建项目</div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+            <div style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <div style="height: 60px; background: linear-gradient(135deg, #dbeafe, #bfdbfe);"></div>
+              <div style="padding: 10px;"><div style="font-size: 10px; font-weight: 600; color: #1c1917;">星辰大海</div><div style="font-size: 8px; color: #a8a29e; margin-top: 4px;">12.5万字 · 3小时前</div></div>
+            </div>
+            <div style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <div style="height: 60px; background: linear-gradient(135deg, #fce7f3, #fbcfe8);"></div>
+              <div style="padding: 10px;"><div style="font-size: 10px; font-weight: 600; color: #1c1917;">剑来</div><div style="font-size: 8px; color: #a8a29e; margin-top: 4px;">8.2万字 · 昨天</div></div>
+            </div>
+            <div style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <div style="height: 60px; background: linear-gradient(135deg, #d1fae5, #a7f3d0);"></div>
+              <div style="padding: 10px;"><div style="font-size: 10px; font-weight: 600; color: #1c1917;">都市修仙</div><div style="font-size: 8px; color: #a8a29e; margin-top: 4px;">5.1万字 · 3天前</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. 侧边导航 + 卡片网格</h3>
+      <p>左侧固定导航栏（我的作品、最近编辑、回收站、设置），右侧卡片网格。导航清晰，有扩展空间。</p>
+    </div>
+  </div>
+
+  <!-- Option B: 全宽无侧栏 -->
+  <div class="card" data-choice="fullwidth-dashboard" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: #fafaf9; padding: 0; min-height: 280px; overflow: hidden; border-radius: 8px;">
+        <!-- Top header -->
+        <div style="background: #ffffff; border-bottom: 1px solid #f0eeeb; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 22px; height: 22px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 6px;"></div>
+            <span style="font-size: 13px; font-weight: 700; color: #1c1917;">InkForge</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <div style="width: 28px; height: 28px; background: #f5f5f4; border-radius: 50%;"></div>
+          </div>
+        </div>
+        <!-- Content area -->
+        <div style="max-width: 720px; margin: 0 auto; padding: 32px 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div>
+              <div style="font-size: 18px; font-weight: 700; color: #1c1917;">我的作品</div>
+              <div style="font-size: 11px; color: #a8a29e; margin-top: 2px;">3 个项目 · 总计 25.8 万字</div>
+            </div>
+            <div style="background: #3b82f6; color: white; font-size: 10px; padding: 6px 14px; border-radius: 8px;">+ 新建</div>
+          </div>
+          <!-- List style -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="background: #fff; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 12px;">
+              <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-radius: 8px; flex-shrink: 0;"></div>
+              <div style="flex: 1;">
+                <div style="font-size: 12px; font-weight: 600; color: #1c1917;">星辰大海</div>
+                <div style="font-size: 9px; color: #a8a29e; margin-top: 2px;">玄幻 · 12.5 万字 · 42 章</div>
+              </div>
+              <div style="font-size: 9px; color: #a8a29e;">3小时前</div>
+            </div>
+            <div style="background: #fff; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 12px;">
+              <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #fce7f3, #fbcfe8); border-radius: 8px; flex-shrink: 0;"></div>
+              <div style="flex: 1;">
+                <div style="font-size: 12px; font-weight: 600; color: #1c1917;">剑来</div>
+                <div style="font-size: 9px; color: #a8a29e; margin-top: 2px;">仙侠 · 8.2 万字 · 28 章</div>
+              </div>
+              <div style="font-size: 9px; color: #a8a29e;">昨天</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. 顶栏 + 居中列表</h3>
+      <p>简洁顶栏，内容居中窄版显示，列表而非网格。极简干净，像 Notion 首页。项目少时也不显空旷。</p>
+    </div>
+  </div>
+</div>

@@ -11,5 +11,5 @@ export async function GET(request: Request) {
   }
   
   // Redirect to projects after successful verification
-  redirect('/projects')
+  redirect('/')
 }

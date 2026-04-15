@@ -1,12 +1,49 @@
 'use client'
 
-// Stub for sync status icon - will be implemented in Phase 08 Plan 02 (cloud sync)
+import { useState } from 'react'
+import { useSync } from '@/lib/hooks/useSync'
+
+/**
+ * Sync status icon for Dashboard top-right.
+ * D-41: ✓ synced, ↻ syncing, ⚠ offline
+ * D-42: Clickable - shows details / manual retry option
+ */
 export function SyncStatusIcon() {
+  const { status, lastSynced, retry, isOnline } = useSync()
+  const [showDetails, setShowDetails] = useState(false)
+
+  if (!isOnline) {
+    return (
+      <button
+        onClick={() => setShowDetails(!showDetails)}
+        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+        title="离线模式"
+      >
+        <span className="text-lg" title="离线">⚠</span>
+      </button>
+    )
+  }
+
+  if (status === 'syncing') {
+    return (
+      <button
+        onClick={() => setShowDetails(!showDetails)}
+        className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600"
+        title="同步中..."
+      >
+        <span className="animate-spin" title="同步中">↻</span>
+      </button>
+    )
+  }
+
+  // Default: synced
   return (
-    <div className="flex items-center justify-center w-8 h-8 text-gray-400">
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-      </svg>
-    </div>
+    <button
+      onClick={() => setShowDetails(!showDetails)}
+      className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700"
+      title={`已同步: ${lastSynced ? new Date(lastSynced).toLocaleTimeString() : '未知'}`}
+    >
+      <span title="已同步">✓</span>
+    </button>
   )
 }

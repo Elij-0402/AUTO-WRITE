@@ -21,6 +21,8 @@ export function SyncProgress() {
       try {
         const result = await performInitialSync(user.id, setProgress)
         setStatus(result.errors > 0 ? 'error' : 'done')
+        // Mark initial sync as done so we don't show again this session
+        sessionStorage.setItem('inkforge_initial_sync_done', 'true')
       } catch {
         setStatus('error')
       }

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import AuthenticatedLayoutClient from './AuthenticatedLayoutClient'
 
 export default async function AuthenticatedLayout({
   children,
@@ -9,6 +10,5 @@ export default async function AuthenticatedLayout({
   const { data: { user } } = await supabase.auth.getUser()
 
   // This layout is only reached for authenticated users (middleware handles redirects)
-  // But we could add a loading state or user context here if needed
-  return <>{children}</>
+  return <AuthenticatedLayoutClient>{children}</AuthenticatedLayoutClient>
 }

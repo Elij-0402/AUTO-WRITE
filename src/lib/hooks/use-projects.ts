@@ -3,6 +3,9 @@
 import { useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { metaDb } from '../db/meta-db'
+import { enqueueChange } from '../sync/sync-queue'
+import { syncNewProject } from '../sync/sync-engine'
+import { createClient } from '../supabase/client'
 import type { ProjectMeta, CreateProjectInput } from '../types'
 
 /**
@@ -43,6 +46,14 @@ export function useProjects() {
     }
 
     await metaDb.projectIndex.add(project)
+
+    // D-37: Immediate sync on new project creation
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await syncNewProject(id, user.id)
+    }
+
     return id
   }, [])
 
@@ -51,6 +62,22 @@ export function useProjects() {
       ...data,
       updatedAt: new Date(),
     })
+
+    // Queue for cloud sync
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const updated = await metaDb.projectIndex.get(id)
+      if (updated) {
+        await enqueueChange({
+          table: 'projectIndex',
+          operation: 'update',
+          data: updated as unknown as Record<string, unknown>,
+          localUpdatedAt: Date.now(),
+          userId: user.id,
+        })
+      }
+    }
   }, [])
 
   const softDeleteProject = useCallback(async (id: string): Promise<void> => {
@@ -59,6 +86,19 @@ export function useProjects() {
       deletedAt: now,
       updatedAt: now,
     })
+
+    // Queue for cloud sync
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await enqueueChange({
+        table: 'projectIndex',
+        operation: 'delete',
+        data: { id } as Record<string, unknown>,
+        localUpdatedAt: Date.now(),
+        userId: user.id,
+      })
+    }
   }, [])
 
   const restoreProject = useCallback(async (id: string): Promise<void> => {

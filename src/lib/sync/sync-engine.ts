@@ -2,9 +2,11 @@ import { createClient } from '@/lib/supabase/client'
 import { getPendingChanges, markSynced, incrementRetry, setLastSyncAt } from './sync-queue'
 import type { SyncQueueItem } from './sync-queue'
 import { resolveConflict } from './conflict-resolver'
+import { metaDb } from '@/lib/db/meta-db'
+import { createProjectDB } from '@/lib/db/project-db'
 
 /**
- * Supabase table mapping from local table names.
+ * Supabase table mapping from local table names to cloud table names.
  * Per D-39: Cloud schema mirrors local structure.
  * Per D-48: aiConfig is NOT synced (stored locally only).
  */
@@ -15,6 +17,15 @@ const TABLE_MAP: Record<string, string> = {
   relations: 'relations',
   messages: 'messages',
   // NOT synced: aiConfig (D-48)
+}
+
+// Reverse map: cloud table name -> local table name
+const CLOUD_TO_LOCAL: Record<string, string> = {
+  project_index: 'projectIndex',
+  chapters: 'chapters',
+  world_entries: 'worldEntries',
+  relations: 'relations',
+  messages: 'messages',
 }
 
 const SYNC_BATCH_SIZE = 50
@@ -104,6 +115,7 @@ export async function flushSyncQueue(): Promise<{ synced: number; failed: number
 /**
  * Initial sync after login - pull cloud data and merge with local.
  * Per D-32: Show progress during first sync.
+ * Per D-33: Last-Write-Wins conflict resolution.
  */
 export async function performInitialSync(
   userId: string,
@@ -112,36 +124,130 @@ export async function performInitialSync(
   const supabase = createClient()
   
   // First, push any pending local changes
-  const pushResult = await flushSyncQueue()
+  await flushSyncQueue()
   
   // Then pull cloud data
-  const tables = Object.keys(TABLE_MAP).filter(t => t !== 'aiConfig')
+  const cloudTables = ['project_index', 'chapters', 'world_entries', 'relations']
   let merged = 0
   let errors = 0
 
-  for (let i = 0; i < tables.length; i++) {
-    const tableName = TABLE_MAP[tables[i]]
+  for (let i = 0; i < cloudTables.length; i++) {
+    const cloudTable = cloudTables[i]
+    const localTable = CLOUD_TO_LOCAL[cloudTable]
     
     // Fetch user's cloud data for this table
     const { data, error } = await supabase
-      .from(tableName)
+      .from(cloudTable)
       .select('*')
       .eq('user_id', userId)
 
     if (error) {
-      console.error(`Initial sync fetch error for ${tableName}:`, error)
+      console.error(`Initial sync fetch error for ${cloudTable}:`, error)
       errors++
       continue
     }
 
-    // Merge into local IndexedDB
-    // This would integrate with the existing meta-db and project-db
-    // For now, we track that data was pulled
-    merged += data?.length ?? 0
+    if (!data || data.length === 0) {
+      // Report progress even if no data
+      if (onProgress) {
+        const percent = Math.round(((i + 1) / cloudTables.length) * 100)
+        onProgress(percent)
+      }
+      continue
+    }
+
+    // Merge into local IndexedDB based on table type
+    if (cloudTable === 'project_index') {
+      // Write to metaDb.projectIndex
+      for (const record of data) {
+        try {
+          await metaDb.projectIndex.put({
+            id: record.id,
+            title: record.title,
+            genre: record.genre ?? '',
+            synopsis: record.synopsis ?? '',
+            coverImageId: record.coverImageId ?? null,
+            wordCount: record.wordCount ?? 0,
+            todayWordCount: record.todayWordCount ?? 0,
+            todayDate: record.todayDate ?? new Date().toISOString().split('T')[0],
+            createdAt: new Date(record.createdAt),
+            updatedAt: new Date(record.localUpdatedAt),
+            deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
+          })
+          merged++
+        } catch (e) {
+          console.error(`Error writing project ${record.id} to local DB:`, e)
+        }
+      }
+    } else {
+      // Per-project tables: group by projectId and write to appropriate project DB
+      const projectIds = [...new Set(data.map(r => r.projectId).filter(Boolean))]
+      
+      for (const projectId of projectIds) {
+        try {
+          const projectDb = createProjectDB(projectId)
+          const tableName = cloudTable === 'world_entries' ? 'worldEntries' : cloudTable
+          
+          for (const record of data) {
+            if (record.projectId !== projectId) continue
+            
+            try {
+              if (cloudTable === 'chapters') {
+                await projectDb.chapters.put({
+                  id: record.id,
+                  projectId: record.projectId,
+                  title: record.title,
+                  content: record.content ?? {},
+                  order: record.order ?? 0,
+                  wordCount: record.wordCount ?? 0,
+                  status: record.status ?? 'draft',
+                  outlineStatus: record.outlineStatus ?? 'not_started',
+                  outlineSummary: record.outlineSummary ?? '',
+                  outlineTargetWordCount: record.outlineTargetWordCount ?? null,
+                  createdAt: new Date(record.createdAt),
+                  updatedAt: new Date(record.localUpdatedAt),
+                  deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
+                })
+              } else if (cloudTable === 'world_entries') {
+                await projectDb.worldEntries.put({
+                  id: record.id,
+                  projectId: record.projectId,
+                  type: record.type,
+                  name: record.name,
+                  fields: record.fields ?? {},
+                  createdAt: new Date(record.createdAt),
+                  updatedAt: new Date(record.localUpdatedAt),
+                  deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
+                })
+              } else if (cloudTable === 'relations') {
+                await projectDb.relations.put({
+                  id: record.id,
+                  projectId: record.projectId,
+                  sourceEntryId: record.sourceEntryId,
+                  targetEntryId: record.targetEntryId,
+                  category: record.category,
+                  description: record.description ?? '',
+                  sourceToTargetLabel: record.sourceToTargetLabel ?? '',
+                  createdAt: new Date(record.createdAt),
+                  updatedAt: new Date(record.localUpdatedAt),
+                  deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
+                })
+              }
+              merged++
+            } catch (e) {
+              console.error(`Error writing ${cloudTable} record ${record.id}:`, e)
+            }
+          }
+        } catch (e) {
+          console.error(`Error opening project DB ${projectId}:`, e)
+          errors++
+        }
+      }
+    }
 
     // Report progress (D-43: Initial sync show progress bar)
     if (onProgress) {
-      const percent = Math.round(((i + 1) / tables.length) * 100)
+      const percent = Math.round(((i + 1) / cloudTables.length) * 100)
       onProgress(percent)
     }
   }

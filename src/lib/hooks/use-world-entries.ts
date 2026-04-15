@@ -4,6 +4,8 @@ import { useCallback, useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { createProjectDB } from '../db/project-db'
 import { metaDb } from '../db/meta-db'
+import { enqueueChange } from '../sync/sync-queue'
+import { createClient } from '../supabase/client'
 import type { WorldEntryType } from '../types'
 import {
   getWorldEntries as getWorldEntriesQuery,
@@ -43,6 +45,13 @@ export function useWorldEntries(projectId: string) {
     }
   }, [entries])
 
+  // Helper to get userId for sync
+  const getUserId = useCallback(async (): Promise<string | null> => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    return user?.id ?? null
+  }, [])
+
   const updateProjectTimestamp = useCallback(async () => {
     await metaDb.projectIndex.update(projectId, { updatedAt: new Date() })
   }, [projectId])
@@ -50,13 +59,44 @@ export function useWorldEntries(projectId: string) {
   const addEntry = useCallback(async (type: WorldEntryType, name?: string): Promise<string> => {
     const id = await addWorldEntryQuery(db, projectId, type, name)
     await updateProjectTimestamp()
+
+    // Queue for cloud sync
+    const userId = await getUserId()
+    if (userId) {
+      const entry = await db.worldEntries.get(id)
+      if (entry) {
+        await enqueueChange({
+          table: 'worldEntries',
+          operation: 'create',
+          data: { ...entry, projectId } as unknown as Record<string, unknown>,
+          localUpdatedAt: Date.now(),
+          userId,
+        })
+      }
+    }
+
     return id
-  }, [db, projectId, updateProjectTimestamp])
+  }, [db, projectId, updateProjectTimestamp, getUserId])
 
   const renameEntry = useCallback(async (id: string, name: string): Promise<void> => {
     await renameWorldEntryQuery(db, id, name)
     await updateProjectTimestamp()
-  }, [db, updateProjectTimestamp])
+
+    // Queue for cloud sync
+    const userId = await getUserId()
+    if (userId) {
+      const entry = await db.worldEntries.get(id)
+      if (entry) {
+        await enqueueChange({
+          table: 'worldEntries',
+          operation: 'update',
+          data: { ...entry, projectId } as unknown as Record<string, unknown>,
+          localUpdatedAt: Date.now(),
+          userId,
+        })
+      }
+    }
+  }, [db, updateProjectTimestamp, getUserId])
 
   const updateEntryFields = useCallback(async (
     id: string,
@@ -64,12 +104,39 @@ export function useWorldEntries(projectId: string) {
   ): Promise<void> => {
     await updateWorldEntryFieldsQuery(db, id, fields)
     await updateProjectTimestamp()
-  }, [db, updateProjectTimestamp])
+
+    // Queue for cloud sync
+    const userId = await getUserId()
+    if (userId) {
+      const entry = await db.worldEntries.get(id)
+      if (entry) {
+        await enqueueChange({
+          table: 'worldEntries',
+          operation: 'update',
+          data: { ...entry, projectId } as unknown as Record<string, unknown>,
+          localUpdatedAt: Date.now(),
+          userId,
+        })
+      }
+    }
+  }, [db, updateProjectTimestamp, getUserId])
 
   const softDeleteEntry = useCallback(async (id: string): Promise<void> => {
     await softDeleteWorldEntryQuery(db, id)
     await updateProjectTimestamp()
-  }, [db, updateProjectTimestamp])
+
+    // Queue for cloud sync
+    const userId = await getUserId()
+    if (userId) {
+      await enqueueChange({
+        table: 'worldEntries',
+        operation: 'delete',
+        data: { id } as Record<string, unknown>,
+        localUpdatedAt: Date.now(),
+        userId,
+      })
+    }
+  }, [db, updateProjectTimestamp, getUserId])
 
   const searchEntries = useCallback(async (query: string, type?: WorldEntryType): Promise<import('../types').WorldEntry[]> => {
     return searchWorldEntriesQuery(db, projectId, query, type)

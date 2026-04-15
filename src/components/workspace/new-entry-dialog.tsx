@@ -216,37 +216,37 @@ export function NewEntryDialog({
         return (
           <>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 姓名 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="角色姓名"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 外貌
               </label>
               <textarea
                 value={appearance}
                 onChange={(e) => setAppearance(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 rows={3}
                 placeholder="描述角色的外貌特征..."
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 背景
               </label>
               <textarea
                 value={background}
                 onChange={(e) => setBackground(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 rows={3}
                 placeholder="描述角色的背景故事..."
               />
@@ -257,37 +257,37 @@ export function NewEntryDialog({
         return (
           <>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 名称 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="地点名称"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 描述
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 rows={3}
                 placeholder="描述地点的样貌和环境..."
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 特征
               </label>
               <textarea
                 value={features}
                 onChange={(e) => setFeatures(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 rows={3}
                 placeholder="描述地点的特殊或标志性特征..."
               />
@@ -298,38 +298,38 @@ export function NewEntryDialog({
         return (
           <>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 名称 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="规则或设定名称"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 内容
               </label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 rows={3}
                 placeholder="描述规则或设定的具体内容..."
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 适用范围
               </label>
               <input
                 type="text"
                 value={scope}
                 onChange={(e) => setScope(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="这个规则适用于哪些场景或角色"
               />
             </div>
@@ -339,37 +339,37 @@ export function NewEntryDialog({
         return (
           <>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 名称 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="时间线事件名称"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 时间点
               </label>
               <input
                 type="text"
                 value={timePoint}
                 onChange={(e) => setTimePoint(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="例如：第三年春、百年前"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                 事件描述
               </label>
               <textarea
                 value={eventDescription}
                 onChange={(e) => setEventDescription(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 rows={3}
                 placeholder="描述在这个时间点发生的事件..."
               />
@@ -388,12 +388,12 @@ export function NewEntryDialog({
             <DialogTitle>发现已存在条目</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+            <p className="text-sm text-stone-600 dark:text-stone-400 mb-4">
               「{duplicateEntry.name}」已存在，请选择：
             </p>
-            <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
-              <p className="font-medium text-zinc-900 dark:text-zinc-100">{duplicateEntry.name}</p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+            <div className="p-3 rounded-lg bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
+              <p className="font-medium text-stone-900 dark:text-stone-100">{duplicateEntry.name}</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
                 类型：{TYPE_LABELS[duplicateEntry.type]}
               </p>
             </div>

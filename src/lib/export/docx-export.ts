@@ -70,9 +70,7 @@ export async function exportToDocx(
     })
   )
   
-  // Table of Contents placeholder
-  // Note: TOC generation requires document to be rendered first
-  // For a proper TOC, we'd need to use XML manipulation or a TOC field
+  // Table of Contents
   children.push(
     new Paragraph({
       text: '目录',
@@ -85,17 +83,19 @@ export async function exportToDocx(
     })
   )
   
-  // Add chapter entries to TOC
+  // Add chapter entries to TOC with proper formatting
   for (const chapter of chapters) {
     const chapterNum = getChapterNumber(chapter.order)
     children.push(
       new Paragraph({
         text: `${chapterNum} ${chapter.title}`,
-        heading: HeadingLevel.HEADING_2,
         spacing: {
           before: 100,
           after: 50,
         },
+        indent: {
+          left: 200
+        }
       })
     )
   }
@@ -214,7 +214,8 @@ export async function exportToDocx(
   
   // Step 4: Generate blob
   const buffer = await Packer.toBuffer(doc)
-  return new Blob([buffer], {
+  const uint8Array = new Uint8Array(buffer as unknown as ArrayBuffer)
+  return new Blob([uint8Array], {
     type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   })
 }

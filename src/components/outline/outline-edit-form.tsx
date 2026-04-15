@@ -162,7 +162,7 @@ export function OutlineEditForm({
 
   if (!chapter) {
     return (
-      <div className="flex-1 flex items-center justify-center text-zinc-400">
+      <div className="flex-1 flex items-center justify-center text-stone-400">
         <p>章节未找到</p>
       </div>
     )
@@ -178,42 +178,42 @@ export function OutlineEditForm({
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header with save status */}
-      <div className="px-6 py-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-        <span className="text-xs text-zinc-400">{isSaving ? '保存中...' : '已保存'}</span>
+      <div className="px-6 py-3 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
+        <span className="text-xs text-stone-400">{isSaving ? '保存中...' : '已保存'}</span>
       </div>
 
       {/* Scrollable form content */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
         {/* Title per D-22 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
             标题
           </label>
           <input
             type="text"
             value={localTitle}
             onChange={(e) => setLocalTitle(e.target.value)}
-            className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500"
+            className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
             placeholder="章节标题"
           />
         </div>
 
         {/* Summary — auto-growing textarea per D-21 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
             大纲摘要
           </label>
           <AutoGrowTextarea
             value={localSummary}
             onChange={setLocalSummary}
             placeholder="输入章节大纲摘要..."
-            className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500 resize-none"
+            className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 resize-none"
           />
         </div>
 
         {/* Target word count per D-22, D-23 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
             目标字数
           </label>
           <div className="flex items-center gap-2">
@@ -222,14 +222,14 @@ export function OutlineEditForm({
               inputMode="numeric"
               value={localTargetWordCount}
               onChange={(e) => handleTargetWordCountChange(e.target.value)}
-              className="w-32 rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500"
+              className="w-32 rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
               placeholder="不设定"
             />
-            <span className="text-sm text-zinc-400">字</span>
+            <span className="text-sm text-stone-400">字</span>
             {localTargetWordCount && (
               <button
                 onClick={() => setLocalTargetWordCount('')}
-                className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                className="text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
                 title="清除目标字数"
               >
                 ✕
@@ -240,13 +240,13 @@ export function OutlineEditForm({
 
         {/* Status dropdown per D-07, D-22 */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
             状态
           </label>
           <select
             value={localOutlineStatus}
             onChange={(e) => setLocalOutlineStatus(e.target.value as OutlineStatus)}
-            className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500"
+            className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
           >
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -257,19 +257,19 @@ export function OutlineEditForm({
         </div>
 
         {/* Word count comparison per D-23 */}
-        <div className="mb-4 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 text-sm">
-          <span className="text-zinc-600 dark:text-zinc-400">{wordCountDisplay}</span>
+        <div className="mb-4 px-3 py-2 rounded-lg bg-stone-50 dark:bg-stone-800/50 text-sm">
+          <span className="text-stone-600 dark:text-stone-400">{wordCountDisplay}</span>
         </div>
 
         {/* Timestamps per D-22 */}
-        <div className="text-xs text-zinc-400 dark:text-zinc-500 space-y-1">
+        <div className="text-xs text-stone-400 dark:text-stone-500 space-y-1">
           <p>创建于 {formatDateCN(chapter.createdAt)}</p>
           <p>更新于 {formatDateCN(chapter.updatedAt)}</p>
         </div>
 
         {/* Generation panel per D-01, D-02 */}
         {showGenerationPanel && (
-          <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+          <div className="mt-4 pt-4 border-t border-stone-200 dark:border-stone-700">
             <GenerationPanel
               projectId={projectId}
               chapterId={chapterId}
@@ -280,7 +280,7 @@ export function OutlineEditForm({
       </div>
 
       {/* Footer with generation button and navigation per D-01, D-20 */}
-      <div className="flex gap-2 px-6 py-3 border-t border-zinc-200 dark:border-zinc-800">
+      <div className="flex gap-2 px-6 py-3 border-t border-stone-200 dark:border-stone-800">
         {/* 生成章节 button per D-01 */}
         <button
           onClick={() => setShowGenerationPanel(true)}
@@ -294,14 +294,14 @@ export function OutlineEditForm({
         <button
           onClick={onPrevious}
           disabled={!hasPrevious}
-          className="px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 text-sm rounded-lg border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           ← 上一章
         </button>
         <button
           onClick={onNext}
           disabled={!hasNext}
-          className="px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed ml-auto transition-colors"
+          className="px-4 py-2 text-sm rounded-lg border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed ml-auto transition-colors"
         >
           下一章 →
         </button>

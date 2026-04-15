@@ -23,7 +23,12 @@ export function useSync(): UseSyncReturn {
 
   useEffect(() => {
     // Load last sync timestamp
-    getLastSyncAt().then(ts => setLastSynced(ts))
+    getLastSyncAt()
+      .then(ts => setLastSynced(ts))
+      .catch((error) => {
+        console.error('Failed to load last sync timestamp:', error)
+        setLastSynced(null)
+      })
 
     // Monitor online status
     setIsOnline(navigator.onLine)

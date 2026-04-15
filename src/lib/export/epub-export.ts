@@ -101,7 +101,8 @@ export async function exportToEpub(
   const epubBuffer = await book.promise
   
   // Step 4: Convert to Blob
-  return new Blob([epubBuffer], {
+  const uint8Array = new Uint8Array(epubBuffer as unknown as ArrayBuffer)
+  return new Blob([uint8Array], {
     type: 'application/epub+zip',
   })
 }

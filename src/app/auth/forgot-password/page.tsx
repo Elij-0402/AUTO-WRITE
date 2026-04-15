@@ -29,10 +29,10 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-stone-50">
         <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-sm text-center">
           <h2 className="text-xl font-semibold mb-2">检查邮箱</h2>
-          <p className="text-gray-600">如果该邮箱已注册，您将收到密码重置链接</p>
+          <p className="text-stone-600">如果该邮箱已注册，您将收到密码重置链接</p>
           <a href="/auth" className="mt-4 inline-block text-blue-600 hover:text-blue-500">
             返回登录
           </a>
@@ -42,12 +42,12 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-stone-50">
       <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-sm">
         <h2 className="text-xl font-semibold mb-6 text-center">重置密码</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="block text-sm font-medium text-stone-700">
               注册邮箱
             </label>
             <input
@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
           {error && <div className="text-red-600 text-sm">{error}</div>}

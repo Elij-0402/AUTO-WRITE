@@ -89,10 +89,10 @@ export function RelationshipSection({
     return (
       <div
         key={relation.id}
-        className="group relative flex items-start gap-2 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors"
+        className="group relative flex items-start gap-2 p-3 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
       >
         {/* Direction arrow */}
-        <span className="text-zinc-400 dark:text-zinc-500 flex-shrink-0 mt-0.5">
+        <span className="text-stone-400 dark:text-stone-500 flex-shrink-0 mt-0.5">
           {isSource ? (
             <ArrowRight className="h-4 w-4" />
           ) : (
@@ -103,20 +103,20 @@ export function RelationshipSection({
         {/* Card content */}
         <div className="flex-1 min-w-0">
           {/* Category badge */}
-          <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400 mb-1">
+          <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-400 mb-1">
             {CATEGORY_LABELS[relation.category]}
           </span>
 
           {/* Description per D-23 */}
           {relation.description && (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-1">
+            <p className="text-sm text-stone-600 dark:text-stone-400 mb-1">
               {relation.description}
             </p>
           )}
 
           {/* Directional label per D-29 */}
           {perspectiveLabel && (
-            <p className="text-xs text-zinc-500 dark:text-zinc-500 italic mb-1">
+            <p className="text-xs text-stone-500 dark:text-stone-500 italic mb-1">
               {perspectiveLabel}
             </p>
           )}
@@ -133,10 +133,10 @@ export function RelationshipSection({
         {/* Delete button */}
         <button
           onClick={() => handleDeleteRelation(relation.id)}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-opacity"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-stone-100 dark:hover:bg-stone-700 transition-opacity"
           aria-label="删除关联"
         >
-          <X className="h-3.5 w-3.5 text-zinc-400 hover:text-red-500" />
+          <X className="h-3.5 w-3.5 text-stone-400 hover:text-red-500" />
         </button>
       </div>
     )
@@ -146,14 +146,14 @@ export function RelationshipSection({
     <div>
       {/* Section header per D-21 */}
       <div className="flex items-center justify-between mb-2">
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+        <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">
           关联
         </label>
         {/* Add button per D-21 */}
         <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
           <Dialog.Trigger asChild>
             <button
-              className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
             >
               <Plus className="h-3.5 w-3.5" />
               添加关联
@@ -162,20 +162,20 @@ export function RelationshipSection({
 
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-6 z-50">
-              <Dialog.Title className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">
+            <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-stone-900 rounded-xl shadow-xl p-6 z-50">
+              <Dialog.Title className="text-lg font-medium text-stone-900 dark:text-stone-100 mb-4">
                 添加关联
               </Dialog.Title>
 
               {/* Target entry selection */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                   目标条目
                 </label>
                 <select
                   value={targetId}
                   onChange={(e) => setTargetId(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500"
+                  className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
                 >
                   <option value="">选择一个条目...</option>
                   {availableTargets.map(entry => (
@@ -188,13 +188,13 @@ export function RelationshipSection({
 
               {/* Category selection per D-23 */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                   关系类别
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as RelationCategory)}
-                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500"
+                  className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
                 >
                   <option value="character_relation">角色关系</option>
                   <option value="general">通用关联</option>
@@ -203,7 +203,7 @@ export function RelationshipSection({
 
               {/* Description per D-23 */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                   关系描述
                 </label>
                 <input
@@ -211,13 +211,13 @@ export function RelationshipSection({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="例如：师徒、朋友、居住"
-                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500"
+                  className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
                 />
               </div>
 
               {/* Directional label per D-29 */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                   方向标签
                 </label>
                 <input
@@ -225,7 +225,7 @@ export function RelationshipSection({
                   value={sourceToTargetLabel}
                   onChange={(e) => setSourceToTargetLabel(e.target.value)}
                   placeholder="例如：是师父、居住于"
-                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500"
+                  className="w-full rounded-lg border border-stone-300 dark:border-stone-600 px-3 py-2 text-sm text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500"
                 />
               </div>
 
@@ -233,7 +233,7 @@ export function RelationshipSection({
               <div className="flex justify-end gap-2">
                 <Dialog.Close asChild>
                   <button
-                    className="px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                    className="px-4 py-2 text-sm rounded-lg border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
                   >
                     取消
                   </button>
@@ -253,9 +253,9 @@ export function RelationshipSection({
 
       {/* Relationship cards per D-24 */}
       {loading ? (
-        <div className="text-sm text-zinc-400">加载中...</div>
+        <div className="text-sm text-stone-400">加载中...</div>
       ) : relations.length === 0 ? (
-        <div className="text-sm text-zinc-400 italic">
+        <div className="text-sm text-stone-400 italic">
           还没有关联关系
         </div>
       ) : (

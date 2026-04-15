@@ -16,7 +16,7 @@ export function SyncStatusIcon() {
     return (
       <button
         onClick={() => setShowDetails(!showDetails)}
-        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+        className="flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700"
         title="离线模式"
       >
         <span className="text-lg" title="离线">⚠</span>

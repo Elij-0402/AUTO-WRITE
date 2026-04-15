@@ -135,13 +135,13 @@ export function ProjectSettingsDialog({
         </DialogHeader>
 
         {/* Tab navigation */}
-        <div className="flex border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex border-b border-stone-200 dark:border-stone-800">
           <button
             onClick={() => setActiveTab('settings')}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'settings'
                 ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                : 'border-transparent text-stone-500 hover:text-stone-700 dark:hover:text-stone-300'
             }`}
           >
             基本设置
@@ -151,7 +151,7 @@ export function ProjectSettingsDialog({
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'export'
                 ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+                : 'border-transparent text-stone-500 hover:text-stone-700 dark:hover:text-stone-300'
             }`}
           >
             导出
@@ -169,7 +169,7 @@ export function ProjectSettingsDialog({
 
           {activeTab === 'export' && (
             <div className="space-y-4">
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="text-sm text-stone-500 dark:text-stone-400">
                 选择导出格式，将你的小说导出为可阅读的格式。
               </p>
 
@@ -179,48 +179,48 @@ export function ProjectSettingsDialog({
                 <button
                   onClick={handleExportMarkdown}
                   disabled={isExporting}
-                  className="w-full flex items-center gap-3 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center gap-3 p-4 rounded-lg border border-stone-200 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                  <div className="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-stone-600 dark:text-stone-400" />
                   </div>
                   <div className="flex-1 text-left">
                     <div className="font-medium">导出Markdown</div>
-                    <div className="text-xs text-zinc-500">.md 格式，适合大多数编辑器</div>
+                    <div className="text-xs text-stone-500">.md 格式，适合大多数编辑器</div>
                   </div>
-                  <Download className="w-5 h-5 text-zinc-400" />
+                  <Download className="w-5 h-5 text-stone-400" />
                 </button>
 
                 {/* DOCX export */}
                 <button
                   onClick={handleExportDocx}
                   disabled={isExporting}
-                  className="w-full flex items-center gap-3 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center gap-3 p-4 rounded-lg border border-stone-200 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                    <FileDown className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                  <div className="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
+                    <FileDown className="w-5 h-5 text-stone-600 dark:text-stone-400" />
                   </div>
                   <div className="flex-1 text-left">
                     <div className="font-medium">导出DOCX</div>
-                    <div className="text-xs text-zinc-500">.docx 格式，适合Microsoft Word</div>
+                    <div className="text-xs text-stone-500">.docx 格式，适合Microsoft Word</div>
                   </div>
-                  <Download className="w-5 h-5 text-zinc-400" />
+                  <Download className="w-5 h-5 text-stone-400" />
                 </button>
 
                 {/* EPUB export */}
                 <button
                   onClick={handleExportEpub}
                   disabled={isExporting}
-                  className="w-full flex items-center gap-3 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center gap-3 p-4 rounded-lg border border-stone-200 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                  <div className="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-stone-600 dark:text-stone-400" />
                   </div>
                   <div className="flex-1 text-left">
                     <div className="font-medium">导出EPUB</div>
-                    <div className="text-xs text-zinc-500">.epub 格式，适合电子书阅读器</div>
+                    <div className="text-xs text-stone-500">.epub 格式，适合电子书阅读器</div>
                   </div>
-                  <Download className="w-5 h-5 text-zinc-400" />
+                  <Download className="w-5 h-5 text-stone-400" />
                 </button>
               </div>
 

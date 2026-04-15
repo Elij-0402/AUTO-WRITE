@@ -184,7 +184,10 @@ ${currentDiscussion}
                     : msg
                 ))
               }
-            } catch {}
+            } catch (parseError) {
+              // Log JSON parse errors for debugging SSE stream format issues
+              console.warn('Failed to parse AI response chunk:', { line, error: parseError })
+            }
           }
         }
       }

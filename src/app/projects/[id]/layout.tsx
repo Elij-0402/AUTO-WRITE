@@ -34,19 +34,19 @@ export default function ProjectLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-        <div className="text-zinc-400 text-sm">加载中...</div>
+      <div className="min-h-screen flex items-center justify-center bg-stone-50 dark:bg-stone-950">
+        <div className="text-stone-400 text-sm">加载中...</div>
       </div>
     )
   }
 
   if (!project) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-        <div className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-stone-50 dark:bg-stone-950">
+        <div className="text-2xl font-semibold text-stone-900 dark:text-stone-100 mb-2">
           项目未找到
         </div>
-        <p className="text-zinc-500 mb-6">该作品不存在或已被删除</p>
+        <p className="text-stone-500 mb-6">该作品不存在或已被删除</p>
         <button
           onClick={() => router.push('/')}
           className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
@@ -58,12 +58,12 @@ export default function ProjectLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen flex flex-col bg-stone-50 dark:bg-stone-950">
       {/* Top bar */}
-      <header className="h-14 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center px-4 gap-3 flex-shrink-0">
+      <header className="h-14 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 flex items-center px-4 gap-3 flex-shrink-0">
         <button
           onClick={() => router.push('/')}
-          className="text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center gap-1"
+          className="text-sm text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100 transition-colors flex items-center gap-1"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -81,15 +81,15 @@ export default function ProjectLayout({
           </svg>
           返回
         </button>
-        <h1 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+        <h1 className="text-base font-semibold text-stone-900 dark:text-stone-100 truncate">
           {project.title}
         </h1>
-        <span className="text-xs text-zinc-400">
+        <span className="text-xs text-stone-400">
           {totalWordCount.toLocaleString()}字 | 今日{todayWordCount}字
         </span>
         <button
           onClick={() => setShowSettings(true)}
-          className="ml-auto flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
+          className="ml-auto flex items-center gap-1 text-sm text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100 transition-colors"
           aria-label="项目设置"
         >
           <Settings className="h-4 w-4" />

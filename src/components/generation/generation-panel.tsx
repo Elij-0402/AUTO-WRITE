@@ -56,9 +56,9 @@ export function GenerationPanel({ projectId, chapterId, onClose }: GenerationPan
   }
   
   return (
-    <div className="border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 overflow-hidden">
+    <div className="border border-stone-200 dark:border-stone-700 rounded-lg bg-white dark:bg-stone-900 overflow-hidden">
       {/* Header per D-02 */}
-      <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between bg-zinc-50 dark:bg-zinc-800/50">
+      <div className="px-4 py-3 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between bg-stone-50 dark:bg-stone-800/50">
         <div className="flex items-center gap-2">
           {status === 'generating' && (
             <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
@@ -75,7 +75,7 @@ export function GenerationPanel({ projectId, chapterId, onClose }: GenerationPan
             </span>
           )}
           {status === 'idle' && (
-            <span className="text-sm text-zinc-500 dark:text-zinc-400">
+            <span className="text-sm text-stone-500 dark:text-stone-400">
               章节生成
             </span>
           )}
@@ -99,7 +99,7 @@ export function GenerationPanel({ projectId, chapterId, onClose }: GenerationPan
           {status === 'generating' && (
             <button
               onClick={cancelGeneration}
-              className="px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="px-3 py-1.5 text-sm rounded-lg border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             >
               取消
             </button>
@@ -107,7 +107,7 @@ export function GenerationPanel({ projectId, chapterId, onClose }: GenerationPan
           {(status === 'complete' || status === 'error') && (
             <button
               onClick={onClose}
-              className="px-3 py-1.5 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="px-3 py-1.5 text-sm rounded-lg border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             >
               关闭
             </button>
@@ -122,7 +122,7 @@ export function GenerationPanel({ projectId, chapterId, onClose }: GenerationPan
       >
         {/* Idle state */}
         {status === 'idle' && (
-          <div className="flex flex-col items-center justify-center h-[200px] text-zinc-400 dark:text-zinc-500">
+          <div className="flex flex-col items-center justify-center h-[200px] text-stone-400 dark:text-stone-500">
             <svg className="h-12 w-12 mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
@@ -133,7 +133,7 @@ export function GenerationPanel({ projectId, chapterId, onClose }: GenerationPan
         {/* Generating state - typewriter effect per D-02 */}
         {status === 'generating' && (
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <p className="whitespace-pre-wrap text-zinc-800 dark:text-zinc-200 leading-relaxed">
+            <p className="whitespace-pre-wrap text-stone-800 dark:text-stone-200 leading-relaxed">
               {streamingContent}
               <span className="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse" />
             </p>
@@ -143,7 +143,7 @@ export function GenerationPanel({ projectId, chapterId, onClose }: GenerationPan
         {/* Complete state */}
         {status === 'complete' && (
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <p className="whitespace-pre-wrap text-zinc-800 dark:text-zinc-200 leading-relaxed">
+            <p className="whitespace-pre-wrap text-stone-800 dark:text-stone-200 leading-relaxed">
               {streamingContent}
             </p>
           </div>
@@ -168,10 +168,10 @@ export function GenerationPanel({ projectId, chapterId, onClose }: GenerationPan
       
       {/* Footer with action buttons per D-03 */}
       {status === 'complete' && (
-        <div className="px-4 py-3 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-end gap-2 bg-zinc-50 dark:bg-zinc-800/50">
+        <div className="px-4 py-3 border-t border-stone-200 dark:border-stone-700 flex items-center justify-end gap-2 bg-stone-50 dark:bg-stone-800/50">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            className="px-4 py-2 text-sm rounded-lg border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
           >
             取消
           </button>

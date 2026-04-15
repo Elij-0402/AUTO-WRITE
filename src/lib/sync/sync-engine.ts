@@ -171,8 +171,8 @@ export async function performInitialSync(
             todayWordCount: record.todayWordCount ?? 0,
             todayDate: record.todayDate ?? new Date().toISOString().split('T')[0],
             createdAt: new Date(record.createdAt),
-            updatedAt: new Date(record.localUpdatedAt),
-            deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
+            updatedAt: new Date(record.updated_at || record.localUpdatedAt),
+            deletedAt: record.deleted_at ? new Date(record.deleted_at) : null,
           })
           merged++
         } catch (e) {
@@ -205,8 +205,8 @@ export async function performInitialSync(
                   outlineSummary: record.outlineSummary ?? '',
                   outlineTargetWordCount: record.outlineTargetWordCount ?? null,
                   createdAt: new Date(record.createdAt),
-                  updatedAt: new Date(record.localUpdatedAt),
-                  deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
+                  updatedAt: new Date(record.updated_at || record.localUpdatedAt),
+                  deletedAt: record.deleted_at ? new Date(record.deleted_at) : null,
                 })
               } else if (cloudTable === 'world_entries') {
                 await projectDb.worldEntries.put({
@@ -214,10 +214,20 @@ export async function performInitialSync(
                   projectId: record.projectId,
                   type: record.type,
                   name: record.name,
-                  fields: record.fields ?? {},
+                  alias: record.alias,
+                  appearance: record.appearance,
+                  personality: record.personality,
+                  background: record.background,
+                  description: record.description,
+                  features: record.features,
+                  content: record.content,
+                  scope: record.scope,
+                  timePoint: record.timePoint,
+                  eventDescription: record.eventDescription,
+                  tags: record.tags ?? [],
                   createdAt: new Date(record.createdAt),
-                  updatedAt: new Date(record.localUpdatedAt),
-                  deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
+                  updatedAt: new Date(record.updated_at || record.localUpdatedAt),
+                  deletedAt: record.deleted_at ? new Date(record.deleted_at) : null,
                 })
               } else if (cloudTable === 'relations') {
                 await projectDb.relations.put({
@@ -229,7 +239,6 @@ export async function performInitialSync(
                   description: record.description ?? '',
                   sourceToTargetLabel: record.sourceToTargetLabel ?? '',
                   createdAt: new Date(record.createdAt),
-                  updatedAt: new Date(record.localUpdatedAt),
                   deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
                 })
               }

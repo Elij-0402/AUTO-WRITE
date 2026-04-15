@@ -95,7 +95,7 @@ export function CreateProjectModal({
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           {/* 标题 (Title) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
               标题 <span className="text-red-500">*</span>
             </label>
             <Input
@@ -110,7 +110,7 @@ export function CreateProjectModal({
 
           {/* 类型 (Genre) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
               类型
             </label>
             <Select onValueChange={(value) => setValue('genre', value)}>
@@ -129,7 +129,7 @@ export function CreateProjectModal({
 
           {/* 简介 (Synopsis) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
               简介
             </label>
             <Textarea

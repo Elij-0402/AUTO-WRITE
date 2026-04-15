@@ -27,13 +27,13 @@ import type { Chapter, OutlineStatus } from '@/lib/types'
 function getStatusDotColor(status: OutlineStatus): string {
   switch (status) {
     case 'not_started':
-      return 'bg-zinc-300 dark:bg-zinc-600'
+      return 'bg-stone-300 dark:bg-stone-600'
     case 'in_progress':
       return 'bg-blue-400 dark:bg-blue-500'
     case 'completed':
       return 'bg-green-400 dark:bg-green-500'
     default:
-      return 'bg-zinc-300 dark:bg-zinc-600'
+      return 'bg-stone-300 dark:bg-stone-600'
   }
 }
 
@@ -71,18 +71,18 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
       ref={setNodeRef}
       style={style}
       className={`
-        group flex items-center gap-2 px-2 py-2 border-b border-zinc-100 dark:border-zinc-800
+        group flex items-center gap-2 px-2 py-2 border-b border-stone-100 dark:border-stone-800
         cursor-pointer transition-colors
         ${isActive
-          ? 'bg-zinc-100 dark:bg-zinc-800'
-          : 'hover:bg-zinc-50 dark:hover:bg-zinc-850'}
+          ? 'bg-stone-100 dark:bg-stone-800'
+          : 'hover:bg-stone-50 dark:hover:bg-stone-850'}
         ${isDragging ? 'opacity-50 shadow-lg z-50' : ''}
       `}
       onClick={onSelect}
     >
       {/* Drag handle per D-12 — outline and chapters share same order */}
       <button
-        className="flex-shrink-0 cursor-grab text-zinc-300 hover:text-zinc-500 dark:text-zinc-600 dark:hover:text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="flex-shrink-0 cursor-grab text-stone-300 hover:text-stone-500 dark:text-stone-600 dark:hover:text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"
         {...attributes}
         {...listeners}
         aria-label="拖动排序"
@@ -106,7 +106,7 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
       <div className="flex-1 min-w-0">
         {isEmptyOutline ? (
           <div className="flex items-center gap-1">
-            <span className="text-sm text-zinc-400 dark:text-zinc-500 truncate">
+            <span className="text-sm text-stone-400 dark:text-stone-500 truncate">
               {chapter.title}
             </span>
             <button
@@ -120,7 +120,7 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
             </button>
           </div>
         ) : (
-          <span className="block truncate text-sm text-zinc-700 dark:text-zinc-300">
+          <span className="block truncate text-sm text-stone-700 dark:text-stone-300">
             {chapter.title}
           </span>
         )}
@@ -128,7 +128,7 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
 
       {/* Word count indicator for entries with outline content */}
       {chapter.wordCount > 0 && !isEmptyOutline && (
-        <span className="flex-shrink-0 text-xs text-zinc-400">
+        <span className="flex-shrink-0 text-xs text-stone-400">
           {chapter.wordCount.toLocaleString()}字
         </span>
       )}
@@ -180,7 +180,7 @@ export function OutlineTab({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-zinc-400 text-sm">
+      <div className="flex items-center justify-center h-full text-stone-400 text-sm">
         加载中...
       </div>
     )
@@ -188,7 +188,7 @@ export function OutlineTab({
 
   if (chapters.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-zinc-400 text-sm gap-2">
+      <div className="flex flex-col items-center justify-center h-full text-stone-400 text-sm gap-2">
         <p>还没有章节</p>
         <p className="text-xs">请先在章节标签中创建章节</p>
       </div>

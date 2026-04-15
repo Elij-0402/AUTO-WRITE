@@ -26,13 +26,13 @@ export function ChapterContextMenu({
 }: ChapterContextMenuProps) {
   return (
     <div
-      className="absolute right-0 top-full z-20 mt-1 w-44 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+      className="absolute right-0 top-full z-20 mt-1 w-44 rounded-lg border border-stone-200 bg-white py-1 shadow-lg dark:border-stone-700 dark:bg-stone-800"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Rename */}
       <button
         onClick={onRename}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-700"
       >
         <Pencil className="h-4 w-4" />
         重命名
@@ -41,7 +41,7 @@ export function ChapterContextMenu({
       {/* Duplicate */}
       <button
         onClick={onDuplicate}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-700"
       >
         <Copy className="h-4 w-4" />
         复制
@@ -50,7 +50,7 @@ export function ChapterContextMenu({
       {/* Status toggle */}
       <button
         onClick={onStatusToggle}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-700"
       >
         {chapter.status === 'draft' ? (
           <>
@@ -66,7 +66,7 @@ export function ChapterContextMenu({
       </button>
 
       {/* Separator */}
-      <div className="my-1 border-t border-zinc-200 dark:border-zinc-700" />
+      <div className="my-1 border-t border-stone-200 dark:border-stone-700" />
 
       {/* Delete */}
       <button

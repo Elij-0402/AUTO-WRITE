@@ -17,7 +17,7 @@ export function DraftCard({ draftId, content, onInsert }: DraftCardProps) {
   }
 
   return (
-    <div className="border rounded-lg p-3 mt-3 bg-zinc-50 dark:bg-zinc-700">
+    <div className="border rounded-lg p-3 mt-3 bg-stone-50 dark:bg-stone-700">
       <p className="text-sm whitespace-pre-wrap">{content}</p>
       <button
         onClick={handleInsert}

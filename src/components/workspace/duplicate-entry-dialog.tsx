@@ -49,26 +49,26 @@ export function DuplicateEntryDialog({
           <DialogTitle>发现已存在条目</DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+          <p className="text-sm text-stone-600 dark:text-stone-400 mb-4">
             「{entryName}」已存在，请选择：
           </p>
-          <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
-            <p className="font-medium text-zinc-900 dark:text-zinc-100">{existingEntry.name}</p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+          <div className="p-3 rounded-lg bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
+            <p className="font-medium text-stone-900 dark:text-stone-100">{existingEntry.name}</p>
+            <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
               类型：{TYPE_LABELS[existingEntry.type]}
             </p>
             {existingEntry.description && (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2 line-clamp-2">
+              <p className="text-sm text-stone-600 dark:text-stone-400 mt-2 line-clamp-2">
                 {existingEntry.description}
               </p>
             )}
             {existingEntry.appearance && (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2 line-clamp-2">
+              <p className="text-sm text-stone-600 dark:text-stone-400 mt-2 line-clamp-2">
                 {existingEntry.appearance}
               </p>
             )}
             {existingEntry.background && (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2 line-clamp-2">
+              <p className="text-sm text-stone-600 dark:text-stone-400 mt-2 line-clamp-2">
                 {existingEntry.background}
               </p>
             )}

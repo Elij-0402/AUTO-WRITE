@@ -284,6 +284,35 @@ function filterByConfidence(suggestions: Suggestion[]): Suggestion[] {
 }
 
 /**
+ * Deduplication function for suggestions.
+ * Removes duplicate relationship suggestions (same entity pairs, regardless of order)
+ * and duplicate new entry suggestions (same suggestedName).
+ */
+function deduplicateSuggestions(suggestions: Suggestion[]): Suggestion[] {
+  const seen = new Set<string>()
+  const deduplicated: Suggestion[] = []
+
+  for (const suggestion of suggestions) {
+    let key: string
+    if (suggestion.type === 'relationship') {
+      // Create a consistent key for relationship suggestions (sort names to handle both directions)
+      const names = [suggestion.entry1Name, suggestion.entry2Name].sort()
+      key = `rel:${names[0]}|${names[1]}`
+    } else {
+      // For new entries, key is the suggested name
+      key = `entry:${suggestion.suggestedName}`
+    }
+
+    if (!seen.has(key)) {
+      seen.add(key)
+      deduplicated.push(suggestion)
+    }
+  }
+
+  return deduplicated
+}
+
+/**
  * Limit suggestions to maximum count.
  * Per D-12: Maximum 3 suggestions per AI response.
  */
@@ -310,5 +339,8 @@ export function parseAISuggestions(
     ...parseNewEntrySuggestions(aiResponse)
   ]
   
-  return limitSuggestions(filterByConfidence(all), 3)
+  // Filter by confidence, deduplicate, then limit to 3
+  const filtered = filterByConfidence(all)
+  const deduped = deduplicateSuggestions(filtered)
+  return limitSuggestions(deduped, 3)
 }

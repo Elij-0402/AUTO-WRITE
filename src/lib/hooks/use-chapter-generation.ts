@@ -57,7 +57,7 @@ ${worldBibleContext || '(暂无相关世界观条目)'}
 export function useChapterGeneration(projectId: string, chapterId: string) {
   const { config } = useAIConfig(projectId)
   const { entriesByType } = useWorldEntries(projectId)
-  const { chapters, addChapter, updateChapterContent } = useChapters(projectId)
+  const { chapters, addChapter, updateChapterContent, reorderChapters } = useChapters(projectId)
   
   const [state, setState] = useState<GenerationState>({
     status: 'idle',
@@ -226,8 +226,15 @@ export function useChapterGeneration(projectId: string, chapterId: string) {
     }
     
     try {
+      // Check if chapter has existing content - content is a ProseMirror doc object
+      const hasExistingContent = currentChapter.content && 
+        typeof currentChapter.content === 'object' && 
+        'content' in currentChapter.content && 
+        Array.isArray(currentChapter.content.content) &&
+        currentChapter.content.content.length > 0
+
       // Per D-08: If chapter has existing content, create new chapter after current
-      if (currentChapter.content && currentChapter.content.trim().length > 0) {
+      if (hasExistingContent) {
         // Create new chapter with "(AI草稿)" suffix
         const newChapterTitle = `${currentChapter.title} (AI草稿)`
         const newChapterId = await addChapter(newChapterTitle)
@@ -243,19 +250,19 @@ export function useChapterGeneration(projectId: string, chapterId: string) {
           ]
         })
         
-        // Find current chapter index and update order to place new chapter after
+        // Find current chapter index and reorder so new chapter is placed after current
         const currentIndex = chapters.findIndex(c => c.id === chapterId)
-        if (currentIndex !== -1 && currentIndex < chapters.length - 1) {
-          // Reorder: move new chapter to be right after current chapter
+        if (currentIndex !== -1) {
+          // Build new order: place generated chapter after current chapter
           const chapterIds = chapters.map(c => c.id)
           const newIndex = chapterIds.indexOf(newChapterId)
-          if (newIndex > currentIndex + 1) {
-            // Remove from current position
+          if (newIndex !== -1 && newIndex !== currentIndex + 1) {
+            // Remove from current position if it's not already right after
             chapterIds.splice(newIndex, 1)
             // Insert after current chapter
             chapterIds.splice(currentIndex + 1, 0, newChapterId)
-            // Note: reorderChapters is available in useChapters but not destructured here
-            // We could add it to the hook return if needed
+            // Apply the reordering
+            await reorderChapters(chapterIds)
           }
         }
         

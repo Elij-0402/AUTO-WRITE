@@ -107,7 +107,7 @@ export function FloatingToolbar({ onDiscuss, editorRef }: FloatingToolbarProps) 
     >
       <button
         onClick={handleDiscussClick}
-        className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 shadow border border-zinc-200 dark:border-zinc-700 rounded px-3 py-1.5 text-sm text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+        className="flex items-center gap-1.5 bg-white dark:bg-stone-800 shadow border border-stone-200 dark:border-stone-700 rounded px-3 py-1.5 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
       >
         <MessageCircle className="w-4 h-4" />
         <span>讨论</span>

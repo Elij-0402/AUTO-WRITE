@@ -19,11 +19,16 @@ export function SyncManager() {
     // D-34: Listen for network recovery to trigger sync
     const handleOnline = () => {
       // Network recovered - retry failed syncs
-      retryFailedSync().then(({ synced }) => {
-        if (synced > 0) {
-          setLastSynced(Date.now())
-        }
-      })
+      retryFailedSync()
+        .then(({ synced }) => {
+          if (synced > 0) {
+            setLastSynced(Date.now())
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to retry sync on network recovery:', error)
+          setStatus('error')
+        })
     }
 
     window.addEventListener('online', handleOnline)

@@ -27,6 +27,20 @@ export interface ChatMessage {
 }
 
 /**
+ * Consistency exemption stored per-project in IndexedDB.
+ * Used to suppress specific contradiction warnings that user has explicitly allowed.
+ */
+export interface ConsistencyExemption {
+  id: string
+  projectId: string
+  /** Hash of entryId + type/description that created this exemption */
+  exemptionKey: string
+  createdAt: number
+  /** Optional note explaining why this was exempted */
+  note?: string
+}
+
+/**
  * Layout settings stored per-project in IndexedDB per D-24.
  * sidebarWidth: persisted sidebar width in pixels per D-25
  * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world') per D-08, D-14
@@ -54,6 +68,7 @@ export class InkForgeProjectDB extends Dexie {
   relations!: Table<Relation, string>
   aiConfig!: Table<AIConfig, string>
   messages!: Table<ChatMessage, string>
+  consistencyExemptions!: Table<ConsistencyExemption, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -96,6 +111,16 @@ export class InkForgeProjectDB extends Dexie {
       relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
       aiConfig: 'id',
       messages: 'id, projectId, role, timestamp',
+    })
+    this.version(5).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+      aiConfig: 'id',
+      messages: 'id, projectId, role, timestamp',
+      consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
     })
   }
 }

@@ -16,6 +16,7 @@ import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
 import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
+import { SyncStatusIcon } from '@/components/sync/SyncStatusIcon'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
 import type { WorldEntryType } from '@/lib/types'
 import type { EditorHandle } from '@/components/editor/editor-types'
@@ -235,8 +236,9 @@ export default function ProjectPage() {
         onClose={() => setAiConfigOpen(false)}
       />
 
-      {/* Top bar with AI settings, focus mode, and theme toggle */}
+      {/* Top bar with AI settings, focus mode, theme toggle, and sync status */}
       <div className="h-12 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center justify-end px-4 gap-2">
+        <SyncStatusIcon />
         <button
           onClick={() => setAiConfigOpen(true)}
           className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"

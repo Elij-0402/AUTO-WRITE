@@ -19,7 +19,7 @@ import {
  */
 
 /** Default sidebar width matching current fixed layout per D-05 */
-export const DEFAULT_SIDEBAR_WIDTH = 280
+export const DEFAULT_SIDEBAR_WIDTH = 240
 /** Minimum sidebar width per D-03 */
 export const MIN_SIDEBAR_WIDTH = 200
 
@@ -128,8 +128,8 @@ export function ResizablePanelGroup({
         onDoubleClick={handleDoubleClick}
         className="group relative flex items-center justify-center w-1 shrink-0 cursor-col-resize"
       >
-        <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400/20 group-active:bg-blue-500/30 transition-colors" />
-        <div className="w-1 h-full bg-zinc-200 group-hover:bg-blue-400 dark:bg-zinc-800 group-hover:dark:bg-blue-500 group-active:bg-blue-500 group-active:dark:bg-blue-400 transition-colors" />
+        <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400/10 group-active:bg-blue-500/15 transition-colors" />
+        <div className="w-px h-full bg-stone-200 group-hover:bg-blue-300 dark:bg-stone-800 group-hover:dark:bg-blue-500/50 group-active:bg-blue-400 group-active:dark:bg-blue-400/60 transition-colors" />
       </Separator>
 
       {/* Main content panel */}

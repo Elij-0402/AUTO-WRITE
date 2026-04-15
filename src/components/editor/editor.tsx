@@ -47,13 +47,14 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(({ content, onChange
       }),
       Typography, // Smart quotes, dashes, horizontal rules
     ],
+    immediatelyRender: false,
     content: content ?? '',
     onUpdate: ({ editor }) => {
       onChange(editor.getJSON())
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-zinc dark:prose-invert max-w-none focus:outline-none',
+        class: 'prose prose-stone dark:prose-invert max-w-none focus:outline-none',
       },
     },
   })
@@ -108,7 +109,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(({ content, onChange
     <div className={`h-full flex flex-col ${className}`}>
       {editor && <EditorToolbar editor={editor} />}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-[640px] mx-auto px-4 py-8">
+        <div className="max-w-[640px] mx-auto px-10 py-7">
           <EditorContent
             editor={editor}
             className="min-h-full"

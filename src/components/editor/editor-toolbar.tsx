@@ -43,12 +43,12 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   }, [editor, headingLevel])
 
   return (
-    <div className="editor-toolbar flex items-center gap-1 border-b border-zinc-200 dark:border-zinc-800 p-2 bg-white dark:bg-black sticky top-0 z-10">
+    <div className="editor-toolbar flex items-center gap-1 border-b border-stone-200 dark:border-stone-800 px-4 py-2 bg-white dark:bg-stone-950 sticky top-0 z-10">
       {/* Bold button per D-21 */}
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ${
-          editor.isActive('bold') ? 'bg-zinc-200 dark:bg-zinc-700' : ''
+        className={`p-2 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors ${
+          editor.isActive('bold') ? 'bg-stone-200 dark:bg-stone-700 text-blue-600 dark:text-blue-400' : ''
         }`}
         title="加粗 (Ctrl+B)"
       >
@@ -58,8 +58,8 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       {/* Italic button per D-21 */}
       <button
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ${
-          editor.isActive('italic') ? 'bg-zinc-200 dark:bg-zinc-700' : ''
+        className={`p-2 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors ${
+          editor.isActive('italic') ? 'bg-stone-200 dark:bg-stone-700 text-blue-600 dark:text-blue-400' : ''
         }`}
         title="斜体 (Ctrl+I)"
       >
@@ -69,8 +69,8 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       {/* Heading button per D-21, D-25, D-45 */}
       <button
         onClick={cycleHeading}
-        className={`p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors min-w-[2.5rem] ${
-          headingLevel > 0 ? 'bg-zinc-200 dark:bg-zinc-700' : ''
+        className={`p-2 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors min-w-[2.5rem] ${
+          headingLevel > 0 ? 'bg-stone-200 dark:bg-stone-700 text-blue-600 dark:text-blue-400' : ''
         }`}
         title="标题 (点击循环切换)"
       >

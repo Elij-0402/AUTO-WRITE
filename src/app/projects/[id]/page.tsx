@@ -22,7 +22,7 @@ import type { WorldEntryType } from '@/lib/types'
 import type { EditorHandle } from '@/components/editor/editor-types'
 
 /** Default chat panel width per D-09 */
-const DEFAULT_CHAT_PANEL_WIDTH = 320
+const DEFAULT_CHAT_PANEL_WIDTH = 300
 /** Minimum chat panel width per D-09 */
 const MIN_CHAT_PANEL_WIDTH = 280
 /** Maximum chat panel width per D-09 */

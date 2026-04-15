@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { useAutoSave } from '@/lib/hooks/use-autosave'
+import { GenerationPanel } from '@/components/generation/generation-panel'
 import type { Chapter, OutlineStatus } from '@/lib/types'
 
 /**
@@ -101,6 +102,9 @@ export function OutlineEditForm({
   const [localSummary, setLocalSummary] = useState('')
   const [localTargetWordCount, setLocalTargetWordCount] = useState<string>('')
   const [localOutlineStatus, setLocalOutlineStatus] = useState<OutlineStatus>('not_started')
+
+  // Generation panel visibility per D-01
+  const [showGenerationPanel, setShowGenerationPanel] = useState(false)
 
   // Sync local state when chapter changes (switching between outline entries)
   useEffect(() => {
@@ -262,10 +266,31 @@ export function OutlineEditForm({
           <p>创建于 {formatDateCN(chapter.createdAt)}</p>
           <p>更新于 {formatDateCN(chapter.updatedAt)}</p>
         </div>
+
+        {/* Generation panel per D-01, D-02 */}
+        {showGenerationPanel && (
+          <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+            <GenerationPanel
+              projectId={projectId}
+              chapterId={chapterId}
+              onClose={() => setShowGenerationPanel(false)}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Previous/Next navigation per D-20 */}
+      {/* Footer with generation button and navigation per D-01, D-20 */}
       <div className="flex gap-2 px-6 py-3 border-t border-zinc-200 dark:border-zinc-800">
+        {/* 生成章节 button per D-01 */}
+        <button
+          onClick={() => setShowGenerationPanel(true)}
+          disabled={!localSummary}
+          className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+          title={!localSummary ? '请先填写大纲摘要' : '基于大纲生成章节内容'}
+        >
+          生成章节
+        </button>
+
         <button
           onClick={onPrevious}
           disabled={!hasPrevious}

@@ -48,7 +48,7 @@ function getGradientFromId(id: string): string {
     hash = id.charCodeAt(i) + ((hash << 5) - hash)
   }
   const hue = Math.abs(hash) % 360
-  return `linear-gradient(135deg, hsl(${hue}, 70%, 60%), hsl(${(hue + 45) % 360}, 70%, 45%))`
+  return `linear-gradient(135deg, hsl(${hue}, 40%, 80%), hsl(${(hue + 45) % 360}, 40%, 70%))`
 }
 
 interface ProjectCardProps {
@@ -115,12 +115,12 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
 
   return (
     <div
-      className="group relative flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 cursor-pointer"
+      className="group relative flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 dark:border-stone-800 dark:bg-stone-900 cursor-pointer"
       onClick={handleCardClick}
     >
       {/* Cover image placeholder — gradient based on project ID */}
       <div
-        className="h-36 w-full"
+        className="h-20 w-full"
         style={{ background: getGradientFromId(project.id) }}
       />
 
@@ -137,11 +137,11 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
               onKeyDown={handleTitleKeyDown}
               onCompositionEnd={handleTitleSave}
               onClick={(e) => e.stopPropagation()}
-              className="w-full rounded border border-zinc-300 px-1 py-0.5 text-base font-semibold text-zinc-900 dark:text-zinc-50 dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+              className="w-full rounded border border-stone-300 px-1 py-0.5 text-sm font-semibold text-stone-900 dark:text-stone-50 dark:border-stone-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           ) : (
             <h3
-              className="text-base font-semibold text-zinc-900 dark:text-zinc-50 truncate hover:text-zinc-600 dark:hover:text-zinc-300"
+              className="text-sm font-semibold text-stone-900 dark:text-stone-50 truncate hover:text-stone-600 dark:hover:text-stone-300"
               onClick={(e) => {
                 e.stopPropagation()
                 setIsEditingTitle(true)
@@ -155,13 +155,13 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
 
         {/* Genre badge */}
         {project.genre && (
-          <span className="mb-2 inline-flex w-fit rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+          <span className="mb-2 inline-flex w-fit rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-700 dark:bg-stone-800 dark:text-stone-300">
             {GENRE_LABELS[project.genre] ?? project.genre}
           </span>
         )}
 
         {/* Metadata */}
-        <div className="mt-auto flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="mt-auto flex items-center justify-between text-xs text-stone-500 dark:text-stone-400">
           <span>字数：{project.wordCount.toLocaleString()}</span>
           <span>{formatRelativeTime(project.updatedAt)}</span>
         </div>
@@ -174,26 +174,26 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
             e.stopPropagation()
             setMenuOpen(!menuOpen)
           }}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-black/20 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/40"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/50 text-stone-700 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white/80 dark:bg-stone-800/50 dark:text-stone-300 dark:hover:bg-stone-800/80"
         >
           <MoreVertical className="h-4 w-4" />
         </button>
 
         {menuOpen && (
           <div
-            className="absolute right-0 top-full z-10 mt-1 w-36 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+            className="absolute right-0 top-full z-10 mt-1 w-36 rounded-lg border border-stone-200 bg-white py-1 shadow-lg dark:border-stone-700 dark:bg-stone-800"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => { setMenuOpen(false); onEdit() }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-700"
             >
               <Pencil className="h-4 w-4" />
               编辑
             </button>
             <button
               onClick={() => { setMenuOpen(false) }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-700"
             >
               <Settings className="h-4 w-4" />
               设置

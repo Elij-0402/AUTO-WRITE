@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useAIChat, ChatMessage } from '@/lib/hooks/use-ai-chat'
+import { useAIChat, ChatMessage, type Contradiction } from '@/lib/hooks/use-ai-chat'
 import { createProjectDB } from '@/lib/db/project-db'
 import { useDismissedSuggestions } from '@/lib/hooks/use-dismissed-suggestions'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
 import { MessageBubble } from './message-bubble'
 import { RelationshipSuggestionCard, NewEntrySuggestionCard } from './suggestion-card'
+import { ConsistencyWarningCard } from './consistency-warning-card'
 import { NewEntryDialog, type NewEntryPrefillData } from './new-entry-dialog'
 import { DuplicateEntryDialog } from './duplicate-entry-dialog'
 import { Send, Loader2 } from 'lucide-react'
@@ -21,16 +22,22 @@ interface AIChatPanelProps {
   selectedText?: string | null
   /** Callback when discussion is complete (text sent or cleared) */
   onDiscussComplete?: () => void
+  /** Callback to switch to world bible tab */
+  onSwitchToWorldTab?: () => void
 }
 
-export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete }: AIChatPanelProps) {
+export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete, onSwitchToWorldTab }: AIChatPanelProps) {
   const {
     messages,
     loading,
     sendMessage,
     suggestions,
     dismissSuggestion,
-    clearSuggestions
+    clearSuggestions,
+    contradictions,
+    isCheckingConsistency,
+    addExemption,
+    clearContradiction
   } = useAIChat(projectId, { selectedText: selectedText || undefined })
 
   const { entriesByType, addEntry } = useWorldEntries(projectId)
@@ -195,6 +202,23 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     // Continue with creation
   }
 
+  // Handle ignoring a contradiction
+  const handleIgnoreContradiction = (index: number) => {
+    clearContradiction(index)
+  }
+
+  // Handle intentional contradiction (adds exemption and clears)
+  const handleIntentionalContradiction = async (contradiction: Contradiction, index: number) => {
+    await addExemption(contradiction.entryName, contradiction.entryType)
+    clearContradiction(index)
+    showToast('已记录为有意为之')
+  }
+
+  // Handle fixing world entry (switch to world tab)
+  const handleFixWorldEntry = () => {
+    onSwitchToWorldTab?.()
+  }
+
   const isEmpty = messages.length === 0
 
   return (
@@ -252,6 +276,30 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
                       onDismiss={() => handleDismiss(suggestion)}
                     />
                   )
+                ))}
+              </div>
+            )}
+
+            {/* Render consistency warnings after AI messages */}
+            {contradictions.length > 0 && (
+              <div className="mt-3 space-y-2">
+                <div className="text-xs text-stone-400 dark:text-stone-500 mb-2">
+                  ⚠️ 矛盾检测
+                </div>
+                {isCheckingConsistency && (
+                  <div className="flex items-center gap-2 text-stone-400 text-sm mb-2">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>检测矛盾中...</span>
+                  </div>
+                )}
+                {contradictions.map((contradiction, idx) => (
+                  <ConsistencyWarningCard
+                    key={`${contradiction.entryName}-${contradiction.entryType}-${idx}`}
+                    contradiction={contradiction}
+                    onIgnore={() => handleIgnoreContradiction(idx)}
+                    onIntentional={() => handleIntentionalContradiction(contradiction, idx)}
+                    onFixWorldEntry={handleFixWorldEntry}
+                  />
                 ))}
               </div>
             )}

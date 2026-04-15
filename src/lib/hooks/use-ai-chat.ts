@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { createProjectDB } from '../db/project-db'
 import { useAIConfig } from './use-ai-config'
 import { useWorldEntries } from './use-world-entries'
+import { useConsistencyExemptions } from './use-consistency-exemptions'
 import {
   extractKeywords,
   findRelevantEntries,
@@ -9,6 +10,7 @@ import {
   buildContextPrompt,
 } from './use-context-injection'
 import { parseAISuggestions, type Suggestion } from '../ai/suggestion-parser'
+import type { WorldEntryType } from '../types'
 
 export interface ChatMessage {
   id: string
@@ -18,6 +20,12 @@ export interface ChatMessage {
   timestamp: number
   hasDraft?: boolean
   draftId?: string
+}
+
+export interface Contradiction {
+  entryName: string
+  entryType: WorldEntryType
+  description: string
 }
 
 export interface UseAIChatOptions {
@@ -30,13 +38,22 @@ export interface UseAIChatOptions {
 export function useAIChat(projectId: string, options?: UseAIChatOptions) {
   const { config } = useAIConfig(projectId)
   const { entriesByType } = useWorldEntries(projectId)
+  const { exemptions, addExemption } = useConsistencyExemptions(projectId)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [streamingContent, setStreamingContent] = useState('')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [contradictions, setContradictions] = useState<Contradiction[]>([])
+  const [isCheckingConsistency, setIsCheckingConsistency] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
   const entriesByTypeRef = useRef(entriesByType)
+  const exemptionsRef = useRef(exemptions)
+
+  // Keep exemptionsRef updated
+  useEffect(() => {
+    exemptionsRef.current = exemptions
+  }, [exemptions])
 
   // Load messages on mount
   useEffect(() => {
@@ -200,6 +217,93 @@ ${currentDiscussion}
       } finally {
         setIsAnalyzing(false)
       }
+
+      // Check for contradictions if draft was generated
+      if (hasDraft && entriesByTypeRef.current) {
+        setIsCheckingConsistency(true)
+        try {
+          const keywords = extractKeywords(fullContent)
+          const matchedEntries = findRelevantEntries(keywords, entriesByTypeRef.current)
+
+          if (matchedEntries.length > 0) {
+            // Build context for contradiction detection
+            const contextEntries = trimToTokenBudget(matchedEntries, 2000)
+            const contextPrompt = `【世界观百科】
+${buildContextPrompt(contextEntries)}
+
+【待检测内容】
+${fullContent}
+
+【任务】
+请检测"待检测内容"中是否存在与"世界观百科"中的设定相矛盾的内容。
+请以JSON格式返回，格式如下：
+{
+  "contradictions": [
+    {
+      "entryName": "条目名称",
+      "entryType": "character|location|rule|timeline",
+      "description": "矛盾描述",
+      "severity": "high|medium|low"
+    }
+  ]
+}
+如果没有发现矛盾，返回空数组：{"contradictions": []}`
+
+            const response = await fetch(`${config.baseUrl}/chat/completions`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${config.apiKey}`
+              },
+              body: JSON.stringify({
+                model: config.model || 'gpt-4',
+                messages: [
+                  { role: 'system', content: '你是一个严格的世界观一致性检查助手。' },
+                  { role: 'user', content: contextPrompt }
+                ],
+                temperature: 0.1
+              })
+            })
+
+            if (response.ok) {
+              const data = await response.json()
+              const assistantContent = data.choices?.[0]?.message?.content
+
+              if (assistantContent) {
+                // Parse JSON response
+                const jsonMatch = assistantContent.match(/\{[\s\S]*\}/)
+                if (jsonMatch) {
+                  const parsed = JSON.parse(jsonMatch[0])
+                  if (parsed.contradictions && Array.isArray(parsed.contradictions)) {
+                    // Filter out low severity and exempted contradictions
+                    const filteredContradictions = parsed.contradictions
+                      .filter((c: { severity?: string }) => c.severity !== 'low')
+                      .filter((c: { entryName?: string; entryType?: string }) => {
+                        // Check if this contradiction is exempted
+                        const isExempt = exemptionsRef.current?.some(
+                          e => e.exemptionKey === `${c.entryName}:${c.entryType}`
+                        )
+                        return !isExempt
+                      })
+                      .map((c: { entryName: string; entryType: string; description: string }) => ({
+                        entryName: c.entryName,
+                        entryType: c.entryType,
+                        description: c.description
+                      }))
+
+                    setContradictions(filteredContradictions)
+                  }
+                }
+              }
+            }
+          }
+        } catch (err) {
+          // Don't block the flow if consistency check fails
+          console.warn('Consistency check failed:', err)
+        } finally {
+          setIsCheckingConsistency(false)
+        }
+      }
       
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
@@ -251,7 +355,11 @@ ${currentDiscussion}
     suggestions,
     isAnalyzing,
     dismissSuggestion,
-    clearSuggestions
+    clearSuggestions,
+    contradictions,
+    isCheckingConsistency,
+    addExemption,
+    clearContradiction: (index: number) => setContradictions(prev => prev.filter((_, i) => i !== index))
   }
 }
 

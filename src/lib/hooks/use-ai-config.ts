@@ -29,9 +29,13 @@ export function useAIConfig(projectId: string) {
     [db]
   )
 
-  const config: AIConfig = liveConfig
-    ? { ...DEFAULT_CONFIG, ...liveConfig, provider: liveConfig.provider ?? 'openai-compatible' }
-    : DEFAULT_CONFIG
+  const config: AIConfig = useMemo(
+    () =>
+      liveConfig
+        ? { ...DEFAULT_CONFIG, ...liveConfig, provider: liveConfig.provider ?? 'openai-compatible' }
+        : DEFAULT_CONFIG,
+    [liveConfig]
+  )
   const loading = liveConfig === undefined
 
   const saveConfig = useCallback(async (newConfig: Partial<AIConfig>) => {

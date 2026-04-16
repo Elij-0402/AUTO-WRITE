@@ -1,563 +1,799 @@
-# Graph Report - .  (2026-04-16)
+# Graph Report - .  (2026-04-17)
 
 ## Corpus Check
-- 117 files ， ~55,793 words
+- 161 files ， ~55,535 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 367 nodes ， 386 edges ， 78 communities detected
-- Extraction: 81% EXTRACTED ， 19% INFERRED ， 0% AMBIGUOUS ， INFERRED: 75 edges (avg confidence: 0.8)
+- 381 nodes ， 356 edges ， 115 communities detected
+- Extraction: 78% EXTRACTED ， 22% INFERRED ， 0% AMBIGUOUS ， INFERRED: 77 edges (avg confidence: 0.8)
 - Token cost: 0 input ， 0 output
 
 ## Community Hubs (Navigation)
-- [[_COMMUNITY_Auth & Session Management|Auth & Session Management]]
-- [[_COMMUNITY_UI Interaction Handlers|UI Interaction Handlers]]
-- [[_COMMUNITY_Chapter Management|Chapter Management]]
-- [[_COMMUNITY_World Entry Editing|World Entry Editing]]
+- [[_COMMUNITY_Sync Engine|Sync Engine]]
+- [[_COMMUNITY_Chapter & Export|Chapter & Export]]
+- [[_COMMUNITY_RAG Layer|RAG Layer]]
+- [[_COMMUNITY_World Bible Editor|World Bible Editor]]
 - [[_COMMUNITY_AI Chat Panel|AI Chat Panel]]
-- [[_COMMUNITY_UI Redesign Spec|UI Redesign Spec]]
-- [[_COMMUNITY_InkForge Core Architecture|InkForge Core Architecture]]
+- [[_COMMUNITY_AI Hooks|AI Hooks]]
 - [[_COMMUNITY_Suggestion Parser|Suggestion Parser]]
-- [[_COMMUNITY_World Entry Queries|World Entry Queries]]
-- [[_COMMUNITY_GSD Framework|GSD Framework]]
-- [[_COMMUNITY_Outline Editing|Outline Editing]]
-- [[_COMMUNITY_Sync Management|Sync Management]]
-- [[_COMMUNITY_Project Dashboard|Project Dashboard]]
-- [[_COMMUNITY_Editor Core|Editor Core]]
-- [[_COMMUNITY_Tiptap Extensions|Tiptap Extensions]]
-- [[_COMMUNITY_Generation Panel|Generation Panel]]
-- [[_COMMUNITY_Context Injection|Context Injection]]
-- [[_COMMUNITY_Outline Queries|Outline Queries]]
-- [[_COMMUNITY_Theme Provider|Theme Provider]]
+- [[_COMMUNITY_World Entry DB|World Entry DB]]
+- [[_COMMUNITY_Relation DB|Relation DB]]
+- [[_COMMUNITY_Project Management|Project Management]]
+- [[_COMMUNITY_Revisions|Revisions]]
+- [[_COMMUNITY_Auth & Sync|Auth & Sync]]
+- [[_COMMUNITY_History Drawer|History Drawer]]
 - [[_COMMUNITY_Project Card|Project Card]]
-- [[_COMMUNITY_Community 20|Community 20]]
-- [[_COMMUNITY_Community 21|Community 21]]
-- [[_COMMUNITY_Community 22|Community 22]]
-- [[_COMMUNITY_Community 23|Community 23]]
-- [[_COMMUNITY_Community 24|Community 24]]
-- [[_COMMUNITY_Community 25|Community 25]]
-- [[_COMMUNITY_Community 26|Community 26]]
-- [[_COMMUNITY_Community 27|Community 27]]
-- [[_COMMUNITY_Community 28|Community 28]]
-- [[_COMMUNITY_Community 29|Community 29]]
-- [[_COMMUNITY_Community 30|Community 30]]
-- [[_COMMUNITY_Community 31|Community 31]]
-- [[_COMMUNITY_Community 32|Community 32]]
-- [[_COMMUNITY_Community 33|Community 33]]
-- [[_COMMUNITY_Community 34|Community 34]]
-- [[_COMMUNITY_Community 35|Community 35]]
-- [[_COMMUNITY_Community 36|Community 36]]
-- [[_COMMUNITY_Community 37|Community 37]]
-- [[_COMMUNITY_Community 38|Community 38]]
-- [[_COMMUNITY_Community 39|Community 39]]
-- [[_COMMUNITY_Community 40|Community 40]]
-- [[_COMMUNITY_Community 41|Community 41]]
-- [[_COMMUNITY_Community 42|Community 42]]
-- [[_COMMUNITY_Community 43|Community 43]]
-- [[_COMMUNITY_Community 44|Community 44]]
-- [[_COMMUNITY_Community 45|Community 45]]
-- [[_COMMUNITY_Community 46|Community 46]]
-- [[_COMMUNITY_Community 47|Community 47]]
-- [[_COMMUNITY_Community 48|Community 48]]
-- [[_COMMUNITY_Community 49|Community 49]]
-- [[_COMMUNITY_Community 50|Community 50]]
-- [[_COMMUNITY_Community 51|Community 51]]
-- [[_COMMUNITY_Community 52|Community 52]]
-- [[_COMMUNITY_Community 53|Community 53]]
-- [[_COMMUNITY_Community 54|Community 54]]
-- [[_COMMUNITY_Community 55|Community 55]]
-- [[_COMMUNITY_Community 56|Community 56]]
-- [[_COMMUNITY_Community 57|Community 57]]
-- [[_COMMUNITY_Community 58|Community 58]]
-- [[_COMMUNITY_Community 59|Community 59]]
-- [[_COMMUNITY_Community 60|Community 60]]
-- [[_COMMUNITY_Community 61|Community 61]]
-- [[_COMMUNITY_Community 62|Community 62]]
-- [[_COMMUNITY_Community 63|Community 63]]
-- [[_COMMUNITY_Community 64|Community 64]]
-- [[_COMMUNITY_Community 65|Community 65]]
-- [[_COMMUNITY_Community 66|Community 66]]
-- [[_COMMUNITY_Community 67|Community 67]]
-- [[_COMMUNITY_Community 68|Community 68]]
-- [[_COMMUNITY_Community 69|Community 69]]
-- [[_COMMUNITY_Community 70|Community 70]]
-- [[_COMMUNITY_Community 71|Community 71]]
-- [[_COMMUNITY_Community 72|Community 72]]
-- [[_COMMUNITY_Community 73|Community 73]]
-- [[_COMMUNITY_Community 74|Community 74]]
-- [[_COMMUNITY_Community 75|Community 75]]
-- [[_COMMUNITY_Community 76|Community 76]]
-- [[_COMMUNITY_Community 77|Community 77]]
+- [[_COMMUNITY_Project Dashboard|Project Dashboard]]
+- [[_COMMUNITY_New Entry Dialog|New Entry Dialog]]
+- [[_COMMUNITY_Tag Input|Tag Input]]
+- [[_COMMUNITY_Authenticated Layout|Authenticated Layout]]
+- [[_COMMUNITY_Chapter Row|Chapter Row]]
+- [[_COMMUNITY_Theme Provider|Theme Provider]]
+- [[_COMMUNITY_Outline Edit Form|Outline Edit Form]]
+- [[_COMMUNITY_AI Config Dialog|AI Config Dialog]]
+- [[_COMMUNITY_Suggestion Card|Suggestion Card]]
+- [[_COMMUNITY_AI Client|AI Client]]
+- [[_COMMUNITY_Prompts|Prompts]]
+- [[_COMMUNITY_Anthropic Provider|Anthropic Provider]]
+- [[_COMMUNITY_Content Hash|Content Hash]]
+- [[_COMMUNITY_Proxy & Middleware|Proxy & Middleware]]
+- [[_COMMUNITY_Conflict Resolver|Conflict Resolver]]
+- [[_COMMUNITY_Generation Panel|Generation Panel]]
+- [[_COMMUNITY_Create Project Modal|Create Project Modal]]
+- [[_COMMUNITY_Duplicate Entry Dialog|Duplicate Entry Dialog]]
+- [[_COMMUNITY_Default Embedder|Default Embedder]]
+- [[_COMMUNITY_Root Layout|Root Layout]]
+- [[_COMMUNITY_Home Page|Home Page]]
+- [[_COMMUNITY_Auth Page|Auth Page]]
+- [[_COMMUNITY_Relation Graph|Relation Graph]]
+- [[_COMMUNITY_Chapter Context Menu|Chapter Context Menu]]
+- [[_COMMUNITY_Create Chapter Input|Create Chapter Input]]
+- [[_COMMUNITY_Delete Chapter Dialog|Delete Chapter Dialog]]
+- [[_COMMUNITY_Editor Toolbar|Editor Toolbar]]
+- [[_COMMUNITY_Floating Toolbar|Floating Toolbar]]
+- [[_COMMUNITY_Format Distance|Format Distance]]
+- [[_COMMUNITY_Outline Tab|Outline Tab]]
+- [[_COMMUNITY_Empty Dashboard|Empty Dashboard]]
+- [[_COMMUNITY_Project Settings Dialog|Project Settings Dialog]]
+- [[_COMMUNITY_Project Settings Form|Project Settings Form]]
+- [[_COMMUNITY_Badge UI|Badge UI]]
+- [[_COMMUNITY_Consistency Warning|Consistency Warning]]
+- [[_COMMUNITY_Draft Card|Draft Card]]
+- [[_COMMUNITY_Resizable Panel|Resizable Panel]]
+- [[_COMMUNITY_Create Entry Input|Create Entry Input]]
+- [[_COMMUNITY_Delete Entry Dialog|Delete Entry Dialog]]
+- [[_COMMUNITY_OpenAI Compatible Provider|OpenAI Compatible Provider]]
+- [[_COMMUNITY_Revisions Test|Revisions Test]]
+- [[_COMMUNITY_EPUB Gen|EPUB Gen]]
+- [[_COMMUNITY_Use All Relations|Use All Relations]]
+- [[_COMMUNITY_Use Dismissed Suggestions|Use Dismissed Suggestions]]
+- [[_COMMUNITY_Use Layout|Use Layout]]
+- [[_COMMUNITY_Use Relations|Use Relations]]
+- [[_COMMUNITY_Use Revisions|Use Revisions]]
+- [[_COMMUNITY_Supabase Client|Supabase Client]]
+- [[_COMMUNITY_Utils|Utils]]
+- [[_COMMUNITY_Next Env Types|Next Env Types]]
+- [[_COMMUNITY_Next Config|Next Config]]
+- [[_COMMUNITY_Playwright Config|Playwright Config]]
+- [[_COMMUNITY_Vitest Config|Vitest Config]]
+- [[_COMMUNITY_Style Profile|Style Profile]]
+- [[_COMMUNITY_Timeline View|Timeline View]]
+- [[_COMMUNITY_Editor Types|Editor Types]]
+- [[_COMMUNITY_Editor|Editor]]
+- [[_COMMUNITY_Accordion UI|Accordion UI]]
+- [[_COMMUNITY_Avatar UI|Avatar UI]]
+- [[_COMMUNITY_Button UI|Button UI]]
+- [[_COMMUNITY_Card UI|Card UI]]
+- [[_COMMUNITY_Dialog UI|Dialog UI]]
+- [[_COMMUNITY_Dropdown Menu UI|Dropdown Menu UI]]
+- [[_COMMUNITY_Input UI|Input UI]]
+- [[_COMMUNITY_Label UI|Label UI]]
+- [[_COMMUNITY_Scroll Area UI|Scroll Area UI]]
+- [[_COMMUNITY_Select UI|Select UI]]
+- [[_COMMUNITY_Separator UI|Separator UI]]
+- [[_COMMUNITY_Sheet UI|Sheet UI]]
+- [[_COMMUNITY_Textarea UI|Textarea UI]]
+- [[_COMMUNITY_Tooltip UI|Tooltip UI]]
+- [[_COMMUNITY_Message Bubble|Message Bubble]]
+- [[_COMMUNITY_Workspace Topbar|Workspace Topbar]]
+- [[_COMMUNITY_AI Events|AI Events]]
+- [[_COMMUNITY_Prompts Test|Prompts Test]]
+- [[_COMMUNITY_AI Provider Types|AI Provider Types]]
+- [[_COMMUNITY_Schemas Test|Schemas Test]]
+- [[_COMMUNITY_Schemas|Schemas]]
+- [[_COMMUNITY_Content Hash Test|Content Hash Test]]
+- [[_COMMUNITY_Chapter Queries Test|Chapter Queries Test]]
+- [[_COMMUNITY_DB Index|DB Index]]
+- [[_COMMUNITY_Meta DB Test|Meta DB Test]]
+- [[_COMMUNITY_InkForge Meta DB|InkForge Meta DB]]
+- [[_COMMUNITY_Project DB Test|Project DB Test]]
+- [[_COMMUNITY_Relation Queries Test|Relation Queries Test]]
+- [[_COMMUNITY_World Entry Queries Test|World Entry Queries Test]]
+- [[_COMMUNITY_Autosave Test|Autosave Test]]
+- [[_COMMUNITY_Context Injection|Context Injection]]
+- [[_COMMUNITY_Projects Test|Projects Test]]
+- [[_COMMUNITY_Embedder Test|Embedder Test]]
+- [[_COMMUNITY_Hybrid Search Test|Hybrid Search Test]]
+- [[_COMMUNITY_RAG Types|RAG Types]]
+- [[_COMMUNITY_Chapter Types|Chapter Types]]
+- [[_COMMUNITY_Types Index|Types Index]]
+- [[_COMMUNITY_Project Types|Project Types]]
+- [[_COMMUNITY_Relation Types|Relation Types]]
+- [[_COMMUNITY_World Entry Types|World Entry Types]]
+- [[_COMMUNITY_Test Setup|Test Setup]]
+- [[_COMMUNITY_Example Spec|Example Spec]]
+- [[_COMMUNITY_InkForge Project|InkForge Project]]
+- [[_COMMUNITY_AI Layer|AI Layer]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `GET()` - 15 edges
-2. `UI Redesign Implementation Plan` - 14 edges
-3. `createClient()` - 11 edges
-4. `flushSyncQueue()` - 10 edges
-5. `AIChatPanel Component` - 9 edges
-6. `getQueueDB()` - 8 edges
-7. `parseAISuggestions()` - 6 edges
-8. `createProjectDB()` - 6 edges
-9. `useWorldEntries Hook` - 6 edges
-10. `showToast()` - 5 edges
+1. `GET()` - 17 edges
+2. `createClient()` - 12 edges
+3. `flushSyncQueue()` - 10 edges
+4. `indexWorldEntries()` - 9 edges
+5. `getQueueDB()` - 8 edges
+6. `parseAISuggestions()` - 6 edges
+7. `createProjectDB()` - 6 edges
+8. `showToast()` - 5 edges
+9. `extractTextFromContent()` - 5 edges
+10. `exportToDocx()` - 5 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Globe/World Icon (SVG)` --semantically_similar_to--> `Worldview Encyclopedia Context Injection`  [INFERRED] [semantically similar]
-  public/globe.svg ★ AGENTS.md
-- `File/Document Icon (SVG)` --semantically_similar_to--> `.planning/ State Machine (STATE.md, ROADMAP.md, config.json)`  [INFERRED] [semantically similar]
-  public/file.svg ★ AGENTS.md
 - `duplicateChapter()` --calls--> `GET()`  [INFERRED]
   src\lib\db\chapter-queries.ts ★ src\app\auth\callback\route.ts
+- `getRevision()` --calls--> `GET()`  [INFERRED]
+  src\lib\db\revisions.ts ★ src\app\auth\callback\route.ts
 - `getWorldEntryById()` --calls--> `GET()`  [INFERRED]
   src\lib\db\world-entry-queries.ts ★ src\app\auth\callback\route.ts
 - `updateTodayWordCount()` --calls--> `GET()`  [INFERRED]
   src\lib\hooks\use-word-count.ts ★ src\app\auth\callback\route.ts
-
-## Hyperedges (group relationships)
-- **GSD Agent Orchestration Stack** ！ agents_gsd_framework, agents_cli_tool, agents_agent_definitions, agents_hook_system, agents_planning_state [EXTRACTED 0.95]
-- **InkForge AI Differentiation Features** ！ agents_worldview_context, agents_contradiction_checking, agents_byok_model, agents_rationale_core_value [EXTRACTED 0.90]
-- **Next.js Deployment and Branding Assets** ！ readme_nextjs_project, next_svg_logo, vercel_svg_logo, readme_vercel_deploy, readme_geist_font [INFERRED 0.80]
-- **Four-Panel Workspace Layout Architecture** ！ four_panel_workspace, chapter_sidebar, editor, ai_chat_panel, resizable_panels [EXTRACTED 1.00]
-- **MCP-Driven E2E Fix Workflow** ！ mcp_infrastructure, next_devtools_mcp, playwright_mcp, mcp_error_detection, react_hooks_violation, e2e_verification_flows [EXTRACTED 0.95]
-- **UI Redesign Component Migration** ！ ui_redesign_plan, stone_palette, blue_accent, button_component, dialog_component, input_component, textarea_component, auth_page, project_dashboard, project_card, chapter_sidebar, chapter_row, editor, editor_toolbar, editor_css, ai_chat_panel, message_bubble [EXTRACTED 0.95]
-- **Risk Check Workflow** ！ mcp_error_detection, risk_tiptap_react19, risk_epub_chinese, risk_supabase_ssr, risk_indexeddb [EXTRACTED 0.85]
-- **Two-Tier DB Architecture** ！ two_tier_indexeddb_pattern, inkforge_meta_db, inkforge_project_db, create_project_db [EXTRACTED 1.00]
-- **Workspace Layout Redesign Specification** ！ workspace_layout_spec, split_panel_layout, dashboard_sidebar_nav, chapter_sidebar, editor, ai_chat_panel, ai_chat_bubbles [EXTRACTED 0.90]
-- **Auth Flow Verification** ！ e2e_verification_flows, auth_page, mcp_infrastructure [EXTRACTED 0.90]
-- **World Bible Context Injection System** ！ world_bible_context_injection, use_context_injection, use_world_entries, ai_chat_panel, world_entry [EXTRACTED 0.90]
+- `proxy()` --calls--> `GET()`  [INFERRED]
+  src\proxy.ts ★ src\app\auth\callback\route.ts
 
 ## Communities
 
-### Community 0 - "Auth & Session Management"
+### Community 0 - "Sync Engine"
 Cohesion: 0.1
-Nodes (25): resetPassword(), signIn(), signOut(), signUp(), handleSignOut(), AuthenticatedLayout(), handleSubmit(), GET() (+17 more)
+Nodes (25): resetPassword(), signIn(), signOut(), signUp(), AuthDropdown(), layoutForceDirected(), AuthenticatedLayout(), GET() (+17 more)
 
-### Community 1 - "UI Interaction Handlers"
-Cohesion: 0.09
-Nodes (23): AIChatPanel Component, Auth Page (Split Panel Layout), BYOK (Bring Your Own Key) AI Model, Chapter Type, ChapterSidebar Component, createProjectDB(), 7 E2E Verification Flows, Tiptap Editor (+15 more)
-
-### Community 2 - "Chapter Management"
-Cohesion: 0.09
+### Community 1 - "Chapter & Export"
+Cohesion: 0.1
 Nodes (16): handleCheckDuplicate(), addChapter(), computeWordCount(), duplicateChapter(), extractTextFromContent(), getChapterNumber(), getChapters(), softDeleteChapter() (+8 more)
 
-### Community 3 - "World Entry Editing"
-Cohesion: 0.09
-Nodes (11): useAIChat(), useAIConfig(), useAutoSave(), useChapterEditor(), useChapterGeneration(), useChapters(), useConsistencyExemptions(), useWorldEntries() (+3 more)
+### Community 2 - "RAG Layer"
+Cohesion: 0.13
+Nodes (15): cosineSimilarity(), embedOne(), HashGramEmbedder, l2Normalize(), normalize(), stableHash(), reciprocalRankFusion(), decodeText() (+7 more)
+
+### Community 3 - "World Bible Editor"
+Cohesion: 0.11
+Nodes (5): useAutoSave(), useChapterEditor(), useWorldEntries Hook, getTypeIcon(), WorldEntryEditForm()
 
 ### Community 4 - "AI Chat Panel"
-Cohesion: 0.11
-Nodes (12): findEntryIdByName(), handleAdoptRelationship(), handleIntentionalContradiction(), handleKeyDown(), handleLinkExisting(), handleSaveNewEntry(), handleSend(), showToast() (+4 more)
+Cohesion: 0.19
+Nodes (8): findEntryIdByName(), handleAdoptRelationship(), handleIntentionalContradiction(), handleKeyDown(), handleLinkExisting(), handleSaveNewEntry(), handleSend(), showToast()
 
-### Community 5 - "UI Redesign Spec"
-Cohesion: 0.12
-Nodes (15): AI Chat Custom Bubble Shapes, Blue Accent Color System, Button Component, Chapter Row Component, Dashboard Sidebar Navigation Layout, Dialog Component, Editor CSS Styles, Editor Toolbar (+7 more)
+### Community 5 - "AI Hooks"
+Cohesion: 0.15
+Nodes (5): useAIChat(), useAIConfig(), useChapterGeneration(), useChapters(), useConsistencyExemptions()
 
-### Community 6 - "InkForge Core Architecture"
-Cohesion: 0.17
-Nodes (13): BYOK (Bring Your Own Key) AI Model, Cross-entity Contradiction Checking, InkForge - AI Novel Writing Workbench, Next.js + React Tech Stack, Rationale: BYOK Eliminates Product Model Cost, Rationale: AI Context Injection Solves Consistency Pain Point, Worldview Encyclopedia Context Injection, Globe/World Icon (SVG) (+5 more)
-
-### Community 7 - "Suggestion Parser"
+### Community 6 - "Suggestion Parser"
 Cohesion: 0.38
 Nodes (9): createNewEntrySuggestion(), createRelationshipSuggestion(), deduplicateSuggestions(), filterByConfidence(), inferEntryTypes(), limitSuggestions(), parseAISuggestions(), parseNewEntrySuggestions() (+1 more)
 
-### Community 8 - "World Entry Queries"
+### Community 7 - "World Entry DB"
 Cohesion: 0.2
 Nodes (1): getWorldEntryById()
 
-### Community 9 - "GSD Framework"
-Cohesion: 0.24
-Nodes (10): Markdown-defined Agent Personas (24 agents), gsd-tools.cjs CLI Entry Point, Context Window Monitoring, Dual Runtime Support (Claude Code + OpenCode), GSD (Get Shit Done) Framework v1.34.2, Runtime Hook System (PreToolUse/PostToolUse), Model Profile System (quality/balanced/budget/adaptive), .planning/ State Machine (STATE.md, ROADMAP.md, config.json) (+2 more)
+### Community 8 - "Relation DB"
+Cohesion: 0.29
+Nodes (4): addRelation(), deleteRelation(), handleAddRelation(), handleDeleteRelation()
 
-### Community 10 - "Outline Editing"
-Cohesion: 0.31
-Nodes (6): buildContextPrompt(), findRelevantEntries(), formatEntryForContext(), injectContext(), matchKeyword(), trimToTokenBudget()
-
-### Community 11 - "Sync Management"
+### Community 9 - "Project Management"
 Cohesion: 0.29
 Nodes (5): ProjectLayout(), useProjects(), updateTodayWordCount(), useTodayWordCount(), useTotalWordCount()
 
-### Community 12 - "Project Dashboard"
-Cohesion: 0.25
-Nodes (8): MCP Error Detection Workflow, MCP Infrastructure Setup, next-devtools MCP Server, Playwright MCP Server, epub-gen Chinese Export Risk, IndexedDB Transaction Error Handling Risk, Supabase SSR Middleware Risk, Tiptap + React 19 Hydration Risk
-
-### Community 13 - "Editor Core"
+### Community 10 - "Revisions"
 Cohesion: 0.33
-Nodes (2): handleTitleKeyDown(), handleTitleSave()
+Nodes (3): createRevision(), getRevision(), pruneRevisions()
 
-### Community 14 - "Tiptap Extensions"
+### Community 11 - "Auth & Sync"
 Cohesion: 0.33
 Nodes (3): AuthStatus(), SyncProgress(), useAuth()
 
-### Community 15 - "Generation Panel"
+### Community 12 - "History Drawer"
 Cohesion: 0.4
 Nodes (0): 
 
-### Community 16 - "Context Injection"
+### Community 13 - "Project Card"
+Cohesion: 0.5
+Nodes (2): handleTitleKeyDown(), handleTitleSave()
+
+### Community 14 - "Project Dashboard"
+Cohesion: 0.4
+Nodes (0): 
+
+### Community 15 - "New Entry Dialog"
 Cohesion: 0.5
 Nodes (2): buildEntry(), handleSave()
 
-### Community 17 - "Outline Queries"
+### Community 16 - "Tag Input"
 Cohesion: 0.6
 Nodes (3): addTag(), handleKeyDown(), removeTag()
 
-### Community 18 - "Theme Provider"
+### Community 17 - "Authenticated Layout"
 Cohesion: 0.67
 Nodes (2): AuthenticatedLayoutClient(), useMounted()
 
-### Community 19 - "Project Card"
+### Community 18 - "Chapter Row"
 Cohesion: 0.67
 Nodes (2): handleKeyDown(), handleSaveTitle()
 
-### Community 20 - "Community 20"
+### Community 19 - "Theme Provider"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 21 - "Community 21"
+### Community 20 - "Outline Edit Form"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 22 - "Community 22"
-Cohesion: 0.5
-Nodes (2): middleware(), updateSession()
-
-### Community 23 - "Community 23"
+### Community 21 - "AI Config Dialog"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 24 - "Community 24"
+### Community 22 - "Suggestion Card"
+Cohesion: 0.5
+Nodes (0): 
+
+### Community 23 - "AI Client"
+Cohesion: 0.67
+Nodes (2): pickStream(), streamChat()
+
+### Community 24 - "Prompts"
+Cohesion: 0.67
+Nodes (2): buildSegmentedSystemPrompt(), buildWorldBibleBlock()
+
+### Community 25 - "Anthropic Provider"
+Cohesion: 0.5
+Nodes (0): 
+
+### Community 26 - "Content Hash"
+Cohesion: 0.67
+Nodes (2): extractPlainText(), walk()
+
+### Community 27 - "Proxy & Middleware"
+Cohesion: 0.5
+Nodes (2): updateSession(), proxy()
+
+### Community 28 - "Conflict Resolver"
+Cohesion: 0.5
+Nodes (0): 
+
+### Community 29 - "Generation Panel"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 25 - "Community 25"
+### Community 30 - "Create Project Modal"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 26 - "Community 26"
+### Community 31 - "Duplicate Entry Dialog"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 27 - "Community 27"
+### Community 32 - "Default Embedder"
 Cohesion: 0.67
-Nodes (1): InkForgeMetaDB
+Nodes (0): 
 
-### Community 28 - "Community 28"
+### Community 33 - "Root Layout"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 29 - "Community 29"
+### Community 34 - "Home Page"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 30 - "Community 30"
+### Community 35 - "Auth Page"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 31 - "Community 31"
+### Community 36 - "Relation Graph"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 32 - "Community 32"
+### Community 37 - "Chapter Context Menu"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 33 - "Community 33"
+### Community 38 - "Create Chapter Input"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 34 - "Community 34"
+### Community 39 - "Delete Chapter Dialog"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 35 - "Community 35"
+### Community 40 - "Editor Toolbar"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 36 - "Community 36"
+### Community 41 - "Floating Toolbar"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 37 - "Community 37"
+### Community 42 - "Format Distance"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 38 - "Community 38"
+### Community 43 - "Outline Tab"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 39 - "Community 39"
+### Community 44 - "Empty Dashboard"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 40 - "Community 40"
+### Community 45 - "Project Settings Dialog"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 41 - "Community 41"
+### Community 46 - "Project Settings Form"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 42 - "Community 42"
+### Community 47 - "Badge UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 43 - "Community 43"
+### Community 48 - "Consistency Warning"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 44 - "Community 44"
+### Community 49 - "Draft Card"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 50 - "Resizable Panel"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 51 - "Create Entry Input"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 52 - "Delete Entry Dialog"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 53 - "OpenAI Compatible Provider"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 54 - "Revisions Test"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 55 - "EPUB Gen"
 Cohesion: 1.0
 Nodes (1): EPub
 
-### Community 45 - "Community 45"
+### Community 56 - "Use All Relations"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 46 - "Community 46"
+### Community 57 - "Use Dismissed Suggestions"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 47 - "Community 47"
+### Community 58 - "Use Layout"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 48 - "Community 48"
+### Community 59 - "Use Relations"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 49 - "Community 49"
+### Community 60 - "Use Revisions"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 50 - "Community 50"
+### Community 61 - "Supabase Client"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 51 - "Community 51"
+### Community 62 - "Utils"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 52 - "Community 52"
+### Community 63 - "Next Env Types"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 53 - "Community 53"
+### Community 64 - "Next Config"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 54 - "Community 54"
+### Community 65 - "Playwright Config"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 55 - "Community 55"
+### Community 66 - "Vitest Config"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 56 - "Community 56"
+### Community 67 - "Style Profile"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 57 - "Community 57"
+### Community 68 - "Timeline View"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 58 - "Community 58"
+### Community 69 - "Editor Types"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 59 - "Community 59"
+### Community 70 - "Editor"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 60 - "Community 60"
+### Community 71 - "Accordion UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 61 - "Community 61"
+### Community 72 - "Avatar UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 62 - "Community 62"
+### Community 73 - "Button UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 63 - "Community 63"
+### Community 74 - "Card UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 64 - "Community 64"
+### Community 75 - "Dialog UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 65 - "Community 65"
+### Community 76 - "Dropdown Menu UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 66 - "Community 66"
+### Community 77 - "Input UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 67 - "Community 67"
+### Community 78 - "Label UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 68 - "Community 68"
+### Community 79 - "Scroll Area UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 69 - "Community 69"
+### Community 80 - "Select UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 70 - "Community 70"
+### Community 81 - "Separator UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 71 - "Community 71"
+### Community 82 - "Sheet UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 72 - "Community 72"
+### Community 83 - "Textarea UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 73 - "Community 73"
+### Community 84 - "Tooltip UI"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 74 - "Community 74"
+### Community 85 - "Message Bubble"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 75 - "Community 75"
+### Community 86 - "Workspace Topbar"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 76 - "Community 76"
+### Community 87 - "AI Events"
 Cohesion: 1.0
-Nodes (1): Browser Window Icon (SVG)
+Nodes (0): 
 
-### Community 77 - "Community 77"
+### Community 88 - "Prompts Test"
 Cohesion: 1.0
-Nodes (1): ProjectMeta Type
+Nodes (0): 
+
+### Community 89 - "AI Provider Types"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 90 - "Schemas Test"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 91 - "Schemas"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 92 - "Content Hash Test"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 93 - "Chapter Queries Test"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 94 - "DB Index"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 95 - "Meta DB Test"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 96 - "InkForge Meta DB"
+Cohesion: 1.0
+Nodes (1): InkForgeMetaDB
+
+### Community 97 - "Project DB Test"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 98 - "Relation Queries Test"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 99 - "World Entry Queries Test"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 100 - "Autosave Test"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 101 - "Context Injection"
+Cohesion: 1.0
+Nodes (1): use-context-injection Hook
+
+### Community 102 - "Projects Test"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 103 - "Embedder Test"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 104 - "Hybrid Search Test"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 105 - "RAG Types"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 106 - "Chapter Types"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 107 - "Types Index"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 108 - "Project Types"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 109 - "Relation Types"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 110 - "World Entry Types"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 111 - "Test Setup"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 112 - "Example Spec"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 113 - "InkForge Project"
+Cohesion: 1.0
+Nodes (1): InkForge
+
+### Community 114 - "AI Layer"
+Cohesion: 1.0
+Nodes (1): AI Layer
 
 ## Knowledge Gaps
-- **33 isolated node(s):** `EPub`, `Dual Runtime Support (Claude Code + OpenCode)`, `Security Layer (Path Traversal, Prompt Injection)`, `Context Window Monitoring`, `Model Profile System (quality/balanced/budget/adaptive)` (+28 more)
+- **5 isolated node(s):** `InkForgeMetaDB`, `EPub`, `use-context-injection Hook`, `InkForge`, `AI Layer`
   These have ＋1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 28`** (2 nodes): `RootLayout()`, `layout.tsx`
+- **Thin community `Root Layout`** (2 nodes): `RootLayout()`, `layout.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 29`** (2 nodes): `CreateChapterInput()`, `create-chapter-input.tsx`
+- **Thin community `Home Page`** (2 nodes): `Home()`, `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 30`** (2 nodes): `DeleteChapterDialog()`, `delete-chapter-dialog.tsx`
+- **Thin community `Auth Page`** (2 nodes): `AuthPage()`, `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 31`** (2 nodes): `EditorToolbar()`, `editor-toolbar.tsx`
+- **Thin community `Relation Graph`** (2 nodes): `truncate()`, `relation-graph.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 32`** (2 nodes): `FloatingToolbar()`, `floating-toolbar.tsx`
+- **Thin community `Chapter Context Menu`** (2 nodes): `ChapterContextMenu()`, `chapter-context-menu.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 33`** (2 nodes): `if()`, `outline-edit-form.tsx`
+- **Thin community `Create Chapter Input`** (2 nodes): `CreateChapterInput()`, `create-chapter-input.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 34`** (2 nodes): `getStatusDotColor()`, `outline-tab.tsx`
+- **Thin community `Delete Chapter Dialog`** (2 nodes): `DeleteChapterDialog()`, `delete-chapter-dialog.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 35`** (2 nodes): `CreateProjectModal()`, `create-project-modal.tsx`
+- **Thin community `Editor Toolbar`** (2 nodes): `getHeadingLevel()`, `editor-toolbar.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 36`** (2 nodes): `EmptyDashboard()`, `empty-dashboard.tsx`
+- **Thin community `Floating Toolbar`** (2 nodes): `FloatingToolbar()`, `floating-toolbar.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 37`** (2 nodes): `getStepText()`, `project-settings-dialog.tsx`
+- **Thin community `Format Distance`** (2 nodes): `formatDistanceToNow()`, `format-distance.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 38`** (2 nodes): `handleFormSubmit()`, `project-settings-form.tsx`
+- **Thin community `Outline Tab`** (2 nodes): `getStatusDotColor()`, `outline-tab.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 39`** (2 nodes): `ConsistencyWarningCard()`, `consistency-warning-card.tsx`
+- **Thin community `Empty Dashboard`** (2 nodes): `EmptyDashboard()`, `empty-dashboard.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 40`** (2 nodes): `DraftCard()`, `draft-card.tsx`
+- **Thin community `Project Settings Dialog`** (2 nodes): `getStepText()`, `project-settings-dialog.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 41`** (2 nodes): `ResizablePanelGroup()`, `resizable-panel.tsx`
+- **Thin community `Project Settings Form`** (2 nodes): `handleFormSubmit()`, `project-settings-form.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 42`** (2 nodes): `CreateEntryInput()`, `create-entry-input.tsx`
+- **Thin community `Badge UI`** (2 nodes): `Badge()`, `badge.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 43`** (2 nodes): `DeleteEntryDialog()`, `delete-entry-dialog.tsx`
+- **Thin community `Consistency Warning`** (2 nodes): `ConsistencyWarningCard()`, `consistency-warning-card.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 44`** (2 nodes): `EPub`, `epub-gen.d.ts`
+- **Thin community `Draft Card`** (2 nodes): `handleInsert()`, `draft-card.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 45`** (2 nodes): `use-dismissed-suggestions.ts`, `useDismissedSuggestions()`
+- **Thin community `Resizable Panel`** (2 nodes): `ResizablePanelGroup()`, `resizable-panel.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 46`** (2 nodes): `use-layout.ts`, `useLayout()`
+- **Thin community `Create Entry Input`** (2 nodes): `CreateEntryInput()`, `create-entry-input.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 47`** (2 nodes): `use-relations.ts`, `useRelations()`
+- **Thin community `Delete Entry Dialog`** (2 nodes): `DeleteEntryDialog()`, `delete-entry-dialog.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 48`** (2 nodes): `createClient()`, `client.ts`
+- **Thin community `OpenAI Compatible Provider`** (2 nodes): `normalizeBaseUrl()`, `openai-compatible.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 49`** (2 nodes): `cn()`, `index.ts`
+- **Thin community `Revisions Test`** (2 nodes): `makeContent()`, `revisions.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 50`** (1 nodes): `next-env.d.ts`
+- **Thin community `EPUB Gen`** (2 nodes): `EPub`, `epub-gen.d.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 51`** (1 nodes): `next.config.ts`
+- **Thin community `Use All Relations`** (2 nodes): `use-all-relations.ts`, `useAllRelations()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 52`** (1 nodes): `vitest.config.ts`
+- **Thin community `Use Dismissed Suggestions`** (2 nodes): `use-dismissed-suggestions.ts`, `useDismissedSuggestions()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 53`** (1 nodes): `chapter-context-menu.tsx`
+- **Thin community `Use Layout`** (2 nodes): `use-layout.ts`, `useLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 54`** (1 nodes): `editor-types.ts`
+- **Thin community `Use Relations`** (2 nodes): `use-relations.ts`, `useRelations()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 55`** (1 nodes): `editor.tsx`
+- **Thin community `Use Revisions`** (2 nodes): `use-revisions.ts`, `useRevisions()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 56`** (1 nodes): `button.tsx`
+- **Thin community `Supabase Client`** (2 nodes): `createClient()`, `client.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 57`** (1 nodes): `dialog.tsx`
+- **Thin community `Utils`** (2 nodes): `cn()`, `index.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 58`** (1 nodes): `input.tsx`
+- **Thin community `Next Env Types`** (1 nodes): `next-env.d.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 59`** (1 nodes): `select.tsx`
+- **Thin community `Next Config`** (1 nodes): `next.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 60`** (1 nodes): `textarea.tsx`
+- **Thin community `Playwright Config`** (1 nodes): `playwright.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 61`** (1 nodes): `message-bubble.tsx`
+- **Thin community `Vitest Config`** (1 nodes): `vitest.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (1 nodes): `chapter-queries.test.ts`
+- **Thin community `Style Profile`** (1 nodes): `style-profile.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 63`** (1 nodes): `index.ts`
+- **Thin community `Timeline View`** (1 nodes): `timeline-view.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 64`** (1 nodes): `meta-db.test.ts`
+- **Thin community `Editor Types`** (1 nodes): `editor-types.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 65`** (1 nodes): `project-db.test.ts`
+- **Thin community `Editor`** (1 nodes): `editor.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 66`** (1 nodes): `relation-queries.test.ts`
+- **Thin community `Accordion UI`** (1 nodes): `accordion.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 67`** (1 nodes): `world-entry-queries.test.ts`
+- **Thin community `Avatar UI`** (1 nodes): `avatar.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 68`** (1 nodes): `use-autosave.test.ts`
+- **Thin community `Button UI`** (1 nodes): `button.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 69`** (1 nodes): `use-projects.test.ts`
+- **Thin community `Card UI`** (1 nodes): `card.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 70`** (1 nodes): `chapter.ts`
+- **Thin community `Dialog UI`** (1 nodes): `dialog.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 71`** (1 nodes): `index.ts`
+- **Thin community `Dropdown Menu UI`** (1 nodes): `dropdown-menu.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (1 nodes): `project.ts`
+- **Thin community `Input UI`** (1 nodes): `input.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 73`** (1 nodes): `relation.ts`
+- **Thin community `Label UI`** (1 nodes): `label.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 74`** (1 nodes): `world-entry.ts`
+- **Thin community `Scroll Area UI`** (1 nodes): `scroll-area.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 75`** (1 nodes): `setup.ts`
+- **Thin community `Select UI`** (1 nodes): `select.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 76`** (1 nodes): `Browser Window Icon (SVG)`
+- **Thin community `Separator UI`** (1 nodes): `separator.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 77`** (1 nodes): `ProjectMeta Type`
+- **Thin community `Sheet UI`** (1 nodes): `sheet.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Textarea UI`** (1 nodes): `textarea.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Tooltip UI`** (1 nodes): `tooltip.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Message Bubble`** (1 nodes): `message-bubble.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Workspace Topbar`** (1 nodes): `workspace-topbar.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `AI Events`** (1 nodes): `events.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Prompts Test`** (1 nodes): `prompts.test.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `AI Provider Types`** (1 nodes): `types.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Schemas Test`** (1 nodes): `schemas.test.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Schemas`** (1 nodes): `schemas.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Content Hash Test`** (1 nodes): `content-hash.test.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Chapter Queries Test`** (1 nodes): `chapter-queries.test.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `DB Index`** (1 nodes): `index.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Meta DB Test`** (1 nodes): `meta-db.test.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `InkForge Meta DB`** (1 nodes): `InkForgeMetaDB`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Project DB Test`** (1 nodes): `project-db.test.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Relation Queries Test`** (1 nodes): `relation-queries.test.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `World Entry Queries Test`** (1 nodes): `world-entry-queries.test.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Autosave Test`** (1 nodes): `use-autosave.test.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Context Injection`** (1 nodes): `use-context-injection Hook`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Projects Test`** (1 nodes): `use-projects.test.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Embedder Test`** (1 nodes): `embedder.test.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Hybrid Search Test`** (1 nodes): `hybrid-search.test.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `RAG Types`** (1 nodes): `types.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Chapter Types`** (1 nodes): `chapter.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Types Index`** (1 nodes): `index.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Project Types`** (1 nodes): `project.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Relation Types`** (1 nodes): `relation.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `World Entry Types`** (1 nodes): `world-entry.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Test Setup`** (1 nodes): `setup.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Example Spec`** (1 nodes): `example.spec.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `InkForge Project`** (1 nodes): `InkForge`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `AI Layer`** (1 nodes): `AI Layer`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `GET()` connect `Auth & Session Management` to `Chapter Management`, `World Entry Queries`, `Outline Editing`, `Sync Management`, `Community 22`?**
-  _High betweenness centrality (0.185) - this node is a cross-community bridge._
-- **Why does `useWorldEntries Hook` connect `UI Interaction Handlers` to `World Entry Editing`, `AI Chat Panel`?**
-  _High betweenness centrality (0.177) - this node is a cross-community bridge._
-- **Why does `handleCheckDuplicate()` connect `Chapter Management` to `Auth & Session Management`, `AI Chat Panel`?**
-  _High betweenness centrality (0.167) - this node is a cross-community bridge._
-- **Are the 14 inferred relationships involving `GET()` (e.g. with `middleware()` and `signUp()`) actually correct?**
-  _`GET()` has 14 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 10 inferred relationships involving `createClient()` (e.g. with `AuthenticatedLayout()` and `signUp()`) actually correct?**
-  _`createClient()` has 10 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `GET()` connect `Sync Engine` to `Chapter & Export`, `RAG Layer`, `World Entry DB`, `Project Management`, `Revisions`, `Proxy & Middleware`?**
+  _High betweenness centrality (0.136) - this node is a cross-community bridge._
+- **Why does `handleCheckDuplicate()` connect `Chapter & Export` to `Sync Engine`, `AI Chat Panel`?**
+  _High betweenness centrality (0.080) - this node is a cross-community bridge._
+- **Why does `indexWorldEntries()` connect `RAG Layer` to `Sync Engine`?**
+  _High betweenness centrality (0.045) - this node is a cross-community bridge._
+- **Are the 16 inferred relationships involving `GET()` (e.g. with `proxy()` and `signUp()`) actually correct?**
+  _`GET()` has 16 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 11 inferred relationships involving `createClient()` (e.g. with `AuthenticatedLayout()` and `signUp()`) actually correct?**
+  _`createClient()` has 11 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 6 inferred relationships involving `flushSyncQueue()` (e.g. with `triggerImmediateSync()` and `createClient()`) actually correct?**
   _`flushSyncQueue()` has 6 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `EPub`, `Dual Runtime Support (Claude Code + OpenCode)`, `Security Layer (Path Traversal, Prompt Injection)` to the rest of the system?**
-  _33 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Are the 6 inferred relationships involving `indexWorldEntries()` (e.g. with `listEmbeddings()` and `GET()`) actually correct?**
+  _`indexWorldEntries()` has 6 INFERRED edges - model-reasoned connections that need verification._

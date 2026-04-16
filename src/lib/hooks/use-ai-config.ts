@@ -1,9 +1,13 @@
 import { useCallback, useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { createProjectDB } from '../db/project-db'
+import type { AIProvider } from '../db/project-db'
+
+export type { AIProvider } from '../db/project-db'
 
 export interface AIConfig {
   id: 'config'
+  provider: AIProvider
   apiKey: string
   baseUrl: string
   model?: string
@@ -11,9 +15,10 @@ export interface AIConfig {
 
 const DEFAULT_CONFIG: AIConfig = {
   id: 'config',
+  provider: 'anthropic',
   apiKey: '',
   baseUrl: '',
-  model: 'gpt-4'
+  model: 'claude-sonnet-4-5'
 }
 
 export function useAIConfig(projectId: string) {
@@ -24,7 +29,9 @@ export function useAIConfig(projectId: string) {
     [db]
   )
 
-  const config = liveConfig ?? DEFAULT_CONFIG
+  const config: AIConfig = liveConfig
+    ? { ...DEFAULT_CONFIG, ...liveConfig, provider: liveConfig.provider ?? 'openai-compatible' }
+    : DEFAULT_CONFIG
   const loading = liveConfig === undefined
 
   const saveConfig = useCallback(async (newConfig: Partial<AIConfig>) => {

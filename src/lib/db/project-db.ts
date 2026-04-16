@@ -4,9 +4,15 @@ import type { Chapter, ProjectMeta, WorldEntry, Relation } from '../types'
 /**
  * AI configuration stored per-project in IndexedDB.
  * BYOK model: API Key and Base URL are user-provided, stored locally only.
+ *
+ * `provider` is new in v6. Missing (undefined) means legacy records created
+ * before the Anthropic path existed — treat those as 'openai-compatible'.
  */
+export type AIProvider = 'anthropic' | 'openai-compatible'
+
 export interface AIConfig {
   id: 'config'  // singleton
+  provider?: AIProvider
   apiKey: string
   baseUrl: string
   model?: string
@@ -122,6 +128,23 @@ export class InkForgeProjectDB extends Dexie {
       messages: 'id, projectId, role, timestamp',
       consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
     })
+    // v6: backfill AIConfig.provider for legacy records.
+    this.version(6)
+      .stores({
+        projects: 'id, updatedAt, deletedAt',
+        chapters: 'id, projectId, order, deletedAt',
+        layoutSettings: 'id',
+        worldEntries: 'id, projectId, type, name, deletedAt',
+        relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+        aiConfig: 'id',
+        messages: 'id, projectId, role, timestamp',
+        consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+      })
+      .upgrade(tx =>
+        tx.table('aiConfig').toCollection().modify(cfg => {
+          if (cfg.provider === undefined) cfg.provider = 'openai-compatible'
+        })
+      )
   }
 }
 

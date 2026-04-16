@@ -7,9 +7,16 @@ import {
   extractKeywords,
   findRelevantEntries,
   trimToTokenBudget,
-  buildContextPrompt,
 } from './use-context-injection'
 import { parseAISuggestions, type Suggestion } from '../ai/suggestion-parser'
+import { streamChat, supportsToolUse, type ProviderStreamMessage } from '../ai/client'
+import { buildSegmentedSystemPrompt } from '../ai/prompts'
+import type {
+  SuggestEntryInput,
+  SuggestRelationInput,
+  ReportContradictionInput,
+} from '../ai/tools/schemas'
+import type { AIEvent } from '../ai/events'
 import type { WorldEntryType } from '../types'
 
 export interface ChatMessage {
@@ -31,8 +38,14 @@ export interface Contradiction {
 export interface UseAIChatOptions {
   /** Callback when draft is generated */
   onDraftGenerated?: (draft: string) => void
-  /** Selected text for discussion — per D-08: text selection discussion */
+  /** Selected text for discussion — per D-08 */
   selectedText?: string
+}
+
+/** Draft marker heuristics kept as a fallback when the provider can't emit a structured signal. */
+const DRAFT_INDICATORS = ['以下是草稿', '草稿：', '插入到编辑器', '续写如下', '生成内容：']
+function detectDraft(content: string): boolean {
+  return DRAFT_INDICATORS.some(marker => content.includes(marker))
 }
 
 export function useAIChat(projectId: string, options?: UseAIChatOptions) {
@@ -50,12 +63,14 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
   const entriesByTypeRef = useRef(entriesByType)
   const exemptionsRef = useRef(exemptions)
 
-  // Keep exemptionsRef updated
   useEffect(() => {
     exemptionsRef.current = exemptions
   }, [exemptions])
 
-  // Load messages on mount
+  useEffect(() => {
+    entriesByTypeRef.current = entriesByType
+  }, [entriesByType])
+
   useEffect(() => {
     if (!projectId) return
     const db = createProjectDB(projectId)
@@ -66,135 +81,91 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
       .catch(console.error)
   }, [projectId])
 
-  // Keep entriesByTypeRef updated
-  useEffect(() => {
-    entriesByTypeRef.current = entriesByType
-  }, [entriesByType])
-
   const sendMessage = useCallback(async (content: string) => {
-    if (!config.apiKey || !config.baseUrl) {
-      throw new Error('请先配置 AI 设置')
+    if (!config.apiKey) {
+      throw new Error('请先配置 AI 设置：API Key 必填')
+    }
+    if (config.provider === 'openai-compatible' && !config.baseUrl) {
+      throw new Error('请先配置 AI 设置：OpenAI 兼容模式需要填写 Base URL')
     }
 
-    // Build system prompt with world bible context injection — per D-01, D-25, D-27
+    // Find relevant world entries (keyword match, will be replaced by RAG in Stage 2).
     const keywords = extractKeywords(content)
     const matchedEntries = findRelevantEntries(keywords, entriesByType)
     const trimmedEntries = trimToTokenBudget(matchedEntries, 4000)
-    
-    // Build current discussion section — per D-08: text selection discussion
-    let currentDiscussion = content
-    if (options?.selectedText) {
-      currentDiscussion = `【选中文段】\n${options.selectedText}\n\n【用户问题】\n${content}`
-    }
-    
-    // Construct full system prompt with all sections — per D-27
-    const systemPromptWithContext = `【世界观百科】
-${trimmedEntries.length > 0 ? buildContextPrompt(trimmedEntries) : '(暂无相关世界观条目)'}
 
-【当前讨论】
-${currentDiscussion}
+    const segmentedSystem = buildSegmentedSystemPrompt({
+      worldEntries: trimmedEntries,
+      selectedText: options?.selectedText,
+    })
 
-【你的任务】
-你是一个专业的网文写作助手，熟悉中文小说创作技巧。当作者选择文段讨论时，基于世界观百科分析文段。当作者询问时，提供写作建议。
-使用简体中文回复。`
-
-    // Create user message
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       projectId,
       role: 'user',
       content,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
-    
-    // Save user message
+    const assistantMsgId = crypto.randomUUID()
+
     const db = createProjectDB(projectId)
     await db.table('messages').add(userMsg)
     setMessages(prev => [...prev, userMsg])
-    
-    // Prepare assistant message placeholder
-    const assistantMsgId = crypto.randomUUID()
+
     setLoading(true)
     setStreamingContent('')
-    
-    // Build messages for API with world bible context injected
-    const apiMessages = [
-      { role: 'system', content: systemPromptWithContext },
-      ...messages.map(m => ({ role: m.role, content: m.content })),
-      { role: 'user', content }
-    ]
-    
-    try {
-      abortControllerRef.current = new AbortController()
-      
-      const response = await fetch(`${config.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.apiKey}`
-        },
-        body: JSON.stringify({
-          model: config.model || 'gpt-4',
-          messages: apiMessages,
-          stream: true
-        }),
-        signal: abortControllerRef.current.signal
-      })
-      
-      if (!response.ok) {
-        throw new Error(`API错误: ${response.status}`)
-      }
-      
-      // Handle streaming response
-      const reader = response.body?.getReader()
-      if (!reader) throw new Error('无法读取响应流')
-      
-      let fullContent = ''
-      const decoder = new TextDecoder()
-      
-      // Create placeholder for assistant message
-      setMessages(prev => [...prev, {
+    setMessages(prev => [
+      ...prev,
+      {
         id: assistantMsgId,
         projectId,
         role: 'assistant',
         content: '',
-        timestamp: Date.now()
-      }])
-      
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        
-        const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') continue
-            
-            try {
-              const parsed = JSON.parse(data)
-              const delta = parsed.choices?.[0]?.delta?.content
-              if (delta) {
-                fullContent += delta
-                setStreamingContent(fullContent)
-                // Update the assistant message in real-time
-                setMessages(prev => prev.map(msg => 
-                  msg.id === assistantMsgId 
-                    ? { ...msg, content: fullContent }
-                    : msg
-                ))
-              }
-            } catch (parseError) {
-              // Log JSON parse errors for debugging SSE stream format issues
-              console.warn('Failed to parse AI response chunk:', { line, error: parseError })
-            }
-          }
+        timestamp: Date.now(),
+      },
+    ])
+
+    const historicalMessages: ProviderStreamMessage[] = messages.map(m => ({
+      role: m.role,
+      content: m.content,
+    }))
+    historicalMessages.push({ role: 'user', content })
+
+    abortControllerRef.current = new AbortController()
+    let fullContent = ''
+    const pendingSuggestions: Suggestion[] = []
+    const pendingContradictions: Contradiction[] = []
+
+    try {
+      const events = streamChat(
+        {
+          provider: config.provider,
+          apiKey: config.apiKey,
+          baseUrl: config.baseUrl,
+          model: config.model,
+        },
+        {
+          segmentedSystem,
+          messages: historicalMessages,
+          signal: abortControllerRef.current.signal,
         }
+      )
+
+      for await (const event of events) {
+        if (event.type === 'text_delta') {
+          fullContent += event.delta
+          setStreamingContent(fullContent)
+          setMessages(prev =>
+            prev.map(m => (m.id === assistantMsgId ? { ...m, content: fullContent } : m))
+          )
+        } else if (event.type === 'tool_call') {
+          handleToolCall(event, pendingSuggestions, pendingContradictions, exemptionsRef.current)
+        } else if (event.type === 'error') {
+          throw new Error(event.message)
+        }
+        // usage/done events are informational for now
       }
-      
-      // Finalize message with potential draft detection
+
       const hasDraft = detectDraft(fullContent)
       const finalMsg: ChatMessage = {
         id: assistantMsgId,
@@ -203,111 +174,27 @@ ${currentDiscussion}
         content: fullContent,
         timestamp: Date.now(),
         hasDraft,
-        draftId: hasDraft ? crypto.randomUUID() : undefined
+        draftId: hasDraft ? crypto.randomUUID() : undefined,
       }
-      
-      // Update in database
       await db.table('messages').update(assistantMsgId, finalMsg)
 
-      // Parse suggestions from AI response — per D-06: auto-analyze after AI response completes
-      setIsAnalyzing(true)
-      try {
-        const parsedSuggestions = parseAISuggestions(fullContent, entriesByTypeRef.current)
-        setSuggestions(parsedSuggestions)
-      } finally {
-        setIsAnalyzing(false)
-      }
-
-      // Check for contradictions if draft was generated
-      if (hasDraft && entriesByTypeRef.current) {
-        setIsCheckingConsistency(true)
+      // Fallback suggestion parsing for providers that don't support tool use.
+      if (!supportsToolUse(config.provider)) {
+        setIsAnalyzing(true)
         try {
-          const keywords = extractKeywords(fullContent)
-          const matchedEntries = findRelevantEntries(keywords, entriesByTypeRef.current)
-
-          if (matchedEntries.length > 0) {
-            // Build context for contradiction detection
-            const contextEntries = trimToTokenBudget(matchedEntries, 2000)
-            const contextPrompt = `【世界观百科】
-${buildContextPrompt(contextEntries)}
-
-【待检测内容】
-${fullContent}
-
-【任务】
-请检测"待检测内容"中是否存在与"世界观百科"中的设定相矛盾的内容。
-请以JSON格式返回，格式如下：
-{
-  "contradictions": [
-    {
-      "entryName": "条目名称",
-      "entryType": "character|location|rule|timeline",
-      "description": "矛盾描述",
-      "severity": "high|medium|low"
-    }
-  ]
-}
-如果没有发现矛盾，返回空数组：{"contradictions": []}`
-
-            const response = await fetch(`${config.baseUrl}/chat/completions`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.apiKey}`
-              },
-              body: JSON.stringify({
-                model: config.model || 'gpt-4',
-                messages: [
-                  { role: 'system', content: '你是一个严格的世界观一致性检查助手。' },
-                  { role: 'user', content: contextPrompt }
-                ],
-                temperature: 0.1
-              })
-            })
-
-            if (response.ok) {
-              const data = await response.json()
-              const assistantContent = data.choices?.[0]?.message?.content
-
-              if (assistantContent) {
-                // Parse JSON response
-                const jsonMatch = assistantContent.match(/\{[\s\S]*\}/)
-                if (jsonMatch) {
-                  const parsed = JSON.parse(jsonMatch[0])
-                  if (parsed.contradictions && Array.isArray(parsed.contradictions)) {
-                    // Filter out low severity and exempted contradictions
-                    const filteredContradictions = parsed.contradictions
-                      .filter((c: { severity?: string }) => c.severity !== 'low')
-                      .filter((c: { entryName?: string; entryType?: string }) => {
-                        // Check if this contradiction is exempted
-                        const isExempt = exemptionsRef.current?.some(
-                          e => e.exemptionKey === `${c.entryName}:${c.entryType}`
-                        )
-                        return !isExempt
-                      })
-                      .map((c: { entryName: string; entryType: string; description: string }) => ({
-                        entryName: c.entryName,
-                        entryType: c.entryType,
-                        description: c.description
-                      }))
-
-                    setContradictions(filteredContradictions)
-                  }
-                }
-              }
-            }
-          }
-        } catch (err) {
-          // Don't block the flow if consistency check fails
-          console.warn('Consistency check failed:', err)
+          const parsed = parseAISuggestions(fullContent, entriesByTypeRef.current)
+          setSuggestions(parsed)
         } finally {
-          setIsCheckingConsistency(false)
+          setIsAnalyzing(false)
         }
+      } else {
+        setSuggestions(pendingSuggestions)
       }
-      
+
+      setContradictions(pendingContradictions)
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
-        // User cancelled
+        // user cancelled — keep partial content
       } else {
         throw err
       }
@@ -322,13 +209,8 @@ ${fullContent}
     abortControllerRef.current?.abort()
   }, [])
 
-  /**
-   * Dismiss a suggestion so it doesn't reappear.
-   * Per D-17: Dismissed suggestions won't appear again in current conversation.
-   */
   const dismissSuggestion = useCallback((suggestion: Suggestion) => {
     setSuggestions(prev => prev.filter(s => {
-      // Simple content comparison for dismissal
       if (s.type === 'relationship' && suggestion.type === 'relationship') {
         return s.entry1Name !== suggestion.entry1Name || s.entry2Name !== suggestion.entry2Name
       }
@@ -339,9 +221,6 @@ ${fullContent}
     }))
   }, [])
 
-  /**
-   * Clear all suggestions (e.g., when starting a new conversation).
-   */
   const clearSuggestions = useCallback(() => {
     setSuggestions([])
   }, [])
@@ -359,12 +238,63 @@ ${fullContent}
     contradictions,
     isCheckingConsistency,
     addExemption,
-    clearContradiction: (index: number) => setContradictions(prev => prev.filter((_, i) => i !== index))
+    clearContradiction: (index: number) =>
+      setContradictions(prev => prev.filter((_, i) => i !== index)),
   }
 }
 
-function detectDraft(content: string): boolean {
-  // Simple heuristic: if user explicitly asked for a draft or AI signals draft
-  const draftIndicators = ['以下是草稿', '草稿：', '插入到编辑器', '续写如下', '生成内容：']
-  return draftIndicators.some(indicator => content.includes(indicator))
+/**
+ * Convert an AI tool_call event into the shape the UI suggestion/contradiction
+ * cards already know how to render.
+ */
+function handleToolCall(
+  event: Extract<AIEvent, { type: 'tool_call' }>,
+  suggestions: Suggestion[],
+  contradictions: Contradiction[],
+  exemptions: Array<{ exemptionKey: string }> | undefined
+): void {
+  if (event.name === 'suggest_entry') {
+    const input = event.input as Partial<SuggestEntryInput>
+    if (!input.entryType || !input.name) return
+    suggestions.push({
+      type: 'newEntry',
+      entryType: input.entryType,
+      suggestedName: input.name,
+      description: input.description ?? '',
+      extractedFields: input.fields ?? {},
+      confidence: input.confidence ?? 'medium',
+    })
+    return
+  }
+
+  if (event.name === 'suggest_relation') {
+    const input = event.input as Partial<SuggestRelationInput>
+    if (!input.entry1Name || !input.entry2Name || !input.relationshipType) return
+    suggestions.push({
+      type: 'relationship',
+      entry1Name: input.entry1Name,
+      entry2Name: input.entry2Name,
+      entry1Type: input.entry1Type ?? 'character',
+      entry2Type: input.entry2Type ?? 'character',
+      relationshipType: input.relationshipType,
+      bidirectionalDescription:
+        input.bidirectionalDescription ??
+        `${input.entry1Name}与${input.entry2Name}存在${input.relationshipType}关系`,
+      confidence: input.confidence ?? 'medium',
+    })
+    return
+  }
+
+  if (event.name === 'report_contradiction') {
+    const input = event.input as Partial<ReportContradictionInput>
+    if (!input.entryName || !input.entryType || !input.description) return
+    if (input.severity === 'low') return
+    const key = `${input.entryName}:${input.entryType}`
+    if (exemptions?.some(e => e.exemptionKey === key)) return
+    contradictions.push({
+      entryName: input.entryName,
+      entryType: input.entryType,
+      description: input.description,
+    })
+  }
 }

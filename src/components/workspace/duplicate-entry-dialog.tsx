@@ -2,6 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 
 const TYPE_LABELS: Record<WorldEntryType, string> = {
@@ -20,10 +21,6 @@ export interface DuplicateEntryDialogProps {
   onCreateNew: () => void
 }
 
-/**
- * Dialog for handling duplicate entry name conflicts.
- * Per D-22: Asks user to choose between linking to existing or creating new.
- */
 export function DuplicateEntryDialog({
   open,
   onClose,
@@ -48,37 +45,39 @@ export function DuplicateEntryDialog({
         <DialogHeader>
           <DialogTitle>发现已存在条目</DialogTitle>
         </DialogHeader>
-        <div className="py-4">
-          <p className="text-sm text-stone-600 dark:text-stone-400 mb-4">
+        <div className="py-2 space-y-3">
+          <p className="text-sm text-muted-foreground">
             「{entryName}」已存在，请选择：
           </p>
-          <div className="p-3 rounded-lg bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
-            <p className="font-medium text-stone-900 dark:text-stone-100">{existingEntry.name}</p>
-            <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
-              类型：{TYPE_LABELS[existingEntry.type]}
-            </p>
-            {existingEntry.description && (
-              <p className="text-sm text-stone-600 dark:text-stone-400 mt-2 line-clamp-2">
-                {existingEntry.description}
+          <Card>
+            <CardContent className="p-3 space-y-1">
+              <p className="font-medium">{existingEntry.name}</p>
+              <p className="text-xs text-muted-foreground">
+                类型：{TYPE_LABELS[existingEntry.type]}
               </p>
-            )}
-            {existingEntry.appearance && (
-              <p className="text-sm text-stone-600 dark:text-stone-400 mt-2 line-clamp-2">
-                {existingEntry.appearance}
-              </p>
-            )}
-            {existingEntry.background && (
-              <p className="text-sm text-stone-600 dark:text-stone-400 mt-2 line-clamp-2">
-                {existingEntry.background}
-              </p>
-            )}
-          </div>
+              {existingEntry.description && (
+                <p className="text-sm text-muted-foreground line-clamp-2 pt-1">
+                  {existingEntry.description}
+                </p>
+              )}
+              {existingEntry.appearance && (
+                <p className="text-sm text-muted-foreground line-clamp-2 pt-1">
+                  {existingEntry.appearance}
+                </p>
+              )}
+              {existingEntry.background && (
+                <p className="text-sm text-muted-foreground line-clamp-2 pt-1">
+                  {existingEntry.background}
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
-        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2">
-          <Button variant="secondary" onClick={handleCreateNew}>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCreateNew}>
             创建新条目
           </Button>
-          <Button variant="primary" onClick={handleLinkExisting}>
+          <Button onClick={handleLinkExisting}>
             关联到现有条目
           </Button>
         </DialogFooter>

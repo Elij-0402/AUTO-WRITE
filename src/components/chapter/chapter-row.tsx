@@ -3,16 +3,18 @@
 import { useState, useRef, useEffect } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, MoreHorizontal } from 'lucide-react'
+import { GripVertical, MoreHorizontal, Pencil, Copy, Trash2, CheckCircle2 } from 'lucide-react'
 import type { Chapter } from '@/lib/types'
-import { ChapterContextMenu } from './chapter-context-menu'
+import { Badge } from '@/components/ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
-/**
- * ChapterRow — Per D-10: shows chapter number (第N章), title, word count (字数), status badge.
- * Per D-16: chapter number is auto-computed from order position.
- * Per D-13: three-dot menu for context menu actions.
- * Uses @dnd-kit/sortable for drag support.
- */
 interface ChapterRowProps {
   chapter: Chapter
   isActive: boolean
@@ -34,9 +36,7 @@ export function ChapterRow({
 }: ChapterRowProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(chapter.title)
-  const [menuOpen, setMenuOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const rowRef = useRef<HTMLDivElement>(null)
   const isComposingRef = useRef(false)
 
   const {
@@ -53,7 +53,6 @@ export function ChapterRow({
     transition,
   }
 
-  // Focus input when editing starts
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus()
@@ -72,9 +71,7 @@ export function ChapterRow({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // IME safety per D-16: only submit on Enter when NOT composing
     if (isComposingRef.current) return
-
     if (e.key === 'Enter') {
       handleSaveTitle()
     } else if (e.key === 'Escape') {
@@ -84,48 +81,38 @@ export function ChapterRow({
   }
 
   const handleRename = () => {
-    setMenuOpen(false)
     setEditTitle(chapter.title)
     setIsEditing(true)
   }
-
-  const statusLabel = chapter.status === 'draft' ? '草稿' : '已完成'
-  const statusColor = chapter.status === 'draft'
-    ? 'bg-surface-2 text-text-secondary'
-    : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`
-        group flex items-center gap-1 px-2 py-2 border-b border-border-subtle
-        cursor-pointer transition-colors
-        ${isActive
-          ? 'bg-primary-muted border-l-[3px] border-l-primary'
-          : 'hover:bg-surface-hover'}
-        ${isDragging ? 'opacity-50 shadow-lg z-50' : ''}
-      `}
+      className={cn(
+        'group flex items-center gap-1.5 px-3 py-1.5 cursor-pointer transition-colors',
+        isActive
+          ? 'bg-accent text-accent-foreground'
+          : 'hover:bg-accent/50',
+        isDragging && 'opacity-50 shadow-lg z-50'
+      )}
       onClick={() => {
         if (!isEditing) onSelect()
       }}
     >
-      {/* Drag handle */}
       <button
-        className="flex-shrink-0 cursor-grab text-text-muted hover:text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity"
+        className="flex-shrink-0 cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
         {...attributes}
         {...listeners}
         aria-label="拖动排序"
       >
-        <GripVertical className="h-4 w-4" />
+        <GripVertical className="h-3.5 w-3.5" />
       </button>
 
-      {/* Chapter number */}
-      <span className="flex-shrink-0 text-xs text-text-muted min-w-[1.5rem] text-right tabular-nums">
+      <span className="flex-shrink-0 text-xs text-muted-foreground min-w-[1.25rem] text-right tabular-nums">
         {chapter.order + 1}
       </span>
 
-      {/* Title */}
       <div className="flex-1 min-w-0">
         {isEditing ? (
           <input
@@ -135,67 +122,69 @@ export function ChapterRow({
             onBlur={handleSaveTitle}
             onKeyDown={handleKeyDown}
             onCompositionStart={() => { isComposingRef.current = true }}
-            onCompositionEnd={() => {
-              isComposingRef.current = false
-            }}
+            onCompositionEnd={() => { isComposingRef.current = false }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full rounded border border-border-strong px-1 py-0 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+            className="w-full rounded border border-input bg-background px-1.5 py-0 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
           />
         ) : (
-          <span className="block truncate text-sm text-foreground">
+          <span className="block truncate text-sm">
             {chapter.title}
           </span>
         )}
       </div>
 
-      {/* Word count */}
       {chapter.wordCount > 0 && (
-        <span className={`flex-shrink-0 text-xs ${isActive ? 'text-primary' : 'text-text-tertiary'}`}>
-          {chapter.wordCount.toLocaleString()}字
+        <span className="flex-shrink-0 text-[11px] text-muted-foreground tabular-nums">
+          {chapter.wordCount.toLocaleString()}
         </span>
       )}
 
-      {/* Status badge */}
-      <span className={`flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded-full ${statusColor}`}>
-        {statusLabel}
-      </span>
+      <Badge
+        variant={chapter.status === 'draft' ? 'secondary' : 'default'}
+        className="text-[10px] px-1.5 py-0 h-4 font-normal"
+      >
+        {chapter.status === 'draft' ? '草稿' : '完成'}
+      </Badge>
 
-      {/* Three-dot menu button */}
-      <div className="relative flex-shrink-0">
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            setMenuOpen(!menuOpen)
-          }}
-          className="flex h-6 w-6 items-center justify-center rounded text-text-tertiary hover:text-foreground hover:bg-surface-hover opacity-0 group-hover:opacity-100 transition-opacity"
-          aria-label="章节操作"
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
-
-        {menuOpen && (
-          <ChapterContextMenu
-            chapter={chapter}
-            onRename={handleRename}
-            onDuplicate={() => {
-              setMenuOpen(false)
-              onDuplicate(chapter.id)
-            }}
-            onDelete={() => {
-              setMenuOpen(false)
-              onDelete(chapter.id)
-            }}
-            onStatusToggle={() => {
-              setMenuOpen(false)
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+          <button
+            className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label="章节操作"
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+          <DropdownMenuItem onClick={handleRename}>
+            <Pencil className="h-3.5 w-3.5" />
+            重命名
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onDuplicate(chapter.id)}>
+            <Copy className="h-3.5 w-3.5" />
+            复制章节
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
               onStatusToggle(
                 chapter.id,
                 chapter.status === 'draft' ? 'completed' : 'draft'
               )
-            }}
-            onClose={() => setMenuOpen(false)}
-          />
-        )}
-      </div>
+            }
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            {chapter.status === 'draft' ? '标记为完成' : '标记为草稿'}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => onDelete(chapter.id)}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            删除
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

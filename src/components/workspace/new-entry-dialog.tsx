@@ -3,33 +3,12 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
-
-/**
- * Type badge colors per UI-SPEC:
- * - character = blue
- * - location = green
- * - rule = purple
- * - timeline = amber
- */
-const TYPE_BADGE_COLORS: Record<WorldEntryType, { bg: string; text: string }> = {
-  character: {
-    bg: 'bg-blue-100 dark:bg-blue-900',
-    text: 'text-blue-700 dark:text-blue-300'
-  },
-  location: {
-    bg: 'bg-green-100 dark:bg-green-900',
-    text: 'text-green-700 dark:text-green-300'
-  },
-  rule: {
-    bg: 'bg-purple-100 dark:bg-purple-900',
-    text: 'text-purple-700 dark:text-purple-300'
-  },
-  timeline: {
-    bg: 'bg-amber-100 dark:bg-amber-900',
-    text: 'text-amber-700 dark:text-amber-300'
-  }
-}
 
 const TYPE_LABELS: Record<WorldEntryType, string> = {
   character: '角色',
@@ -38,22 +17,14 @@ const TYPE_LABELS: Record<WorldEntryType, string> = {
   timeline: '时间线'
 }
 
-/**
- * Prefill data structure per entry type.
- * Per D-18-21: Type-specific fields pre-filled from AI suggestion.
- */
 export interface NewEntryPrefillData {
   name: string
-  // Character fields (D-18)
   appearance?: string
   background?: string
-  // Location fields (D-19)
   description?: string
   features?: string
-  // Rule fields (D-20)
   content?: string
   scope?: string
-  // Timeline fields (D-21)
   timePoint?: string
   eventDescription?: string
 }
@@ -61,27 +32,14 @@ export interface NewEntryPrefillData {
 export interface NewEntryDialogProps {
   open: boolean
   onClose: () => void
-  /** Inferred entry type from AI per D-14 */
   entryType: WorldEntryType
-  /** Pre-filled data from AI suggestion per D-10, D-18-21 */
   prefillData: NewEntryPrefillData
-  /** Callback when entry is saved */
   onSave: (entry: Partial<WorldEntry>) => Promise<void>
-  /** Optional callback when duplicate is detected - should return existing entry or null */
   onCheckDuplicate?: (name: string) => Promise<WorldEntry | null>
-  /** Callback when user chooses to link to existing entry */
   onLinkExisting?: (entry: WorldEntry) => void
-  /** Callback when user chooses to create new anyway */
   onCreateNew?: () => void
 }
 
-/**
- * Dialog for creating new world bible entries with AI-prefilled data.
- * Per D-10: Opens pre-filled entry form on suggestion adoption.
- * Per D-14: AI infers entry type, user confirms in form.
- * Per D-18-21: Type-specific pre-fill fields.
- * Per D-22: Duplicate name handling via onCheckDuplicate callback.
- */
 export function NewEntryDialog({
   open,
   onClose,
@@ -92,7 +50,6 @@ export function NewEntryDialog({
   onLinkExisting,
   onCreateNew
 }: NewEntryDialogProps) {
-  // Form state
   const [name, setName] = useState('')
   const [alias, setAlias] = useState('')
   const [appearance, setAppearance] = useState('')
@@ -104,13 +61,11 @@ export function NewEntryDialog({
   const [scope, setScope] = useState('')
   const [timePoint, setTimePoint] = useState('')
   const [eventDescription, setEventDescription] = useState('')
-  
-  // UI state
+
   const [saving, setSaving] = useState(false)
   const [duplicateEntry, setDuplicateEntry] = useState<WorldEntry | null>(null)
   const [checkingDuplicate, setCheckingDuplicate] = useState(false)
 
-  // Sync form with prefill data when dialog opens
   useEffect(() => {
     if (open) {
       setName(prefillData.name || '')
@@ -127,9 +82,6 @@ export function NewEntryDialog({
     }
   }, [open, prefillData])
 
-  const colors = TYPE_BADGE_COLORS[entryType]
-
-  // Build entry object based on type
   const buildEntry = (): Partial<WorldEntry> => {
     const base = {
       type: entryType,
@@ -172,12 +124,11 @@ export function NewEntryDialog({
 
     setSaving(true)
     try {
-      // Check for duplicate if callback provided
       if (onCheckDuplicate) {
         setCheckingDuplicate(true)
         const existing = await onCheckDuplicate(name.trim())
         setCheckingDuplicate(false)
-        
+
         if (existing) {
           setDuplicateEntry(existing)
           setSaving(false)
@@ -185,7 +136,6 @@ export function NewEntryDialog({
         }
       }
 
-      // Save the entry
       const entry = buildEntry()
       await onSave(entry)
       onClose()
@@ -209,177 +159,79 @@ export function NewEntryDialog({
     }
   }
 
-  // Render type-specific fields
   const renderTypeFields = () => {
     switch (entryType) {
       case 'character':
         return (
           <>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                姓名 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                placeholder="角色姓名"
-              />
+            <div className="space-y-2">
+              <Label>姓名 <span className="text-destructive">*</span></Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="角色姓名" />
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                外貌
-              </label>
-              <textarea
-                value={appearance}
-                onChange={(e) => setAppearance(e.target.value)}
-                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-                rows={3}
-                placeholder="描述角色的外貌特征..."
-              />
+            <div className="space-y-2">
+              <Label>外貌</Label>
+              <Textarea value={appearance} onChange={(e) => setAppearance(e.target.value)} rows={3} placeholder="描述角色的外貌特征..." className="resize-none" />
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                背景
-              </label>
-              <textarea
-                value={background}
-                onChange={(e) => setBackground(e.target.value)}
-                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-                rows={3}
-                placeholder="描述角色的背景故事..."
-              />
+            <div className="space-y-2">
+              <Label>背景</Label>
+              <Textarea value={background} onChange={(e) => setBackground(e.target.value)} rows={3} placeholder="描述角色的背景故事..." className="resize-none" />
             </div>
           </>
         )
       case 'location':
         return (
           <>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                名称 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                placeholder="地点名称"
-              />
+            <div className="space-y-2">
+              <Label>名称 <span className="text-destructive">*</span></Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="地点名称" />
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                描述
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-                rows={3}
-                placeholder="描述地点的样貌和环境..."
-              />
+            <div className="space-y-2">
+              <Label>描述</Label>
+              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="描述地点的样貌和环境..." className="resize-none" />
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                特征
-              </label>
-              <textarea
-                value={features}
-                onChange={(e) => setFeatures(e.target.value)}
-                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-                rows={3}
-                placeholder="描述地点的特殊或标志性特征..."
-              />
+            <div className="space-y-2">
+              <Label>特征</Label>
+              <Textarea value={features} onChange={(e) => setFeatures(e.target.value)} rows={3} placeholder="描述地点的特殊或标志性特征..." className="resize-none" />
             </div>
           </>
         )
       case 'rule':
         return (
           <>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                名称 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                placeholder="规则或设定名称"
-              />
+            <div className="space-y-2">
+              <Label>名称 <span className="text-destructive">*</span></Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="规则或设定名称" />
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                内容
-              </label>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-                rows={3}
-                placeholder="描述规则或设定的具体内容..."
-              />
+            <div className="space-y-2">
+              <Label>内容</Label>
+              <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={3} placeholder="描述规则或设定的具体内容..." className="resize-none" />
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                适用范围
-              </label>
-              <input
-                type="text"
-                value={scope}
-                onChange={(e) => setScope(e.target.value)}
-                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                placeholder="这个规则适用于哪些场景或角色"
-              />
+            <div className="space-y-2">
+              <Label>适用范围</Label>
+              <Input value={scope} onChange={(e) => setScope(e.target.value)} placeholder="这个规则适用于哪些场景或角色" />
             </div>
           </>
         )
       case 'timeline':
         return (
           <>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                名称 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                placeholder="时间线事件名称"
-              />
+            <div className="space-y-2">
+              <Label>名称 <span className="text-destructive">*</span></Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="时间线事件名称" />
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                时间点
-              </label>
-              <input
-                type="text"
-                value={timePoint}
-                onChange={(e) => setTimePoint(e.target.value)}
-                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                placeholder="例如：第三年春、百年前"
-              />
+            <div className="space-y-2">
+              <Label>时间点</Label>
+              <Input value={timePoint} onChange={(e) => setTimePoint(e.target.value)} placeholder="例如：第三年春、百年前" />
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                事件描述
-              </label>
-              <textarea
-                value={eventDescription}
-                onChange={(e) => setEventDescription(e.target.value)}
-                className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-                rows={3}
-                placeholder="描述在这个时间点发生的事件..."
-              />
+            <div className="space-y-2">
+              <Label>事件描述</Label>
+              <Textarea value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} rows={3} placeholder="描述在这个时间点发生的事件..." className="resize-none" />
             </div>
           </>
         )
     }
   }
 
-  // Show duplicate dialog if detected
   if (duplicateEntry) {
     return (
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -387,22 +239,24 @@ export function NewEntryDialog({
           <DialogHeader>
             <DialogTitle>发现已存在条目</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-text-secondary mb-4">
+          <div className="py-2 space-y-3">
+            <p className="text-sm text-muted-foreground">
               「{duplicateEntry.name}」已存在，请选择：
             </p>
-            <div className="p-3 rounded-lg bg-surface-1 border border-border-subtle">
-              <p className="font-medium text-foreground">{duplicateEntry.name}</p>
-              <p className="text-xs text-text-tertiary mt-1">
-                类型：{TYPE_LABELS[duplicateEntry.type]}
-              </p>
-            </div>
+            <Card>
+              <CardContent className="p-3">
+                <p className="font-medium">{duplicateEntry.name}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  类型：{TYPE_LABELS[duplicateEntry.type]}
+                </p>
+              </CardContent>
+            </Card>
           </div>
-          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2">
-            <Button variant="secondary" onClick={handleCreateNew}>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCreateNew}>
               创建新条目
             </Button>
-            <Button variant="primary" onClick={handleLinkExisting}>
+            <Button onClick={handleLinkExisting}>
               关联到现有条目
             </Button>
           </DialogFooter>
@@ -416,24 +270,23 @@ export function NewEntryDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded ${colors.bg} ${colors.text}`}>
+            <Badge variant="secondary" className="font-normal">
               {TYPE_LABELS[entryType]}
-            </span>
+            </Badge>
             <DialogTitle>新建条目</DialogTitle>
           </div>
         </DialogHeader>
-        
-        <div className="py-4 max-h-[60vh] overflow-y-auto">
+
+        <div className="py-2 space-y-4 max-h-[60vh] overflow-y-auto">
           {renderTypeFields()}
         </div>
-        
-        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2">
-          <Button variant="secondary" onClick={onClose} disabled={saving}>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
             取消
           </Button>
-          <Button 
-            variant="primary" 
-            onClick={handleSave} 
+          <Button
+            onClick={handleSave}
             disabled={saving || checkingDuplicate || !name.trim()}
           >
             {saving ? '保存中...' : checkingDuplicate ? '检查中...' : '保存'}

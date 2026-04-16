@@ -10,6 +10,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { CheckCircle2, XCircle } from 'lucide-react'
 
 interface AIConfigDialogProps {
   projectId: string
@@ -35,7 +38,7 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
     setTestResult(null)
     setErrorMsg('')
     setModelList([])
-    
+
     try {
       if (!formData.baseUrl || !formData.apiKey) {
         setErrorMsg('请先填写 Base URL 和 API Key')
@@ -43,7 +46,6 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
         return
       }
 
-      // 标准化 baseUrl（移除末尾的 /v1 或 /）
       let normalizedUrl = formData.baseUrl.trimRight()
       if (normalizedUrl.endsWith('/v1')) {
         normalizedUrl = normalizedUrl.slice(0, -3)
@@ -52,7 +54,6 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
         normalizedUrl = normalizedUrl.slice(0, -1)
       }
 
-      // 调用 models API（OpenAI 兼容格式）
       const response = await fetch(`${normalizedUrl}/v1/models`, {
         method: 'GET',
         headers: {
@@ -73,7 +74,7 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
       }
 
       const models = data?.data?.map((m: any) => m.id) || []
-      
+
       if (models.length === 0) {
         setErrorMsg('未找到任何模型，请检查 API 凭证')
         setTestResult('error')
@@ -81,7 +82,6 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
         setModelList(models)
         setShowModels(true)
         setTestResult('success')
-        // 自动选择第一个模型
         if (models.length > 0 && !formData.model) {
           setFormData(prev => ({ ...prev, model: models[0] }))
         }
@@ -106,98 +106,93 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
         <DialogHeader>
           <DialogTitle>AI 设置</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="apiKey" className="text-right text-sm">
-              API 密钥
-            </label>
+        <div className="grid gap-4 py-2">
+          <div className="space-y-2">
+            <Label htmlFor="apiKey">API 密钥</Label>
             <Input
               id="apiKey"
               type="password"
               value={formData.apiKey || ''}
               onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
               placeholder="sk-..."
-              className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="baseUrl" className="text-right text-sm">
-              接口地址
-            </label>
+
+          <div className="space-y-2">
+            <Label htmlFor="baseUrl">接口地址</Label>
             <Input
               id="baseUrl"
               type="text"
               value={formData.baseUrl || ''}
               onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
               placeholder="https://api.openai.com"
-              className="col-span-3"
             />
           </div>
 
-          {/* 模型探测结果 */}
           {testResult && (
-            <div className={testResult === 'success' ? 'text-green-600 text-sm' : 'text-red-600 text-sm'}>
-              {testResult === 'success' ? '✓ 已成功连接' : `✗ ${errorMsg || '连接失败，请检查配置'}`}
+            <div className={`flex items-center gap-2 text-sm ${testResult === 'success' ? 'text-green-600' : 'text-destructive'}`}>
+              {testResult === 'success' ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>已成功连接</span>
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4" />
+                  <span>{errorMsg || '连接失败，请检查配置'}</span>
+                </>
+              )}
             </div>
           )}
 
-          {/* 模型列表选择 */}
           {showModels && modelList.length > 0 && (
-            <div className="grid grid-cols-4 items-start gap-4">
-              <label className="text-right text-sm">模型列表</label>
-              <div className="col-span-3 border border-border-subtle rounded-lg p-2 max-h-48 overflow-y-auto">
+            <div className="space-y-2">
+              <Label>模型列表</Label>
+              <div className="border rounded-md p-1 max-h-48 overflow-y-auto">
                 {modelList.map((model) => (
-                  <div key={model} className="py-1">
-                    <label className="flex items-center gap-2 cursor-pointer hover:bg-surface-hover px-2 py-1 rounded">
-                      <input
-                        type="radio"
-                        name="model"
-                        value={model}
-                        checked={formData.model === model}
-                        onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm">{model}</span>
-                    </label>
-                  </div>
+                  <label
+                    key={model}
+                    className="flex items-center gap-2 cursor-pointer hover:bg-accent px-2 py-1 rounded-sm"
+                  >
+                    <input
+                      type="radio"
+                      name="model"
+                      value={model}
+                      checked={formData.model === model}
+                      onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                      className="w-4 h-4 text-primary"
+                    />
+                    <span className="text-sm">{model}</span>
+                  </label>
                 ))}
               </div>
             </div>
           )}
 
-          {/* 手动模型输入（备选） */}
           {!showModels && (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="model" className="text-right text-sm">
-                模型
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="model">模型</Label>
               <Input
                 id="model"
                 type="text"
                 value={formData.model || ''}
                 onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                 placeholder="gpt-4 或自动探测"
-                className="col-span-3"
               />
             </div>
           )}
         </div>
         <DialogFooter>
-          <button
-            type="button"
+          <Button
+            variant="outline"
             onClick={handleDetectModels}
             disabled={testing || !formData.apiKey || !formData.baseUrl}
-            className="px-4 py-2 text-sm border border-border-subtle rounded-lg hover:bg-surface-hover disabled:opacity-50 transition-colors"
           >
             {testing ? '探测中...' : '自动探测模型'}
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary-hover transition-colors"
-          >
+          </Button>
+          <Button onClick={handleSave}>
             保存
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

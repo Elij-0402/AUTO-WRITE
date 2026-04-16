@@ -2,33 +2,10 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import type { WorldEntryType } from '@/lib/types'
-
-/**
- * Type badge colors per UI-SPEC:
- * - character = blue
- * - location = green
- * - rule = purple
- * - timeline = amber
- */
-const TYPE_BADGE_COLORS: Record<WorldEntryType, { bg: string; text: string }> = {
-  character: {
-    bg: 'bg-blue-100 dark:bg-blue-900',
-    text: 'text-blue-700 dark:text-blue-300'
-  },
-  location: {
-    bg: 'bg-green-100 dark:bg-green-900',
-    text: 'text-green-700 dark:text-green-300'
-  },
-  rule: {
-    bg: 'bg-purple-100 dark:bg-purple-900',
-    text: 'text-purple-700 dark:text-purple-300'
-  },
-  timeline: {
-    bg: 'bg-amber-100 dark:bg-amber-900',
-    text: 'text-amber-700 dark:text-amber-300'
-  }
-}
 
 const TYPE_LABELS: Record<WorldEntryType, string> = {
   character: '角色',
@@ -37,16 +14,10 @@ const TYPE_LABELS: Record<WorldEntryType, string> = {
   timeline: '时间线'
 }
 
-/**
- * Relationship suggestion card for displaying relationship suggestions in chat.
- * Per D-13, D-23: Includes bidirectional description.
- * Per D-09: Auto-create relationship on adopt.
- */
 export interface RelationshipSuggestionCardProps {
   entry1Name: string
   entry2Name: string
   relationshipType: string
-  /** D-13, D-23: Bidirectional description */
   bidirectionalDescription: string
   onAdopt: () => void
   onDismiss: () => void
@@ -68,65 +39,47 @@ export function RelationshipSuggestionCard({
   }
 
   return (
-    <div
-      className={`
-        rounded-lg p-3
-        bg-surface-1
-        ${dismissed ? 'opacity-50 grayscale' : ''}
-      `}
-    >
-      {/* Header with entry names */}
-      <div className="flex items-center gap-2 mb-2">
-        <span className="font-semibold text-foreground">{entry1Name}</span>
-        <span className="text-text-tertiary">—</span>
-        <span className="font-semibold text-foreground">{entry2Name}</span>
-      </div>
+    <Card className={cn('shadow-none', dismissed && 'opacity-50')}>
+      <CardContent className="p-3 space-y-2">
+        <div className="flex items-center gap-2 text-sm">
+          <span className="font-semibold">{entry1Name}</span>
+          <span className="text-muted-foreground">—</span>
+          <span className="font-semibold">{entry2Name}</span>
+        </div>
 
-      {/* Relationship type badge */}
-      <div className="mb-2">
-        <span className="inline-block px-2 py-0.5 text-xs font-medium bg-surface-2 text-text-secondary rounded">
+        <Badge variant="secondary" className="text-[11px]">
           {relationshipType}
-        </span>
-      </div>
+        </Badge>
 
-      {/* Bidirectional description per D-13, D-23 */}
-      <p className="text-sm text-text-secondary mb-3">
-        {bidirectionalDescription}
-      </p>
+        <p className="text-sm text-muted-foreground">
+          {bidirectionalDescription}
+        </p>
 
-      {/* Action buttons */}
-      <div className="flex gap-2">
-        <Button
-          size="sm"
-          variant="primary"
-          onClick={onAdopt}
-          disabled={dismissed}
-        >
-          采纳
-        </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={handleDismiss}
-          disabled={dismissed}
-        >
-          暂不
-        </Button>
-      </div>
-    </div>
+        <div className="flex gap-2 pt-1">
+          <Button
+            size="sm"
+            onClick={onAdopt}
+            disabled={dismissed}
+          >
+            采纳
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleDismiss}
+            disabled={dismissed}
+          >
+            暂不
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
-/**
- * New entry suggestion card for suggesting new world bible entries.
- * Per D-10: Opens pre-filled entry form on adopt.
- * Per D-14: AI infers entry type, user confirms in form.
- * Per D-18-21: Type-specific pre-fill fields.
- */
 export interface NewEntrySuggestionCardProps {
   entryType: WorldEntryType
   suggestedName: string
-  /** AI-extracted preview description */
   description: string
   onAdopt: () => void
   onDismiss: () => void
@@ -140,8 +93,6 @@ export function NewEntrySuggestionCard({
   onDismiss
 }: NewEntrySuggestionCardProps) {
   const [dismissed, setDismissed] = useState(false)
-  
-  const colors = TYPE_BADGE_COLORS[entryType]
 
   const handleDismiss = () => {
     setDismissed(true)
@@ -149,63 +100,48 @@ export function NewEntrySuggestionCard({
   }
 
   return (
-    <div
-      className={`
-        rounded-lg p-3
-        bg-surface-1
-        ${dismissed ? 'opacity-50 grayscale' : ''}
-      `}
-    >
-      {/* Header with type badge and name */}
-      <div className="flex items-center gap-2 mb-2">
-        <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded ${colors.bg} ${colors.text}`}>
-          {TYPE_LABELS[entryType]}
-        </span>
-        <span className="font-semibold text-foreground">{suggestedName}</span>
-      </div>
+    <Card className={cn('shadow-none', dismissed && 'opacity-50')}>
+      <CardContent className="p-3 space-y-2">
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-[11px]">
+            {TYPE_LABELS[entryType]}
+          </Badge>
+          <span className="font-semibold text-sm">{suggestedName}</span>
+        </div>
 
-      {/* Description preview */}
-      <p className="text-sm text-text-secondary mb-3">
-        {description}
-      </p>
+        <p className="text-sm text-muted-foreground">
+          {description}
+        </p>
 
-      {/* Action buttons */}
-      <div className="flex gap-2">
-        <Button
-          size="sm"
-          variant="primary"
-          onClick={onAdopt}
-          disabled={dismissed}
-        >
-          创建条目
-        </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={handleDismiss}
-          disabled={dismissed}
-        >
-          暂不
-        </Button>
-      </div>
-    </div>
+        <div className="flex gap-2 pt-1">
+          <Button
+            size="sm"
+            onClick={onAdopt}
+            disabled={dismissed}
+          >
+            创建条目
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleDismiss}
+            disabled={dismissed}
+          >
+            暂不
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
-/**
- * Unified suggestion card that renders either relationship or new entry card.
- * Per D-12: Maximum 3 suggestions per AI response.
- * Per D-17: Dismissed suggestions won't appear again in conversation.
- */
 export interface Suggestion {
   id: string
   type: 'relationship' | 'newEntry'
-  // Relationship fields
   entry1Name?: string
   entry2Name?: string
   relationshipType?: string
   bidirectionalDescription?: string
-  // New entry fields
   entryType?: WorldEntryType
   suggestedName?: string
   description?: string

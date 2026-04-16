@@ -11,18 +11,18 @@ import { RelationshipSuggestionCard, NewEntrySuggestionCard } from './suggestion
 import { ConsistencyWarningCard } from './consistency-warning-card'
 import { NewEntryDialog, type NewEntryPrefillData } from './new-entry-dialog'
 import { DuplicateEntryDialog } from './duplicate-entry-dialog'
-import { Send, Loader2, Lightbulb, AlertTriangle } from 'lucide-react'
+import { Send, Loader2, Lightbulb, AlertTriangle, Bot, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Separator } from '@/components/ui/separator'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 import type { Suggestion, RelationshipSuggestion, NewEntrySuggestion } from '@/lib/ai/suggestion-parser'
 
 interface AIChatPanelProps {
   projectId: string
   onInsertDraft?: (content: string) => void
-  /** Selected text from editor for discussion per D-08 */
   selectedText?: string | null
-  /** Callback when discussion is complete (text sent or cleared) */
   onDiscussComplete?: () => void
-  /** Callback to switch to world bible tab */
   onSwitchToWorldTab?: () => void
 }
 
@@ -49,20 +49,15 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  // Dialog state for new entry adoption per D-10
   const [newEntryDialogOpen, setNewEntryDialogOpen] = useState(false)
   const [prefillEntry, setPrefillEntry] = useState<{ type: WorldEntryType; data: NewEntryPrefillData } | null>(null)
 
-  // Dialog state for duplicate entry per D-22
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
   const [existingEntry, setExistingEntry] = useState<WorldEntry | null>(null)
   const [duplicateEntryName, setDuplicateEntryName] = useState('')
 
-  // Toast state (simple inline approach - could be replaced with a toast library)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  // Auto-scroll to bottom when new messages arrive — use scrollTop on container
-  // instead of scrollIntoView which scrolls all ancestors (causing whole-page scroll)
   useEffect(() => {
     const container = messagesContainerRef.current
     if (container) {
@@ -70,10 +65,8 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     }
   }, [messages])
 
-  // Filter suggestions through dismissed
   const visibleSuggestions = filterDismissed(suggestions)
 
-  // Reset dismissed suggestions when conversation changes
   useEffect(() => {
     if (messages.length === 0) {
       reset()
@@ -87,7 +80,6 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     setInput('')
     try {
       await sendMessage(text)
-      // Clear selected text after sending per D-08
       onDiscussComplete?.()
     } catch (err) {
       console.error('Failed to send message:', err)
@@ -106,7 +98,6 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     onInsertDraft?.(content)
   }
 
-  // Find entry ID by name from entriesByType
   const findEntryIdByName = (name: string): string | null => {
     for (const [type, entries] of Object.entries(entriesByType)) {
       const found = entries.find(e => e.name === name || name.includes(e.name))
@@ -115,13 +106,11 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     return null
   }
 
-  // Show toast message
   const showToast = (message: string) => {
     setToastMessage(message)
     setTimeout(() => setToastMessage(null), 3000)
   }
 
-  // Handle adopting a relationship suggestion per D-09
   const handleAdoptRelationship = async (suggestion: RelationshipSuggestion) => {
     const entry1Id = findEntryIdByName(suggestion.entry1Name)
     const entry2Id = findEntryIdByName(suggestion.entry2Name)
@@ -148,7 +137,6 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     }
   }
 
-  // Handle adopting a new entry suggestion per D-10
   const handleAdoptNewEntry = (suggestion: NewEntrySuggestion) => {
     const prefillData: NewEntryPrefillData = {
       name: suggestion.suggestedName,
@@ -158,13 +146,11 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     setNewEntryDialogOpen(true)
   }
 
-  // Handle dismiss per D-17
   const handleDismiss = (suggestion: Suggestion) => {
     dismiss(suggestion)
     dismissSuggestion(suggestion)
   }
 
-  // Handle saving new entry from dialog
   const handleSaveNewEntry = async (entry: Partial<WorldEntry>) => {
     if (!prefillEntry) return
     try {
@@ -178,7 +164,6 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     }
   }
 
-  // Handle checking for duplicate entry names per D-22
   const handleCheckDuplicate = async (name: string): Promise<WorldEntry | null> => {
     const allEntries = [
       ...entriesByType.character,
@@ -195,31 +180,24 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     return null
   }
 
-  // Handle linking to existing entry
   const handleLinkExisting = (entry: WorldEntry) => {
-    // For now, just show a toast - could open relation creation dialog
     showToast(`已选择关联到「${entry.name}」`)
   }
 
-  // Handle creating new when duplicate exists
   const handleCreateNew = () => {
     setDuplicateDialogOpen(false)
-    // Continue with creation
   }
 
-  // Handle ignoring a contradiction
   const handleIgnoreContradiction = (index: number) => {
     clearContradiction(index)
   }
 
-  // Handle intentional contradiction (adds exemption and clears)
   const handleIntentionalContradiction = async (contradiction: Contradiction, index: number) => {
     await addExemption(contradiction.entryName, contradiction.entryType)
     clearContradiction(index)
     showToast('已记录为有意为之')
   }
 
-  // Handle fixing world entry (switch to world tab)
   const handleFixWorldEntry = () => {
     onSwitchToWorldTab?.()
   }
@@ -227,25 +205,31 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const isEmpty = messages.length === 0
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-surface-0">
-      {/* Toast notification */}
+    <div className="h-full flex flex-col overflow-hidden bg-background relative">
       {toastMessage && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 glass-panel-elevated text-foreground text-sm rounded-lg shadow-lg">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-50 px-3 py-1.5 bg-foreground text-background text-xs rounded-md shadow-lg">
           {toastMessage}
         </div>
       )}
 
-      {/* Messages area */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden p-3">
+      <div className="h-10 border-b flex items-center px-3">
+        <Bot className="h-4 w-4 text-muted-foreground mr-2" />
+        <span className="text-sm font-medium">AI 助手</span>
+      </div>
+
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden">
         {isEmpty ? (
-          <div className="h-full flex items-center justify-center text-text-tertiary">
-            <div className="text-center">
-              <p className="text-lg mb-1">AI 聊天</p>
-              <p className="text-sm text-text-muted">配置 AI 设置后开始对话</p>
+          <div className="h-full flex items-center justify-center text-muted-foreground p-6">
+            <div className="text-center space-y-2">
+              <div className="w-10 h-10 mx-auto rounded-full bg-muted flex items-center justify-center mb-3">
+                <Bot className="h-5 w-5" />
+              </div>
+              <p className="text-sm font-medium text-foreground">开始与 AI 对话</p>
+              <p className="text-xs text-muted-foreground">配置 AI 设置后开始对话</p>
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="px-3 divide-y divide-border/60">
             {messages.map((msg: ChatMessage) => (
               <MessageBubble
                 key={msg.id}
@@ -254,10 +238,9 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
               />
             ))}
 
-            {/* Render suggestions after AI messages */}
             {visibleSuggestions.length > 0 && (
-                <div className="mt-3 space-y-2">
-                <div className="flex items-center gap-2 text-xs text-text-tertiary mb-2">
+              <div className="py-3 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                   <Lightbulb className="w-3 h-3" />
                   <span>AI 建议</span>
                 </div>
@@ -286,15 +269,14 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
               </div>
             )}
 
-            {/* Render consistency warnings after AI messages */}
             {contradictions.length > 0 && (
-              <div className="mt-3 space-y-2">
-                <div className="flex items-center gap-2 text-xs text-text-tertiary mb-2">
+              <div className="py-3 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                   <AlertTriangle className="w-3 h-3" />
                   <span>矛盾检测</span>
                 </div>
                 {isCheckingConsistency && (
-                  <div className="flex items-center gap-2 text-text-tertiary text-sm mb-2">
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
                     <Loader2 className="w-3 h-3 animate-spin" />
                     <span>检测矛盾中...</span>
                   </div>
@@ -312,51 +294,49 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
             )}
 
             {loading && (
-              <div className="flex justify-start mb-2">
-                <div className="bg-surface-1 rounded-lg p-3">
-                  <div className="flex items-center gap-2 text-text-tertiary">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">AI 正在思考...</span>
-                  </div>
+              <div className="py-3">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span className="text-sm">AI 正在思考...</span>
                 </div>
               </div>
             )}
-            <div />
           </div>
         )}
       </div>
 
-      {/* Input area */}
-      <div className="border-t border-border-subtle p-3">
+      <div className="border-t p-3 space-y-2">
         {chatError && (
-          <div className="flex items-center justify-between mb-2 px-3 py-2 rounded-lg bg-danger-muted text-danger text-sm">
+          <div className="flex items-center justify-between px-3 py-2 rounded-md bg-destructive/10 text-destructive text-sm">
             <span>{chatError}</span>
-            <button onClick={() => setChatError(null)} className="ml-2 text-danger hover:text-danger/70 font-bold">&times;</button>
+            <button onClick={() => setChatError(null)} className="ml-2 hover:opacity-70">
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
-        <div className="flex gap-2">
-          <textarea
+
+        <div className="flex gap-2 items-end">
+          <Textarea
             ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="输入消息..."
+            placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
             disabled={loading}
             rows={1}
-            className="flex-1 resize-none rounded-[10px] border border-border-subtle px-3 py-2 text-sm bg-surface-1 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50 transition-colors"
-            style={{ maxHeight: '120px' }}
+            className="flex-1 resize-none min-h-[36px] max-h-[120px] text-sm"
           />
-          <button
+          <Button
             onClick={handleSend}
             disabled={!input.trim() || loading}
-            className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-primary text-primary-foreground rounded-[10px] hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            size="icon"
+            className="flex-shrink-0 h-9 w-9"
           >
             <Send className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* New Entry Dialog */}
       {prefillEntry && (
         <NewEntryDialog
           open={newEntryDialogOpen}
@@ -370,7 +350,6 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         />
       )}
 
-      {/* Duplicate Entry Dialog */}
       {existingEntry && (
         <DuplicateEntryDialog
           open={duplicateDialogOpen}

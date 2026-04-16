@@ -2,24 +2,16 @@
 
 import { useCallback } from 'react'
 import type { Editor } from '@tiptap/react'
+import { Bold, Italic, Heading1, Heading2, Heading3 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
 interface EditorToolbarProps {
   editor: Editor
 }
 
-/**
- * Format toolbar per D-20 to D-27:
- * - Fixed at top of editor content area, always visible
- * - Minimalist, low-distraction design
- * - Three buttons: Bold, Italic, Heading (cycles through H1/H2/H3)
- * - Background matches editor background
- * - Bottom border divider line
- * 
- * Heading behavior per D-45:
- * - Click cycles: paragraph → H1 → H2 → H3 → paragraph
- */
 export function EditorToolbar({ editor }: EditorToolbarProps) {
-  // Get current heading level
   const getHeadingLevel = (): number => {
     if (editor.isActive('heading', { level: 1 })) return 1
     if (editor.isActive('heading', { level: 2 })) return 2
@@ -29,7 +21,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
   const headingLevel = getHeadingLevel()
 
-  // Cycle heading: none → 1 → 2 → 3 → none
   const cycleHeading = useCallback(() => {
     if (headingLevel === 0) {
       editor.chain().focus().toggleHeading({ level: 1 }).run()
@@ -42,42 +33,68 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
     }
   }, [editor, headingLevel])
 
+  const HeadingIcon = headingLevel === 1
+    ? Heading1
+    : headingLevel === 2
+      ? Heading2
+      : headingLevel === 3
+        ? Heading3
+        : Heading1
+
   return (
-    <div className="editor-toolbar flex items-center gap-1 border-b border-border-subtle px-4 py-2 bg-surface-0 sticky top-0 z-10">
-      {/* Bold button per D-21 */}
-      <button
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`p-2 rounded-lg bg-surface-1 hover:bg-surface-hover transition-colors ${
-          editor.isActive('bold') ? 'bg-primary-muted text-primary' : ''
-        }`}
-        title="加粗 (Ctrl+B)"
-      >
-        <span className="font-bold text-base">B</span>
-      </button>
+    <div className="editor-toolbar flex items-center gap-0.5 border-b px-3 py-1.5 bg-background sticky top-0 z-10">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              'h-8 w-8',
+              editor.isActive('bold') && 'bg-accent text-accent-foreground'
+            )}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>加粗 (Ctrl+B)</TooltipContent>
+      </Tooltip>
 
-      {/* Italic button per D-21 */}
-      <button
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`p-2 rounded-lg bg-surface-1 hover:bg-surface-hover transition-colors ${
-          editor.isActive('italic') ? 'bg-primary-muted text-primary' : ''
-        }`}
-        title="斜体 (Ctrl+I)"
-      >
-        <span className="italic text-base">I</span>
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              'h-8 w-8',
+              editor.isActive('italic') && 'bg-accent text-accent-foreground'
+            )}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>斜体 (Ctrl+I)</TooltipContent>
+      </Tooltip>
 
-      {/* Heading button per D-21, D-25, D-45 */}
-      <button
-        onClick={cycleHeading}
-        className={`p-2 rounded-lg bg-surface-1 hover:bg-surface-hover transition-colors min-w-[2.5rem] ${
-          headingLevel > 0 ? 'bg-primary-muted text-primary' : ''
-        }`}
-        title="标题 (点击循环切换)"
-      >
-        <span className={`text-base ${headingLevel > 0 ? 'font-bold' : ''}`}>
-          {headingLevel === 0 ? 'H' : `H${headingLevel}`}
-        </span>
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              'h-8 w-8',
+              headingLevel > 0 && 'bg-accent text-accent-foreground'
+            )}
+            onClick={cycleHeading}
+          >
+            <HeadingIcon className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          标题 {headingLevel > 0 ? `H${headingLevel}` : '(点击循环切换)'}
+        </TooltipContent>
+      </Tooltip>
     </div>
   )
 }

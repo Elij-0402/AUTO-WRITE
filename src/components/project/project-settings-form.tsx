@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -34,10 +35,6 @@ interface ProjectSettingsFormProps {
   onSave: (data: Partial<ProjectMeta>) => Promise<void>
 }
 
-/**
- * Full project metadata editing form per D-07.
- * Will be reused in Plan 02's project workspace.
- */
 export function ProjectSettingsForm({
   project,
   onSave,
@@ -69,31 +66,28 @@ export function ProjectSettingsForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      {/* 标题 */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-text-secondary">
-          标题 <span className="text-red-500">*</span>
-        </label>
+        <Label htmlFor="title">
+          标题 <span className="text-destructive">*</span>
+        </Label>
         <Input
+          id="title"
           {...register('title')}
           placeholder="输入小说标题"
           maxLength={100}
         />
         {errors.title && (
-          <p className="text-xs text-red-500">{errors.title.message}</p>
+          <p className="text-xs text-destructive">{errors.title.message}</p>
         )}
       </div>
 
-      {/* 类型 */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-text-secondary">
-          类型
-        </label>
+        <Label htmlFor="genre">类型</Label>
         <Select
           defaultValue={project.genre}
           onValueChange={(value) => setValue('genre', value, { shouldDirty: true })}
         >
-          <SelectTrigger>
+          <SelectTrigger id="genre">
             <SelectValue placeholder="选择类型" />
           </SelectTrigger>
           <SelectContent>
@@ -106,28 +100,23 @@ export function ProjectSettingsForm({
         </Select>
       </div>
 
-      {/* 简介 */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-text-secondary">
-          简介
-        </label>
+        <Label htmlFor="synopsis">简介</Label>
         <Textarea
+          id="synopsis"
           {...register('synopsis')}
           placeholder="简单描述你的故事"
           maxLength={500}
           rows={4}
         />
         {errors.synopsis && (
-          <p className="text-xs text-red-500">{errors.synopsis.message}</p>
+          <p className="text-xs text-destructive">{errors.synopsis.message}</p>
         )}
       </div>
 
-      {/* 封面 (placeholder for now) */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-text-secondary">
-          封面图片
-        </label>
-        <div className="flex h-32 items-center justify-center rounded-lg border-2 border-dashed border-border-subtle text-sm text-text-tertiary">
+        <Label>封面图片</Label>
+        <div className="flex h-32 items-center justify-center rounded-md border-2 border-dashed text-sm text-muted-foreground">
           封面功能即将推出
         </div>
       </div>

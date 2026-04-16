@@ -11,13 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Settings } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { ChevronLeft, Settings } from 'lucide-react'
 
-/**
- * Project workspace layout per D-04: full project workspace replaces the dashboard view.
- * Per D-09: chapter sidebar always visible alongside the editor.
- * Per D-07: project settings accessible from workspace.
- */
 export default function ProjectLayout({
   children,
 }: {
@@ -34,8 +30,8 @@ export default function ProjectLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <div className="text-[var(--foreground)]/50 text-sm">加载中...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-muted-foreground text-sm">加载中...</div>
       </div>
     )
   }
@@ -46,61 +42,50 @@ export default function ProjectLayout({
         <div className="text-2xl font-semibold text-foreground mb-2">
           项目未找到
         </div>
-        <p className="text-text-secondary mb-6">该作品不存在或已被删除</p>
-        <button
-          onClick={() => router.push('/')}
-          className="text-sm text-primary hover:text-primary-hover transition-colors"
-        >
+        <p className="text-muted-foreground mb-6">该作品不存在或已被删除</p>
+        <Button variant="outline" onClick={() => router.push('/')}>
           返回作品列表
-        </button>
+        </Button>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--background)]">
-      {/* Top bar */}
-      <header className="h-14 glass-panel border-b-0 border-[var(--border-subtle)] z-50 sticky top-0 flex items-center px-4 gap-3 flex-shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.02)] dark:shadow-[0_2px_15px_rgba(0,0,0,0.1)]">
-        <button
+    <div className="min-h-screen flex flex-col bg-background">
+      <header className="h-14 border-b bg-background sticky top-0 z-50 flex items-center px-4 gap-3 flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => router.push('/')}
-          className="text-sm text-text-tertiary hover:text-foreground transition-colors flex items-center gap-1"
+          className="text-muted-foreground hover:text-foreground"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
+          <ChevronLeft className="h-4 w-4" />
           返回
-        </button>
-        <h1 className="text-base font-bold text-[var(--foreground)] truncate ml-2">
+        </Button>
+
+        <div className="h-5 w-px bg-border" />
+
+        <h1 className="text-sm font-semibold text-foreground truncate">
           {project.title}
         </h1>
-        <span className="text-xs text-[var(--foreground)]/40 ml-4 font-medium bg-[var(--foreground)]/5 px-2 py-0.5 rounded-full">
-          {totalWordCount.toLocaleString()}字 <span className="mx-1">•</span> 今日{todayWordCount}字
+
+        <span className="text-xs text-muted-foreground font-medium bg-muted px-2 py-0.5 rounded-md">
+          {totalWordCount.toLocaleString()} 字 · 今日 {todayWordCount}
         </span>
-        <button
+
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setShowSettings(true)}
-          className="ml-auto flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)]/60 hover:text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/10 px-3 py-1.5 rounded-lg"
-          aria-label="项目设置"
+          className="ml-auto"
         >
           <Settings className="h-4 w-4" />
           项目设置
-        </button>
+        </Button>
       </header>
 
-      {/* Main workspace area */}
-      <div className="flex flex-1 overflow-hidden">{children}</div>
+      <div className="flex flex-col flex-1 overflow-hidden">{children}</div>
 
-      {/* Project settings dialog per D-07 */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
         <DialogContent className="max-w-md">
           <DialogHeader>

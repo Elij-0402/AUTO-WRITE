@@ -18,30 +18,22 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical } from 'lucide-react'
 import { useChapters } from '@/lib/hooks/use-chapters'
+import { cn } from '@/lib/utils'
 import type { Chapter, OutlineStatus } from '@/lib/types'
 
-/**
- * Outline status color mapping per D-16.
- * gray = not_started, blue = in_progress, green = completed
- */
 function getStatusDotColor(status: OutlineStatus): string {
   switch (status) {
     case 'not_started':
-      return 'bg-text-muted'
+      return 'bg-muted-foreground/40'
     case 'in_progress':
-      return 'bg-blue-400 dark:bg-blue-500'
+      return 'bg-primary'
     case 'completed':
-      return 'bg-green-400 dark:bg-green-500'
+      return 'bg-green-500'
     default:
-      return 'bg-text-muted'
+      return 'bg-muted-foreground/40'
   }
 }
 
-/**
- * OutlineRow — Individual outline entry row per D-16, D-17, D-19.
- * Per D-17: clicking switches editor area to outline editing form.
- * Per D-19: empty entries show "还没有大纲" prompt with "编辑" button.
- */
 interface OutlineRowProps {
   chapter: Chapter
   isActive: boolean
@@ -70,29 +62,24 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`
-        group flex items-center gap-2 px-2 py-2 border-b border-border-subtle
-        cursor-pointer transition-colors
-        ${isActive
-          ? 'bg-surface-hover'
-          : 'hover:bg-surface-hover'}
-        ${isDragging ? 'opacity-50 shadow-lg z-50' : ''}
-      `}
+      className={cn(
+        'group flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-colors',
+        isActive ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50',
+        isDragging && 'opacity-50 shadow-lg z-50'
+      )}
       onClick={onSelect}
     >
-      {/* Drag handle per D-12 — outline and chapters share same order */}
       <button
-        className="flex-shrink-0 cursor-grab text-text-muted hover:text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity"
+        className="flex-shrink-0 cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
         {...attributes}
         {...listeners}
         aria-label="拖动排序"
       >
-        <GripVertical className="h-4 w-4" />
+        <GripVertical className="h-3.5 w-3.5" />
       </button>
 
-      {/* Status color dot per D-16 */}
       <span
-        className={`flex-shrink-0 w-2 h-2 rounded-full ${getStatusDotColor(chapter.outlineStatus)}`}
+        className={cn('flex-shrink-0 w-1.5 h-1.5 rounded-full', getStatusDotColor(chapter.outlineStatus))}
         title={
           chapter.outlineStatus === 'not_started'
             ? '未开始'
@@ -102,11 +89,10 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
         }
       />
 
-      {/* Title and content */}
       <div className="flex-1 min-w-0">
         {isEmptyOutline ? (
-          <div className="flex items-center gap-1">
-            <span className="text-sm text-text-tertiary truncate">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm text-muted-foreground truncate">
               {chapter.title}
             </span>
             <button
@@ -114,34 +100,27 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
                 e.stopPropagation()
                 onSelect()
               }}
-              className="text-xs text-primary hover:text-primary-hover shrink-0"
+              className="text-xs text-primary hover:underline shrink-0"
             >
               编辑
             </button>
           </div>
         ) : (
-          <span className="block truncate text-sm text-foreground">
+          <span className="block truncate text-sm">
             {chapter.title}
           </span>
         )}
       </div>
 
-      {/* Word count indicator for entries with outline content */}
       {chapter.wordCount > 0 && !isEmptyOutline && (
-        <span className="flex-shrink-0 text-xs text-text-tertiary">
-          {chapter.wordCount.toLocaleString()}字
+        <span className="flex-shrink-0 text-[11px] text-muted-foreground tabular-nums">
+          {chapter.wordCount.toLocaleString()}
         </span>
       )}
     </div>
   )
 }
 
-/**
- * OutlineTab per D-13, D-16, D-17.
- * Shows outline entries with status color dots.
- * Clicking an entry switches to outline editing form in editor area (per D-17).
- * Drag-reorder shares the same order field as chapters per D-12.
- */
 interface OutlineTabProps {
   projectId: string
   onSelectOutline: (chapterId: string) => void
@@ -160,7 +139,6 @@ export function OutlineTab({
     useSensor(KeyboardSensor)
   )
 
-  // Drag reorder per D-12 — outline and chapters share the same order
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -180,7 +158,7 @@ export function OutlineTab({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-text-tertiary text-sm">
+      <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
         加载中...
       </div>
     )
@@ -188,7 +166,7 @@ export function OutlineTab({
 
   if (chapters.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-text-tertiary text-sm gap-2">
+      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground text-sm gap-1 px-3">
         <p>还没有章节</p>
         <p className="text-xs">请先在章节标签中创建章节</p>
       </div>

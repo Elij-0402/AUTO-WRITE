@@ -107,7 +107,7 @@ export function FloatingToolbar({ onDiscuss, editorRef }: FloatingToolbarProps) 
     >
       <button
         onClick={handleDiscussClick}
-        className="flex items-center gap-1.5 glass-panel shadow-lg rounded-lg px-3 py-1.5 text-sm text-foreground hover:bg-surface-hover transition-colors"
+        className="flex items-center gap-1.5 bg-popover border shadow-md rounded-md px-3 py-1.5 text-sm text-popover-foreground hover:bg-accent transition-colors"
       >
         <MessageCircle className="w-4 h-4" />
         <span>讨论</span>

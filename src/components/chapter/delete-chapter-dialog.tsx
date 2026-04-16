@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -11,10 +10,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
-/**
- * DeleteChapterDialog per D-15: confirmation dialog for soft delete.
- * All text in Simplified Chinese.
- */
 interface DeleteChapterDialogProps {
   chapterTitle: string
   onConfirm: () => void
@@ -37,13 +32,13 @@ export function DeleteChapterDialog({
         </DialogHeader>
         <DialogFooter className="flex gap-2 sm:justify-end">
           <Button
-            variant="secondary"
+            variant="outline"
             onClick={onCancel}
           >
             取消
           </Button>
           <Button
-            variant="danger"
+            variant="destructive"
             onClick={onConfirm}
           >
             删除

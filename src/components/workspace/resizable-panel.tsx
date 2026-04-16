@@ -128,8 +128,7 @@ export function ResizablePanelGroup({
         onDoubleClick={handleDoubleClick}
         className="group relative flex items-center justify-center w-1 shrink-0 cursor-col-resize"
       >
-        <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400/10 group-active:bg-blue-500/15 transition-colors" />
-        <div className="w-px h-full bg-stone-200 group-hover:bg-blue-300 dark:bg-stone-800 group-hover:dark:bg-blue-500/50 group-active:bg-blue-400 group-active:dark:bg-blue-400/60 transition-colors" />
+        <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-primary/10 group-active:bg-primary/20 transition-colors" />
       </Separator>
 
       {/* Main content panel */}

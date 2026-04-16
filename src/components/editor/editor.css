@@ -1,28 +1,19 @@
-/* Tiptap editor styles */
+/* Tiptap editor styles — using CSS variables from globals.css */
 
 .tiptap {
   font-family: var(--font-noto-sans-sc), ui-sans-serif, system-ui, sans-serif;
   font-size: 16px;
   line-height: 2.0;
-  color: #1c1917;
-  background: #fff;
-}
-
-.dark .tiptap {
-  color: #fafaf9;
-  background: #0c0a09;
+  color: hsl(var(--foreground));
+  background: transparent;
 }
 
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
-  color: #a8a29e;
+  color: hsl(var(--muted-foreground));
   pointer-events: none;
   height: 0;
-}
-
-.dark .tiptap p.is-editor-empty:first-child::before {
-  color: #57534e;
 }
 
 .tiptap:focus {
@@ -31,12 +22,7 @@
 
 .tiptap .selection,
 .tiptap ::selection {
-  background-color: rgba(59, 130, 246, 0.2);
-}
-
-.dark .tiptap .selection,
-.dark .tiptap ::selection {
-  background-color: rgba(96, 165, 250, 0.3);
+  background-color: hsl(var(--primary) / 0.2);
 }
 
 .tiptap p {
@@ -78,22 +64,13 @@
 
 .tiptap hr {
   border: none;
-  border-top: 1px solid #e7e5e4;
+  border-top: 1px solid hsl(var(--border));
   margin: 2em 0;
 }
 
-.dark .tiptap hr {
-  border-top-color: #292524;
-}
-
 .tiptap blockquote {
-  border-left: 3px solid #e7e5e4;
+  border-left: 3px solid hsl(var(--border));
   padding-left: 1em;
   margin-left: 0;
-  color: #57534e;
-}
-
-.dark .tiptap blockquote {
-  border-left-color: #292524;
-  color: #a8a29e;
+  color: hsl(var(--muted-foreground));
 }

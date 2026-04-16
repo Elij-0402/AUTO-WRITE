@@ -2,11 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 
-/**
- * TagInput per D-06: free tag system with autocomplete from existing tags.
- * Used in world entry edit form.
- */
 interface TagInputProps {
   tags: string[]
   onTagsChange: (tags: string[]) => void
@@ -20,17 +18,14 @@ export function TagInput({ tags, onTagsChange, allTags }: TagInputProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Filter existing tags by input for autocomplete
   const filteredTags = allTags.filter(tag =>
     tag.toLowerCase().includes(inputValue.toLowerCase()) &&
     !tags.includes(tag)
   )
 
-  // Check if exact tag exists (for showing "create new" option)
   const exactMatch = allTags.find(t => t.toLowerCase() === inputValue.toLowerCase())
   const showCreateOption = inputValue.trim() && !exactMatch && filteredTags.length === 0
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -63,35 +58,35 @@ export function TagInput({ tags, onTagsChange, allTags }: TagInputProps) {
         addTag(inputValue)
       }
     } else if (e.key === 'Backspace' && !inputValue && tags.length > 0) {
-      // Remove last tag on backspace when input is empty
       removeTag(tags[tags.length - 1])
     }
   }
 
   return (
-    <div ref={containerRef} className="relative">
-      {/* Current tags as pills */}
-      <div className="flex flex-wrap gap-1 mb-2">
-        {tags.map(tag => (
-          <span
-            key={tag}
-            className="inline-flex items-center gap-1 px-2 py-0.5 bg-surface-2 text-text-secondary text-xs rounded-full"
-          >
-            {tag}
-            <button
-              type="button"
-              onClick={() => removeTag(tag)}
-              className="hover:text-red-500 transition-colors"
+    <div ref={containerRef} className="relative space-y-2">
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {tags.map(tag => (
+            <Badge
+              key={tag}
+              variant="secondary"
+              className="gap-1 pr-1 font-normal"
             >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        ))}
-      </div>
+              {tag}
+              <button
+                type="button"
+                onClick={() => removeTag(tag)}
+                className="hover:text-destructive transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
 
-      {/* Input */}
       <div className="relative">
-        <input
+        <Input
           ref={inputRef}
           type="text"
           value={inputValue}
@@ -104,18 +99,17 @@ export function TagInput({ tags, onTagsChange, allTags }: TagInputProps) {
           onCompositionStart={() => { isComposingRef.current = true }}
           onCompositionEnd={() => { isComposingRef.current = false }}
           placeholder="添加标签..."
-          className="w-full rounded-lg border border-border-subtle px-3 py-1.5 text-sm text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-surface-0"
+          className="h-8 text-sm"
         />
       </div>
 
-      {/* Autocomplete dropdown */}
       {showDropdown && (filteredTags.length > 0 || showCreateOption) && (
-        <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-surface-0 glass-panel border border-border-subtle rounded-lg shadow-lg py-1 max-h-48 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-popover border rounded-md shadow-md py-1 max-h-48 overflow-y-auto">
           {filteredTags.map(tag => (
             <button
               key={tag}
               type="button"
-              className="w-full px-3 py-1.5 text-left text-sm text-foreground hover:bg-surface-hover"
+              className="w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
               onClick={() => addTag(tag)}
             >
               {tag}
@@ -124,7 +118,7 @@ export function TagInput({ tags, onTagsChange, allTags }: TagInputProps) {
           {showCreateOption && (
             <button
               type="button"
-              className="w-full px-3 py-1.5 text-left text-sm text-primary hover:bg-surface-hover"
+              className="w-full px-3 py-1.5 text-left text-sm text-primary hover:bg-accent"
               onClick={() => addTag(inputValue)}
             >
               + 创建 &quot;{inputValue}&quot;

@@ -1,25 +1,34 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
 import { Plus, X, ArrowRight, ArrowLeft } from 'lucide-react'
 import { useRelations } from '@/lib/hooks/use-relations'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type { WorldEntry, Relation, RelationCategory } from '@/lib/types'
 
-/**
- * Category labels per D-23
- */
 const CATEGORY_LABELS: Record<RelationCategory, string> = {
   character_relation: '角色关系',
   general: '通用关联',
 }
 
-/**
- * RelationshipSection per D-21, D-22, D-23, D-24, D-25, D-26.
- * - Shows relationship cards with direction, category, description, target entry name
- * - Bidirectional perspective: both entries see the relationship from their side
- * - Cross-entry navigation: clicking target entry navigates to that entry
- */
 interface RelationshipSectionProps {
   projectId: string
   sourceEntry: WorldEntry
@@ -35,17 +44,15 @@ export function RelationshipSection({
 }: RelationshipSectionProps) {
   const { relations, loading, addRelation, deleteRelation } = useRelations(projectId, sourceEntry.id)
 
-  // Filter out already-linked entries for the target dropdown per T-04-08
   const availableTargets = useMemo(() => {
-    const linkedIds = new Set(relations.map(r => 
+    const linkedIds = new Set(relations.map(r =>
       r.sourceEntryId === sourceEntry.id ? r.targetEntryId : r.sourceEntryId
     ))
-    return allEntries.filter(e => 
+    return allEntries.filter(e =>
       e.id !== sourceEntry.id && !linkedIds.has(e.id)
     )
   }, [allEntries, sourceEntry.id, relations])
 
-  // Add relationship dialog state
   const [dialogOpen, setDialogOpen] = useState(false)
   const [targetId, setTargetId] = useState('')
   const [category, setCategory] = useState<RelationCategory>('character_relation')
@@ -55,7 +62,6 @@ export function RelationshipSection({
   const handleAddRelation = async () => {
     if (!targetId) return
     await addRelation(targetId, sourceEntry.id, category, description, sourceToTargetLabel)
-    // Reset form
     setTargetId('')
     setCategory('character_relation')
     setDescription('')
@@ -67,32 +73,25 @@ export function RelationshipSection({
     await deleteRelation(relationId)
   }
 
-  // Render relationship card per D-24
   const renderRelationCard = (relation: Relation) => {
-    // Determine if sourceEntry is the source or target of this relation
     const isSource = relation.sourceEntryId === sourceEntry.id
     const targetId = isSource ? relation.targetEntryId : relation.sourceEntryId
     const targetEntry = allEntries.find(e => e.id === targetId)
-    
+
     if (!targetEntry) return null
 
-    // Direction indicator per D-24, D-29
-    const directionIndicator = isSource 
-      ? { arrow: '→', label: relation.sourceToTargetLabel || '' }
-      : { arrow: '←', label: relation.sourceToTargetLabel || '' }
+    const directionLabel = relation.sourceToTargetLabel || ''
 
-    // Reverse perspective for target perspective per D-22
-    const perspectiveLabel = isSource 
-      ? directionIndicator.label
-      : `← ${directionIndicator.label || '关联'}`
+    const perspectiveLabel = isSource
+      ? directionLabel
+      : `← ${directionLabel || '关联'}`
 
     return (
       <div
         key={relation.id}
-        className="group relative flex items-start gap-2 p-3 rounded-lg border border-border-subtle bg-surface-0 hover:border-border-strong transition-colors"
+        className="group relative flex items-start gap-2 p-3 rounded-md border bg-card hover:border-primary/30 transition-colors"
       >
-        {/* Direction arrow */}
-        <span className="text-text-tertiary flex-shrink-0 mt-0.5">
+        <span className="text-muted-foreground flex-shrink-0 mt-0.5">
           {isSource ? (
             <ArrowRight className="h-4 w-4" />
           ) : (
@@ -100,28 +99,23 @@ export function RelationshipSection({
           )}
         </span>
 
-        {/* Card content */}
-        <div className="flex-1 min-w-0">
-          {/* Category badge */}
-          <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-surface-1 text-text-secondary mb-1">
+        <div className="flex-1 min-w-0 space-y-1">
+          <Badge variant="secondary" className="text-[11px] font-normal">
             {CATEGORY_LABELS[relation.category]}
-          </span>
+          </Badge>
 
-          {/* Description per D-23 */}
           {relation.description && (
-            <p className="text-sm text-text-secondary mb-1">
+            <p className="text-sm">
               {relation.description}
             </p>
           )}
 
-          {/* Directional label per D-29 */}
           {perspectiveLabel && (
-            <p className="text-xs text-text-tertiary italic mb-1">
+            <p className="text-xs text-muted-foreground italic">
               {perspectiveLabel}
             </p>
           )}
 
-          {/* Target entry name (clickable) per D-26 */}
           <button
             onClick={() => onSelectEntry(targetId)}
             className="text-sm font-medium text-primary hover:underline"
@@ -130,13 +124,12 @@ export function RelationshipSection({
           </button>
         </div>
 
-        {/* Delete button */}
         <button
           onClick={() => handleDeleteRelation(relation.id)}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface-hover transition-opacity"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-accent transition-opacity"
           aria-label="删除关联"
         >
-          <X className="h-3.5 w-3.5 text-stone-400 hover:text-red-500" />
+          <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
         </button>
       </div>
     )
@@ -144,118 +137,87 @@ export function RelationshipSection({
 
   return (
     <div>
-      {/* Section header per D-21 */}
       <div className="flex items-center justify-between mb-2">
-        <label className="block text-sm font-medium text-text-secondary">
-          关联
-        </label>
-        {/* Add button per D-21 */}
-        <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
-          <Dialog.Trigger asChild>
-            <button
-              className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border border-border-subtle text-text-secondary hover:bg-surface-hover transition-colors"
-            >
-              <Plus className="h-3.5 w-3.5" />
+        <Label>关联</Label>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+              <Plus className="h-3 w-3" />
               添加关联
-            </button>
-          </Dialog.Trigger>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[480px]">
+            <DialogHeader>
+              <DialogTitle>添加关联</DialogTitle>
+            </DialogHeader>
 
-          <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 bg-[oklch(0.12_0.008_55_/_0.85)] z-50" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md glass-panel-elevated rounded-xl shadow-xl p-6 z-50">
-              <Dialog.Title className="text-lg font-medium text-foreground mb-4">
-                添加关联
-              </Dialog.Title>
-
-              {/* Target entry selection */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  目标条目
-                </label>
-                <select
-                  value={targetId}
-                  onChange={(e) => setTargetId(e.target.value)}
-                  className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                >
-                  <option value="">选择一个条目...</option>
-                  {availableTargets.map(entry => (
-                    <option key={entry.id} value={entry.id}>
-                      {entry.name}
-                    </option>
-                  ))}
-                </select>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>目标条目</Label>
+                <Select value={targetId} onValueChange={setTargetId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择一个条目..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableTargets.map(entry => (
+                      <SelectItem key={entry.id} value={entry.id}>
+                        {entry.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Category selection per D-23 */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  关系类别
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as RelationCategory)}
-                  className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                >
-                  <option value="character_relation">角色关系</option>
-                  <option value="general">通用关联</option>
-                </select>
+              <div className="space-y-2">
+                <Label>关系类别</Label>
+                <Select value={category} onValueChange={(v) => setCategory(v as RelationCategory)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="character_relation">角色关系</SelectItem>
+                    <SelectItem value="general">通用关联</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Description per D-23 */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  关系描述
-                </label>
-                <input
+              <div className="space-y-2">
+                <Label>关系描述</Label>
+                <Input
                   type="text"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="例如：师徒、朋友、居住"
-                  className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
               </div>
 
-              {/* Directional label per D-29 */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  方向标签
-                </label>
-                <input
+              <div className="space-y-2">
+                <Label>方向标签</Label>
+                <Input
                   type="text"
                   value={sourceToTargetLabel}
                   onChange={(e) => setSourceToTargetLabel(e.target.value)}
                   placeholder="例如：是师父、居住于"
-                  className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-foreground bg-surface-0 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
               </div>
+            </div>
 
-              {/* Actions */}
-              <div className="flex justify-end gap-2">
-                <Dialog.Close asChild>
-                  <button
-                    className="px-4 py-2 text-sm rounded-lg border border-border-subtle text-text-secondary hover:bg-surface-hover transition-colors"
-                  >
-                    取消
-                  </button>
-                </Dialog.Close>
-                <button
-                  onClick={handleAddRelation}
-                  disabled={!targetId}
-                  className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  添加
-                </button>
-              </div>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                取消
+              </Button>
+              <Button onClick={handleAddRelation} disabled={!targetId}>
+                添加
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Relationship cards per D-24 */}
       {loading ? (
-        <div className="text-sm text-text-tertiary">加载中...</div>
+        <div className="text-sm text-muted-foreground">加载中...</div>
       ) : relations.length === 0 ? (
-        <div className="text-sm text-text-tertiary italic">
+        <div className="text-sm text-muted-foreground italic">
           还没有关联关系
         </div>
       ) : (

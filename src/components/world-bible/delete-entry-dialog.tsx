@@ -10,10 +10,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
-/**
- * DeleteEntryDialog per D-17: confirmation dialog with relationship count.
- * Shows warning message when entry has relations.
- */
 interface DeleteEntryDialogProps {
   entryName: string
   relationCount: number
@@ -41,16 +37,10 @@ export function DeleteEntryDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-2 sm:justify-end">
-          <Button
-            variant="secondary"
-            onClick={onCancel}
-          >
+          <Button variant="outline" onClick={onCancel}>
             取消
           </Button>
-          <Button
-            variant="danger"
-            onClick={onConfirm}
-          >
+          <Button variant="destructive" onClick={onConfirm}>
             删除
           </Button>
         </DialogFooter>

@@ -1,49 +1,50 @@
 'use client'
 
 import { useState } from 'react'
+import { Check, RefreshCw, WifiOff } from 'lucide-react'
 import { useSync } from '@/lib/hooks/useSync'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
-/**
- * Sync status icon for Dashboard top-right.
- * D-41: ✓ synced, ↻ syncing, ⚠ offline
- * D-42: Clickable - shows details / manual retry option
- */
 export function SyncStatusIcon() {
   const { status, lastSynced, retry, isOnline } = useSync()
-  const [showDetails, setShowDetails] = useState(false)
 
   if (!isOnline) {
     return (
-      <button
-        onClick={() => setShowDetails(!showDetails)}
-        className="flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700"
-        title="离线模式"
-      >
-        <span className="text-lg" title="离线">⚠</span>
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600">
+            <WifiOff className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>离线模式</TooltipContent>
+      </Tooltip>
     )
   }
 
   if (status === 'syncing') {
     return (
-      <button
-        onClick={() => setShowDetails(!showDetails)}
-        className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600"
-        title="同步中..."
-      >
-        <span className="animate-spin" title="同步中">↻</span>
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>同步中...</TooltipContent>
+      </Tooltip>
     )
   }
 
-  // Default: synced
   return (
-    <button
-      onClick={() => setShowDetails(!showDetails)}
-      className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700"
-      title={`已同步: ${lastSynced ? new Date(lastSynced).toLocaleTimeString() : '未知'}`}
-    >
-      <span title="已同步">✓</span>
-    </button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600">
+          <Check className="h-4 w-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        已同步 {lastSynced ? new Date(lastSynced).toLocaleTimeString() : ''}
+      </TooltipContent>
+    </Tooltip>
   )
 }

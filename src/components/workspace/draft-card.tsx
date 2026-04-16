@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { Check } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface DraftCardProps {
   draftId: string
@@ -17,19 +19,24 @@ export function DraftCard({ draftId, content, onInsert }: DraftCardProps) {
   }
 
   return (
-    <div className="border border-border-subtle rounded-xl p-3 mt-3 bg-surface-1">
-      <p className="text-sm whitespace-pre-wrap">{content}</p>
-      <button
+    <div className="border rounded-md p-3 bg-muted/30">
+      <p className="text-sm whitespace-pre-wrap leading-relaxed">{content}</p>
+      <Button
         onClick={handleInsert}
         disabled={inserted}
-        className={`mt-2 text-sm px-3 py-1 rounded-lg transition-colors ${
-          inserted
-            ? 'bg-green-100 text-green-700 cursor-default'
-            : 'bg-primary-muted text-primary hover:bg-primary/20'
-        }`}
+        size="sm"
+        variant={inserted ? 'ghost' : 'outline'}
+        className="mt-2"
       >
-        {inserted ? '✓ 已插入' : '插入到编辑器'}
-      </button>
+        {inserted ? (
+          <>
+            <Check className="h-3.5 w-3.5" />
+            已插入
+          </>
+        ) : (
+          '插入到编辑器'
+        )}
+      </Button>
     </div>
   )
 }

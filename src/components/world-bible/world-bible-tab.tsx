@@ -1,15 +1,22 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { User, MapPin, BookOpen, Clock, Plus, ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react'
+import { User, MapPin, BookOpen, Clock, Plus, ChevronDown, ChevronRight, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
 import { DeleteEntryDialog } from './delete-entry-dialog'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
-/**
- * Type icons per D-32: User for characters, MapPin for locations, BookOpen for rules, Clock for timelines
- */
 function getTypeIcon(type: WorldEntryType) {
   switch (type) {
     case 'character':
@@ -23,9 +30,6 @@ function getTypeIcon(type: WorldEntryType) {
   }
 }
 
-/**
- * Chinese type names per D-09
- */
 function getTypeName(type: WorldEntryType): string {
   switch (type) {
     case 'character':
@@ -39,28 +43,21 @@ function getTypeName(type: WorldEntryType): string {
   }
 }
 
-/**
- * Empty state prompts per type per D-20
- */
 function getEmptyPrompt(type: WorldEntryType): string {
   switch (type) {
     case 'character':
-      return '还没有角色，点击添加第一个角色'
+      return '还没有角色，点击添加'
     case 'location':
-      return '还没有地点，点击添加第一个地点'
+      return '还没有地点，点击添加'
     case 'rule':
-      return '还没有规则，点击添加第一个规则'
+      return '还没有规则，点击添加'
     case 'timeline':
-      return '还没有时间线，点击添加第一个时间线'
+      return '还没有时间线，点击添加'
   }
 }
 
 const TYPE_ORDER: WorldEntryType[] = ['character', 'location', 'rule', 'timeline']
 
-/**
- * WorldEntryRow per D-10, D-31, D-32.
- * Shows type icon, name, tag preview, and three-dot context menu.
- */
 interface WorldEntryRowProps {
   entry: WorldEntry
   isActive: boolean
@@ -70,89 +67,58 @@ interface WorldEntryRowProps {
 }
 
 function WorldEntryRow({ entry, isActive, onSelect, onEdit, onDelete }: WorldEntryRowProps) {
-  const [menuOpen, setMenuOpen] = useState(false)
   const Icon = getTypeIcon(entry.type)
-
   const tagPreview = entry.tags.slice(0, 2).join(', ')
 
   return (
     <div
-      className={`
-        group flex items-center gap-2 px-2 py-2 border-b border-border-subtle
-        cursor-pointer transition-colors
-        ${isActive
-          ? 'bg-surface-hover'
-          : 'hover:bg-surface-hover dark:hover:bg-stone-850'}
-      `}
+      className={cn(
+        'group flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-colors',
+        isActive ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
+      )}
       onClick={onSelect}
     >
-      {/* Type icon per D-32 */}
-      <Icon className="h-4 w-4 flex-shrink-0 text-stone-400" />
+      <Icon className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
 
-      {/* Name and tags */}
       <div className="flex-1 min-w-0">
-        <span className="block truncate text-sm text-foreground">
+        <span className="block truncate text-sm">
           {entry.name}
         </span>
         {tagPreview && (
-          <span className="block truncate text-xs text-text-tertiary">
+          <span className="block truncate text-[11px] text-muted-foreground">
             {tagPreview}
           </span>
         )}
       </div>
 
-      {/* Three-dot menu per D-31 */}
-      <div className="relative">
-        <button
-          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface-hover dark:hover:bg-stone-700 transition-opacity"
-          onClick={(e) => {
-            e.stopPropagation()
-            setMenuOpen(!menuOpen)
-          }}
-          aria-label="更多操作"
-        >
-          <MoreHorizontal className="h-4 w-4 text-stone-400" />
-        </button>
-
-        {menuOpen && (
-          <>
-            <div
-              className="fixed inset-0 z-10"
-              onClick={() => setMenuOpen(false)}
-            />
-            <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-lg py-1 min-w-24">
-              <button
-                className="w-full px-3 py-1.5 text-left text-sm text-foreground hover:bg-stone-100 dark:hover:bg-stone-700"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  onEdit()
-                }}
-              >
-                编辑
-              </button>
-              <button
-                className="w-full px-3 py-1.5 text-left text-sm text-danger hover:bg-danger-muted"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMenuOpen(false)
-                  onDelete()
-                }}
-              >
-                删除
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+          <button
+            className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-accent opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label="更多操作"
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+          <DropdownMenuItem onClick={onEdit}>
+            <Pencil className="h-3.5 w-3.5" />
+            编辑
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={onDelete}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            删除
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }
 
-/**
- * WorldBibleTab per D-08, D-09, D-10, D-11, D-15, D-17, D-20.
- * Third sidebar tab with type-grouped entry list, search, creation, and deletion.
- */
 interface WorldBibleTabProps {
   projectId: string
   activeEntryId: string | null
@@ -162,9 +128,6 @@ interface WorldBibleTabProps {
   onCreateEntry: (type: WorldEntryType) => void
 }
 
-/**
- * Default names per type per D-15
- */
 function getDefaultName(type: WorldEntryType): string {
   switch (type) {
     case 'character':
@@ -188,7 +151,7 @@ export function WorldBibleTab({
 }: WorldBibleTabProps) {
   const { entries, entriesByType, loading, addEntry, softDeleteEntry } = useWorldEntries(projectId)
   const { getRelationCount } = useRelations(projectId)
-  
+
   const [searchQuery, setSearchQuery] = useState('')
   const [collapsedSections, setCollapsedSections] = useState<Record<WorldEntryType, boolean>>({
     character: false,
@@ -196,20 +159,10 @@ export function WorldBibleTab({
     rule: false,
     timeline: false,
   })
-  
-  // Deletion state
+
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
   const [deleteRelationCount, setDeleteRelationCount] = useState(0)
 
-  // Compute all existing tags for autocomplete (used by parent for tag input)
-  const allExistingTags = useMemo(() => {
-    if (!entries) return []
-    const tagSet = new Set<string>()
-    entries.forEach(e => e.tags.forEach(t => tagSet.add(t)))
-    return Array.from(tagSet).sort()
-  }, [entries])
-
-  // Filter entries by search query per D-11
   const filteredEntries = useMemo(() => {
     if (!entries || !searchQuery.trim()) return null
     const query = searchQuery.toLowerCase()
@@ -219,23 +172,18 @@ export function WorldBibleTab({
     )
   }, [entries, searchQuery])
 
-  // Toggle section collapse
   const toggleSection = (type: WorldEntryType) => {
     setCollapsedSections(prev => ({ ...prev, [type]: !prev[type] }))
   }
 
-  // Handle create entry - calls internal addEntry and notifies parent per D-15
   const handleCreateEntryInternal = async (type: WorldEntryType) => {
     const defaultName = getDefaultName(type)
     const newId = await addEntry(type, defaultName)
-    // Auto-select and enter edit mode per D-15
     onSelectEntry(newId)
     onEditEntry(newId)
-    // Also call parent's onCreateEntry for any additional handling
     onCreateEntry(type)
   }
 
-  // Handle delete with relation count
   const handleDeleteClick = async (entry: WorldEntry) => {
     const count = await getRelationCount(entry.id)
     setDeleteTarget({ id: entry.id, name: entry.name })
@@ -245,7 +193,6 @@ export function WorldBibleTab({
   const handleDeleteConfirm = async () => {
     if (deleteTarget) {
       await softDeleteEntry(deleteTarget.id)
-      // Clear selection if deleting active entry
       if (deleteTarget.id === activeEntryId) {
         onSelectEntry('')
       }
@@ -260,31 +207,28 @@ export function WorldBibleTab({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-text-tertiary text-sm">
+      <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
         加载中...
       </div>
     )
   }
 
-  // Search active: show flat filtered list across all types per D-11
   if (filteredEntries !== null) {
     return (
       <div className="flex flex-col h-full">
-        {/* Search bar per D-11 */}
-        <div className="px-3 py-2 border-b border-border-subtle">
-          <input
+        <div className="px-3 py-2 border-b">
+          <Input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索世界观..."
-            className="w-full rounded-lg border border-border-subtle px-3 py-1.5 text-sm text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-surface-0"
+            className="h-8 text-sm"
           />
         </div>
 
-        {/* Filtered results */}
         <div className="flex-1 overflow-y-auto">
           {filteredEntries.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-text-tertiary text-sm">
+            <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
               没有找到匹配的结果
             </div>
           ) : (
@@ -301,7 +245,6 @@ export function WorldBibleTab({
           )}
         </div>
 
-        {/* Delete confirmation dialog per D-17 */}
         {deleteTarget && (
           <DeleteEntryDialog
             entryName={deleteTarget.name}
@@ -314,21 +257,18 @@ export function WorldBibleTab({
     )
   }
 
-  // Normal view: type-grouped sections
   return (
     <div className="flex flex-col h-full">
-      {/* Search bar per D-11 */}
-      <div className="px-3 py-2 border-b border-border-subtle">
-        <input
+      <div className="px-3 py-2 border-b">
+        <Input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="搜索世界观..."
-          className="w-full rounded-lg border border-border-subtle px-3 py-1.5 text-sm text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-surface-0"
+          className="h-8 text-sm"
         />
       </div>
 
-      {/* Type sections per D-09 */}
       <div className="flex-1 overflow-y-auto">
         {TYPE_ORDER.map(type => {
           const sectionEntries = entriesByType[type] || []
@@ -338,47 +278,44 @@ export function WorldBibleTab({
 
           return (
             <div key={type}>
-              {/* Section header per D-09 */}
-              <div className="flex items-center gap-1 px-3 py-2 bg-surface-1 border-b border-border-subtle">
+              <div className="flex items-center gap-1 px-3 py-1.5 bg-muted/30 border-b">
                 <button
                   onClick={() => toggleSection(type)}
-                  className="flex items-center gap-1 flex-1 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
+                  className="flex items-center gap-1.5 flex-1 hover:text-foreground transition-colors"
                 >
                   {isCollapsed ? (
-                    <ChevronRight className="h-4 w-4 text-stone-400" />
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                   ) : (
-                    <ChevronDown className="h-4 w-4 text-stone-400" />
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                   )}
-                  <Icon className="h-4 w-4 text-text-tertiary" />
-                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">
+                  <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-sm font-medium">
                     {typeName}
                   </span>
-                  <span className="text-xs text-text-tertiary ml-1">
-                    ({sectionEntries.length})
+                  <span className="text-[11px] text-muted-foreground ml-1">
+                    {sectionEntries.length}
                   </span>
                 </button>
 
-                {/* + button per D-15 - calls internal creation */}
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => handleCreateEntryInternal(type)}
-                  className="p-1 rounded hover:bg-surface-hover dark:hover:bg-stone-700 transition-colors"
+                  className="h-6 w-6"
                   aria-label={`添加${typeName}`}
                 >
-                  <Plus className="h-4 w-4 text-stone-400" />
-                </button>
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
               </div>
 
-              {/* Section content */}
               {!isCollapsed && (
                 sectionEntries.length === 0 ? (
-                  <div className="flex items-center justify-center py-4 text-text-tertiary text-sm">
-                    <button
-                      onClick={() => handleCreateEntryInternal(type)}
-                      className="hover:text-blue-500 transition-colors"
-                    >
-                      {getEmptyPrompt(type)}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handleCreateEntryInternal(type)}
+                    className="flex items-center justify-center w-full py-3 text-muted-foreground text-xs hover:text-foreground hover:bg-accent/30 transition-colors"
+                  >
+                    {getEmptyPrompt(type)}
+                  </button>
                 ) : (
                   sectionEntries
                     .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
@@ -399,7 +336,6 @@ export function WorldBibleTab({
         })}
       </div>
 
-      {/* Delete confirmation dialog per D-17 */}
       {deleteTarget && (
         <DeleteEntryDialog
           entryName={deleteTarget.name}

@@ -1,121 +1,103 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Warm literary light theme: aged paper, ink, cinnabar */
-  --background: oklch(0.96 0.008 70);
-  --foreground: oklch(0.15 0.01 55);
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
 
-  /* Warm paper-like surfaces */
-  --surface-0: oklch(0.98 0.006 70);
-  --surface-1: oklch(0.95 0.008 68);
-  --surface-2: oklch(0.92 0.01 65);
-  --surface-hover: oklch(0.94 0.009 68);
-  --surface-active: oklch(0.90 0.012 65);
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
 
-  /* Warm text hierarchy */
-  --text-secondary: oklch(0.45 0.01 55);
-  --text-tertiary: oklch(0.60 0.008 60);
-  --text-muted: oklch(0.75 0.006 65);
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
 
-  /* Borders — warm-tinted */
-  --border-subtle: oklch(0.85 0.008 65 / 0.5);
-  --border-strong: oklch(0.70 0.01 60 / 0.4);
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
 
-  /* Primary accent: scholarly blue — 藏蓝 */
-  --primary: oklch(0.52 0.12 260);
-  --primary-foreground: oklch(0.97 0.005 250);
-  --primary-hover: oklch(0.46 0.11 260);
-  --primary-muted: oklch(0.52 0.12 260 / 0.1);
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
 
-  /* Accent: cinnabar/vermilion — 朱砂 (decorative only) */
-  --accent: oklch(0.52 0.16 25);
-  --accent-foreground: oklch(0.97 0.005 70);
-  --accent-muted: oklch(0.52 0.16 25 / 0.1);
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
 
-  /* Danger */
-  --danger: oklch(0.58 0.2 27);
-  --danger-foreground: oklch(0.97 0.005 70);
-  --danger-muted: oklch(0.58 0.2 27 / 0.1);
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
 
-  /* Glass tokens — warm, subtle */
-  --glass-bg: oklch(0.98 0.006 70 / 0.8);
-  --glass-border: oklch(0.90 0.008 65 / 0.4);
-  --glass-shadow: 0 4px 24px oklch(0.20 0.01 55 / 0.06);
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
 
-  /* Timing functions */
-  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 221.2 83.2% 53.3%;
+
+  --radius: 0.5rem;
 }
 
-/* Class-based dark mode — matches ThemeProvider .dark toggle */
 .dark {
-  /* Deep ink-black with warm sepia undertone — 墨色 (brightened for contrast) */
-  --background: oklch(0.15 0.008 55);
-  --foreground: oklch(0.92 0.01 75);
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
 
-  --surface-0: oklch(0.17 0.007 55);
-  --surface-1: oklch(0.21 0.008 55);
-  --surface-2: oklch(0.26 0.01 52);
-  --surface-hover: oklch(0.23 0.009 55);
-  --surface-active: oklch(0.28 0.01 52);
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
 
-  --text-secondary: oklch(0.70 0.008 65);
-  --text-tertiary: oklch(0.55 0.007 60);
-  --text-muted: oklch(0.42 0.006 55);
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
 
-  --border-subtle: oklch(0.95 0.005 65 / 0.08);
-  --border-strong: oklch(0.95 0.005 65 / 0.14);
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 47.4% 11.2%;
 
-  /* Scholarly blue — brighter in dark to maintain contrast */
-  --primary: oklch(0.58 0.12 260);
-  --primary-foreground: oklch(0.97 0.005 250);
-  --primary-hover: oklch(0.64 0.11 260);
-  --primary-muted: oklch(0.58 0.12 260 / 0.15);
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
 
-  /* Accent: cinnabar — slightly brighter in dark */
-  --accent: oklch(0.58 0.16 25);
-  --accent-foreground: oklch(0.97 0.005 70);
-  --accent-muted: oklch(0.58 0.16 25 / 0.15);
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
 
-  --danger: oklch(0.65 0.19 25);
-  --danger-foreground: oklch(0.97 0.005 70);
-  --danger-muted: oklch(0.65 0.19 25 / 0.15);
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
 
-  /* Glass — warm dark */
-  --glass-bg: oklch(0.14 0.007 55 / 0.8);
-  --glass-border: oklch(0.95 0.005 65 / 0.08);
-  --glass-shadow: 0 8px 32px oklch(0.05 0.005 55 / 0.4);
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 224.3 76.3% 48%;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
 
-  --color-surface-0: var(--surface-0);
-  --color-surface-1: var(--surface-1);
-  --color-surface-2: var(--surface-2);
-  --color-surface-hover: var(--surface-hover);
-  --color-surface-active: var(--surface-active);
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
 
-  --color-text-secondary: var(--text-secondary);
-  --color-text-tertiary: var(--text-tertiary);
-  --color-text-muted: var(--text-muted);
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
 
-  --color-border-subtle: var(--border-subtle);
-  --color-border-strong: var(--border-strong);
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
 
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary-hover: var(--primary-hover);
-  --color-primary-muted: var(--primary-muted);
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
 
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent-muted: var(--accent-muted);
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
 
-  --color-danger: var(--danger);
-  --color-danger-foreground: var(--danger-foreground);
-  --color-danger-muted: var(--danger-muted);
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 
   --font-sans: var(--font-noto-sans-sc), "Noto Sans SC", "PingFang SC",
     "SF Pro Display", "Microsoft YaHei", sans-serif;
@@ -123,15 +105,14 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
   font-family: var(--font-sans);
   line-height: 1.8;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Animation keyframes */
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -143,51 +124,35 @@ body {
   }
 }
 
-@keyframes warm-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.7; }
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
 }
 
-/* Utility classes */
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
 @layer utilities {
-  .glass-panel {
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
-  }
-
-  .glass-panel-elevated {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow), 0 0 0 1px var(--border-subtle);
-  }
-
-  .separator-handle {
-    width: 1px;
-    background: var(--border-subtle);
-    transition: background 0.3s var(--ease-smooth);
-  }
-  .group:hover > .separator-handle,
-  .group:hover .separator-handle {
-    background: var(--primary);
-    opacity: 0.5;
-  }
-  .group:active > .separator-handle,
-  .group:active .separator-handle {
-    background: var(--primary);
-    opacity: 0.7;
-  }
-
   .animate-fade-up {
-    animation: fade-up 0.4s var(--ease-smooth) both;
+    animation: fade-up 0.3s ease-out both;
   }
 
-  .animate-warm-pulse {
-    animation: warm-pulse 2.5s ease-in-out infinite;
+  .animate-accordion-down {
+    animation: accordion-down 0.2s ease-out;
+  }
+
+  .animate-accordion-up {
+    animation: accordion-up 0.2s ease-out;
   }
 }
 

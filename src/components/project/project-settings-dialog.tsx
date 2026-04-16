@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Download, FileText, FileDown, BookOpen } from 'lucide-react'
+import { Download, FileText, FileDown, BookOpen, Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import { ProjectSettingsForm } from './project-settings-form'
 import { exportToMarkdown, downloadBlob } from '@/lib/export/markdown-export'
 import { exportToDocx } from '@/lib/export/docx-export'
 import { exportToEpub } from '@/lib/export/epub-export'
+import { cn } from '@/lib/utils'
 import type { ProjectMeta } from '@/lib/types'
 
 interface ProjectSettingsDialogProps {
@@ -31,10 +32,6 @@ const EXPORT_STEPS = {
   downloading: '触发下载...',
 } as const
 
-/**
- * Project settings dialog with Export tab per D-11.
- * Contains project metadata editing and export utilities.
- */
 export function ProjectSettingsDialog({
   project,
   open,
@@ -49,18 +46,17 @@ export function ProjectSettingsDialog({
     try {
       setExportStatus('preparing')
       setExportError(null)
-      
+
       setExportStatus('gathering')
       const blob = await exportToMarkdown(project.id)
-      
+
       setExportStatus('generating')
-      // Small delay to show generating step
       await new Promise(resolve => setTimeout(resolve, 100))
-      
+
       setExportStatus('downloading')
       const filename = `${project.title || 'novel'}.md`
       downloadBlob(blob, filename)
-      
+
       setExportStatus('idle')
     } catch (err) {
       setExportStatus('error')
@@ -72,17 +68,17 @@ export function ProjectSettingsDialog({
     try {
       setExportStatus('preparing')
       setExportError(null)
-      
+
       setExportStatus('gathering')
       const blob = await exportToDocx(project.id, project.title || '未知标题')
-      
+
       setExportStatus('generating')
       await new Promise(resolve => setTimeout(resolve, 100))
-      
+
       setExportStatus('downloading')
       const filename = `${project.title || 'novel'}.docx`
       downloadBlob(blob, filename)
-      
+
       setExportStatus('idle')
     } catch (err) {
       setExportStatus('error')
@@ -94,17 +90,17 @@ export function ProjectSettingsDialog({
     try {
       setExportStatus('preparing')
       setExportError(null)
-      
+
       setExportStatus('gathering')
       const blob = await exportToEpub(project.id, { title: project.title || '未知标题' })
-      
+
       setExportStatus('generating')
       await new Promise(resolve => setTimeout(resolve, 100))
-      
+
       setExportStatus('downloading')
       const filename = `${project.title || 'novel'}.epub`
       downloadBlob(blob, filename)
-      
+
       setExportStatus('idle')
     } catch (err) {
       setExportStatus('error')
@@ -134,31 +130,31 @@ export function ProjectSettingsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Tab navigation */}
-        <div className="flex border-b border-stone-200 dark:border-stone-800">
+        <div className="flex border-b">
           <button
             onClick={() => setActiveTab('settings')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={cn(
+              'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
               activeTab === 'settings'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-stone-500 hover:text-stone-700 dark:hover:text-stone-300'
-            }`}
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
           >
             基本设置
           </button>
           <button
             onClick={() => setActiveTab('export')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={cn(
+              'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
               activeTab === 'export'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-stone-500 hover:text-stone-700 dark:hover:text-stone-300'
-            }`}
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
           >
             导出
           </button>
         </div>
 
-        {/* Tab content */}
         <div className="flex-1 overflow-y-auto py-4">
           {activeTab === 'settings' && (
             <ProjectSettingsForm
@@ -169,72 +165,66 @@ export function ProjectSettingsDialog({
 
           {activeTab === 'export' && (
             <div className="space-y-4">
-              <p className="text-sm text-stone-500 dark:text-stone-400">
+              <p className="text-sm text-muted-foreground">
                 选择导出格式，将你的小说导出为可阅读的格式。
               </p>
 
-              {/* Export buttons */}
-              <div className="space-y-3">
-                {/* Markdown export */}
+              <div className="space-y-2">
                 <button
                   onClick={handleExportMarkdown}
                   disabled={isExporting}
-                  className="w-full flex items-center gap-3 p-4 rounded-lg border border-stone-200 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center gap-3 p-4 rounded-md border hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-stone-600 dark:text-stone-400" />
+                  <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-muted-foreground" />
                   </div>
-                  <div className="flex-1 text-left">
-                    <div className="font-medium">导出Markdown</div>
-                    <div className="text-xs text-stone-500">.md 格式，适合大多数编辑器</div>
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">导出 Markdown</div>
+                    <div className="text-xs text-muted-foreground">.md 格式，适合大多数编辑器</div>
                   </div>
-                  <Download className="w-5 h-5 text-stone-400" />
+                  <Download className="w-4 h-4 text-muted-foreground" />
                 </button>
 
-                {/* DOCX export */}
                 <button
                   onClick={handleExportDocx}
                   disabled={isExporting}
-                  className="w-full flex items-center gap-3 p-4 rounded-lg border border-stone-200 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center gap-3 p-4 rounded-md border hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
-                    <FileDown className="w-5 h-5 text-stone-600 dark:text-stone-400" />
+                  <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                    <FileDown className="w-5 h-5 text-muted-foreground" />
                   </div>
-                  <div className="flex-1 text-left">
-                    <div className="font-medium">导出DOCX</div>
-                    <div className="text-xs text-stone-500">.docx 格式，适合Microsoft Word</div>
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">导出 DOCX</div>
+                    <div className="text-xs text-muted-foreground">.docx 格式，适合 Microsoft Word</div>
                   </div>
-                  <Download className="w-5 h-5 text-stone-400" />
+                  <Download className="w-4 h-4 text-muted-foreground" />
                 </button>
 
-                {/* EPUB export */}
                 <button
                   onClick={handleExportEpub}
                   disabled={isExporting}
-                  className="w-full flex items-center gap-3 p-4 rounded-lg border border-stone-200 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center gap-3 p-4 rounded-md border hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 text-stone-600 dark:text-stone-400" />
+                  <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-muted-foreground" />
                   </div>
-                  <div className="flex-1 text-left">
-                    <div className="font-medium">导出EPUB</div>
-                    <div className="text-xs text-stone-500">.epub 格式，适合电子书阅读器</div>
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">导出 EPUB</div>
+                    <div className="text-xs text-muted-foreground">.epub 格式，适合电子书阅读器</div>
                   </div>
-                  <Download className="w-5 h-5 text-stone-400" />
+                  <Download className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
 
-              {/* Progress indicator */}
               {exportStatus !== 'idle' && exportStatus !== 'error' && (
-                <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-                  <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full" />
+                <div className="flex items-center gap-2 text-sm text-primary">
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   {getStepText()}
                 </div>
               )}
 
-              {/* Error display */}
               {exportStatus === 'error' && exportError && (
-                <div className="text-sm text-red-600 dark:text-red-400">
+                <div className="text-sm text-destructive">
                   {exportError}
                 </div>
               )}

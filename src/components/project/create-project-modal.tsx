@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -93,28 +94,25 @@ export function CreateProjectModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          {/* 标题 (Title) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-text-secondary">
-              标题 <span className="text-red-500">*</span>
-            </label>
+            <Label htmlFor="title">
+              标题 <span className="text-destructive">*</span>
+            </Label>
             <Input
+              id="title"
               {...register('title')}
               placeholder="输入小说标题"
               maxLength={100}
             />
             {errors.title && (
-              <p className="text-xs text-red-500">{errors.title.message}</p>
+              <p className="text-xs text-destructive">{errors.title.message}</p>
             )}
           </div>
 
-          {/* 类型 (Genre) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-text-secondary">
-              类型
-            </label>
+            <Label htmlFor="genre">类型</Label>
             <Select onValueChange={(value) => setValue('genre', value)}>
-              <SelectTrigger>
+              <SelectTrigger id="genre">
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
@@ -127,26 +125,24 @@ export function CreateProjectModal({
             </Select>
           </div>
 
-          {/* 简介 (Synopsis) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-text-secondary">
-              简介
-            </label>
+            <Label htmlFor="synopsis">简介</Label>
             <Textarea
+              id="synopsis"
               {...register('synopsis')}
               placeholder="简单描述你的故事"
               maxLength={500}
               rows={3}
             />
             {errors.synopsis && (
-              <p className="text-xs text-red-500">{errors.synopsis.message}</p>
+              <p className="text-xs text-destructive">{errors.synopsis.message}</p>
             )}
           </div>
 
           <DialogFooter>
             <Button
               type="button"
-              variant="secondary"
+              variant="outline"
               onClick={() => handleOpenChange(false)}
             >
               取消

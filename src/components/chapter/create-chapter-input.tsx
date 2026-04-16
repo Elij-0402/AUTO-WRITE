@@ -2,11 +2,8 @@
 
 import { useState, useRef } from 'react'
 import { Plus } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 
-/**
- * CreateChapterInput per D-11: inline chapter creation at bottom of sidebar.
- * Per D-16: IME safety — only submit on Enter when NOT composing.
- */
 interface CreateChapterInputProps {
   onCreate: (title: string) => Promise<string | void>
 }
@@ -27,7 +24,6 @@ export function CreateChapterInput({ onCreate }: CreateChapterInputProps) {
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // IME safety: don't trigger on Enter during composition
     if (isComposingRef.current) return
 
     if (e.key === 'Enter') {
@@ -40,7 +36,6 @@ export function CreateChapterInput({ onCreate }: CreateChapterInputProps) {
 
   const handleExpand = () => {
     setIsExpanded(true)
-    // Focus input after expansion
     setTimeout(() => {
       inputRef.current?.focus()
     }, 0)
@@ -50,17 +45,17 @@ export function CreateChapterInput({ onCreate }: CreateChapterInputProps) {
     return (
       <button
         onClick={handleExpand}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-text-tertiary hover:text-foreground hover:bg-surface-hover transition-colors"
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors border-t"
       >
         <Plus className="h-4 w-4" />
-        新章节
+        新建章节
       </button>
     )
   }
 
   return (
-    <div className="px-3 py-2 border-t border-border-subtle">
-      <input
+    <div className="px-3 py-2 border-t">
+      <Input
         ref={inputRef}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
@@ -68,13 +63,12 @@ export function CreateChapterInput({ onCreate }: CreateChapterInputProps) {
         onCompositionStart={() => { isComposingRef.current = true }}
         onCompositionEnd={() => { isComposingRef.current = false }}
         onBlur={() => {
-          // Only collapse if no text entered
           if (!title.trim()) {
             setIsExpanded(false)
           }
         }}
         placeholder="输入章节标题"
-        className="w-full rounded-lg border border-dashed border-border-strong bg-surface-hover/50 px-3 py-1.5 text-sm text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+        className="h-8 text-sm"
         autoFocus
       />
     </div>

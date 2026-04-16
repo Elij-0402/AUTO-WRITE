@@ -19,7 +19,7 @@ import { CreateProjectModal } from './create-project-modal'
 
 function getGreeting(): string {
   const hour = new Date().getHours()
-  if (hour >= 6 && hour < 12) return '早安，今天想写点什么？'
+  if (hour >= 6 && hour < 12) return '早安，今天想写点什么'
   if (hour >= 12 && hour < 18) return '午后时光，适合写作'
   if (hour >= 18 && hour < 22) return '夜幕降临，故事开始'
   return '夜深了，灵感正浓'
@@ -79,31 +79,55 @@ export function ProjectDashboard() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="flex-1 px-6 py-16 sm:px-8 lg:py-20">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-12 animate-fade-up">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 bg-primary rounded-md flex items-center justify-center">
-                <PenLine className="w-3.5 h-3.5 text-primary-foreground" />
+      <div className="flex-1 px-6 py-16 sm:px-8 lg:py-24">
+        <div className="mx-auto w-full max-w-3xl">
+          {/* Masthead */}
+          <header className="animate-fade-up">
+            <div className="flex items-end justify-between gap-6">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-foreground">
+                  <PenLine className="h-3 w-3 text-background" strokeWidth={2.5} />
+                </div>
+                <span className="font-display text-base tracking-[0.08em] text-foreground">
+                  InkForge
+                </span>
               </div>
-              <span className="text-sm font-semibold tracking-tight">
-                InkForge
-              </span>
+              <p className="text-[13px] italic text-muted-foreground tracking-wide">
+                {greeting}
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {greeting}
-            </p>
+            <div
+              aria-hidden
+              className="mt-5 h-px w-full bg-foreground/10"
+              style={{
+                maskImage:
+                  'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
+                WebkitMaskImage:
+                  'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
+              }}
+            />
+          </header>
+
+          {/* Section header */}
+          <div
+            className="mt-10 mb-6 flex items-baseline justify-between animate-fade-up"
+            style={{ animationDelay: '60ms' }}
+          >
+            <h1 className="font-display text-2xl tracking-wide text-foreground">
+              我的书斋
+            </h1>
+            <span className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground/80">
+              {projects.length} {projects.length === 1 ? 'Volume' : 'Volumes'}
+            </span>
           </div>
 
-          <div
-            className="grid gap-4 mb-16 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-            style={{ animationDelay: '80ms' }}
-          >
+          {/* Grid */}
+          <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((project, i) => (
               <div
                 key={project.id}
                 className="animate-fade-up"
-                style={{ animationDelay: `${(i + 1) * 50}ms` }}
+                style={{ animationDelay: `${120 + i * 60}ms` }}
               >
                 <ProjectCard
                   project={project}
@@ -115,26 +139,26 @@ export function ProjectDashboard() {
 
             <div
               className="animate-fade-up"
-              style={{ animationDelay: `${(projects.length + 1) * 50}ms` }}
+              style={{ animationDelay: `${120 + projects.length * 60}ms` }}
             >
               <button
                 onClick={() => setCreateModalOpen(true)}
-                className="flex w-full h-full min-h-[140px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-muted-foreground transition-colors hover:border-primary hover:text-primary hover:bg-primary/5 cursor-pointer"
+                className="group relative flex h-full min-h-[164px] w-full flex-col items-center justify-center gap-3 rounded-lg border border-foreground/10 bg-transparent text-muted-foreground transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-foreground/25 hover:bg-foreground/[0.015] hover:text-foreground cursor-pointer"
               >
-                <Plus className="h-5 w-5" />
-                <span className="text-sm font-medium">新建项目</span>
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-5 top-0 h-px origin-left scale-x-0 bg-foreground/70 transition-transform duration-500 ease-out group-hover:scale-x-100"
+                />
+                <span className="flex h-8 w-8 items-center justify-center rounded-sm border border-current/40">
+                  <Plus className="h-4 w-4" strokeWidth={1.5} />
+                </span>
+                <span className="font-display text-base tracking-wide">
+                  新建项目
+                </span>
               </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-6 text-xs text-muted-foreground animate-fade-up" style={{ animationDelay: '300ms' }}>
-            <button className="hover:text-foreground transition-colors">
-              回收站
-            </button>
-            <button className="hover:text-foreground transition-colors">
-              账户设定
-            </button>
-          </div>
         </div>
       </div>
 
@@ -147,7 +171,7 @@ export function ProjectDashboard() {
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>删除项目</DialogTitle>
+            <DialogTitle className="font-display text-xl tracking-wide">删除项目</DialogTitle>
             <DialogDescription>
               确定要删除「{projectToDeleteData?.title}」吗？删除后可在回收站中恢复。
             </DialogDescription>

@@ -8,7 +8,7 @@ import { OutlineEditForm } from '@/components/outline/outline-edit-form'
 import { Editor } from '@/components/editor/editor'
 import { FloatingToolbar } from '@/components/editor/floating-toolbar'
 import { useChapterEditor } from '@/lib/hooks/use-chapter-editor'
-import { ThemeProvider, useTheme } from '@/components/editor/theme-provider'
+import { ThemeProvider } from '@/components/editor/theme-provider'
 import { DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
 import { useLayout } from '@/lib/hooks/use-layout'
 import { useChapters } from '@/lib/hooks/use-chapters'
@@ -16,15 +16,8 @@ import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
 import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
-import { SyncStatusIcon } from '@/components/sync/SyncStatusIcon'
-import { Button } from '@/components/ui/button'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { Settings2, Maximize2, Minimize2, Sun, Moon } from 'lucide-react'
+import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
 import type { EditorHandle } from '@/components/editor/editor-types'
 
@@ -124,10 +117,30 @@ export default function ProjectPage() {
           setActiveWorldEntryId(null)
         }
       }
+
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+        const target = e.target as HTMLElement | null
+        const isEditable =
+          target?.tagName === 'INPUT' ||
+          target?.tagName === 'TEXTAREA' ||
+          target?.isContentEditable
+        if (isEditable) return
+
+        if (e.key === '1') {
+          e.preventDefault()
+          handleTabChange('chapters')
+        } else if (e.key === '2') {
+          e.preventDefault()
+          handleTabChange('outline')
+        } else if (e.key === '3') {
+          e.preventDefault()
+          handleTabChange('world')
+        }
+      }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [activeOutlineId, activeWorldEntryId])
+  }, [activeOutlineId, activeWorldEntryId, handleTabChange])
 
   const handleSidebarDoubleClickReset = () => {
     saveSidebarWidth(DEFAULT_SIDEBAR_WIDTH)
@@ -184,26 +197,12 @@ export default function ProjectPage() {
           onClose={() => setAiConfigOpen(false)}
         />
 
-        <div className="h-11 border-b bg-background flex items-center justify-end px-3 gap-1">
-          <SyncStatusIcon />
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setAiConfigOpen(true)}
-                className="h-8 w-8"
-              >
-                <Settings2 className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>AI 设置</TooltipContent>
-          </Tooltip>
-
-          <FocusModeToggle focusMode={focusMode} onToggle={() => setFocusMode(!focusMode)} />
-          <ThemeToggle />
-        </div>
+        <WorkspaceTopbar
+          projectId={params.id}
+          focusMode={focusMode}
+          onToggleFocusMode={() => setFocusMode(!focusMode)}
+          onOpenAIConfig={() => setAiConfigOpen(true)}
+        />
 
         {focusMode ? (
           <div className="flex-1 flex flex-col overflow-hidden">
@@ -280,54 +279,6 @@ export default function ProjectPage() {
         )}
       </TooltipProvider>
     </ThemeProvider>
-  )
-}
-
-function FocusModeToggle({ focusMode, onToggle }: { focusMode: boolean; onToggle: () => void }) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant={focusMode ? 'secondary' : 'ghost'}
-          size="icon"
-          onClick={onToggle}
-          className="h-8 w-8"
-        >
-          {focusMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{focusMode ? '退出聚焦模式' : '进入聚焦模式'}</TooltipContent>
-    </Tooltip>
-  )
-}
-
-function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme()
-
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
-  }
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleTheme}
-          className="h-8 w-8"
-        >
-          {resolvedTheme === 'dark' ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>
-        {resolvedTheme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
-      </TooltipContent>
-    </Tooltip>
   )
 }
 

@@ -1,8 +1,0 @@
-- generic [active] [ref=e1]:
-  - generic [ref=e2]:
-    - generic [ref=e3]: 项目未找到
-    - paragraph [ref=e4]: 该作品不存在或已被删除
-    - button "返回作品列表" [ref=e5]
-  - button "Open Next.js Dev Tools" [ref=e11] [cursor=pointer]:
-    - img [ref=e12]
-  - alert [ref=e15]

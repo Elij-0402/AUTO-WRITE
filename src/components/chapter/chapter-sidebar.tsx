@@ -15,6 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { BookOpen, ListTree, Globe2 } from 'lucide-react'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { ChapterRow } from './chapter-row'
 import { CreateChapterInput } from './create-chapter-input'
@@ -22,12 +23,11 @@ import { DeleteChapterDialog } from './delete-chapter-dialog'
 import { OutlineTab } from '@/components/outline/outline-tab'
 import { WorldBibleTab } from '@/components/world-bible/world-bible-tab'
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
-import { Badge } from '@/components/ui/badge'
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
 import type { WorldEntryType } from '@/lib/types'
 
@@ -45,6 +45,19 @@ interface ChapterSidebarProps {
   onDeleteWorldEntry: (id: string) => void
   onCreateWorldEntry: (type: WorldEntryType) => void
 }
+
+type RailItem = {
+  value: ActiveTab
+  label: string
+  shortcut: string
+  icon: typeof BookOpen
+}
+
+const RAIL_ITEMS: RailItem[] = [
+  { value: 'chapters', label: '章节', shortcut: 'Ctrl+1', icon: BookOpen },
+  { value: 'outline', label: '大纲', shortcut: 'Ctrl+2', icon: ListTree },
+  { value: 'world', label: '世界观', shortcut: 'Ctrl+3', icon: Globe2 },
+]
 
 export function ChapterSidebar({
   projectId,
@@ -127,106 +140,175 @@ export function ChapterSidebar({
     )
   }
 
-  const handleAccordionChange = (value: string) => {
-    if (!value) return
-    onTabChange(value as ActiveTab)
-  }
+  const chaptersHeaderCount = chapters.length
+  const activeItem = RAIL_ITEMS.find((i) => i.value === activeTab) ?? RAIL_ITEMS[0]
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex-1 overflow-y-auto">
-        <Accordion
-          type="single"
-          collapsible={false}
-          value={activeTab}
-          onValueChange={handleAccordionChange}
-        >
-          <AccordionItem value="chapters" className="border-b">
-            <AccordionTrigger className="text-sm py-2.5 px-3 hover:no-underline">
-              <div className="flex items-center gap-2">
-                <span>章节</span>
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                  {chapters.length}
-                </Badge>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="p-0">
-              <div>
-                {chapters.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground text-sm gap-1 px-3">
-                    <p>还没有章节</p>
-                    <p className="text-xs">点击下方按钮创建第一个章节</p>
-                  </div>
-                ) : (
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                    modifiers={[restrictToVerticalAxis]}
-                  >
-                    <SortableContext
-                      items={chapters.map((c) => c.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      {chapters.map((chapter) => (
-                        <ChapterRow
-                          key={chapter.id}
-                          chapter={chapter}
-                          isActive={activeChapterId === chapter.id}
-                          onSelect={() => onSelectChapter(chapter.id)}
-                          onRename={renameChapter}
-                          onDuplicate={duplicateChapter}
-                          onDelete={(id) => setDeleteTargetId(id)}
-                          onStatusToggle={updateChapterStatus}
-                        />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
-                )}
-              </div>
+    <div className="flex h-full overflow-hidden">
+      <nav
+        aria-label="侧栏导航"
+        className="flex w-12 shrink-0 flex-col border-r bg-muted/20 py-2"
+      >
+        {RAIL_ITEMS.map((item) => {
+          const Icon = item.icon
+          const isActive = activeTab === item.value
+          return (
+            <Tooltip key={item.value}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => onTabChange(item.value)}
+                  aria-label={item.label}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={cn(
+                    'relative flex h-11 w-full items-center justify-center text-muted-foreground transition-colors',
+                    'hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                    isActive && 'text-primary'
+                  )}
+                >
+                  {isActive && (
+                    <span
+                      aria-hidden
+                      className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-primary"
+                    />
+                  )}
+                  <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.25 : 2} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="flex items-center gap-2">
+                <span>{item.label}</span>
+                <kbd className="rounded border border-border bg-muted px-1 text-[10px] font-mono text-muted-foreground">
+                  {item.shortcut}
+                </kbd>
+              </TooltipContent>
+            </Tooltip>
+          )
+        })}
+      </nav>
 
-              <CreateChapterInput onCreate={handleCreateChapter} />
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="flex h-9 shrink-0 items-center justify-between border-b px-3 text-[13px] font-medium tracking-wide">
+          <span>{activeItem.label}</span>
+          {activeTab === 'chapters' && chaptersHeaderCount > 0 && (
+            <span className="text-[11px] font-normal tabular-nums text-muted-foreground">
+              {chaptersHeaderCount}
+            </span>
+          )}
+        </div>
 
-              {deleteTarget && (
-                <DeleteChapterDialog
-                  chapterTitle={deleteTarget.title}
-                  onConfirm={handleDeleteConfirm}
-                  onCancel={() => setDeleteTargetId(null)}
-                />
-              )}
-            </AccordionContent>
-          </AccordionItem>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {activeTab === 'chapters' && (
+            <ChaptersPanel
+              chapters={chapters}
+              sensors={sensors}
+              activeChapterId={activeChapterId}
+              onSelectChapter={onSelectChapter}
+              onRename={renameChapter}
+              onDuplicate={duplicateChapter}
+              onDelete={setDeleteTargetId}
+              onStatusToggle={updateChapterStatus}
+              onDragEnd={handleDragEnd}
+              onCreate={handleCreateChapter}
+            />
+          )}
 
-          <AccordionItem value="outline" className="border-b">
-            <AccordionTrigger className="text-sm py-2.5 px-3 hover:no-underline">
-              大纲
-            </AccordionTrigger>
-            <AccordionContent className="p-0">
-              <OutlineTab
-                projectId={projectId}
-                onSelectOutline={onSelectOutline}
-                activeOutlineId={activeOutlineId}
-              />
-            </AccordionContent>
-          </AccordionItem>
+          {activeTab === 'outline' && (
+            <OutlineTab
+              projectId={projectId}
+              onSelectOutline={onSelectOutline}
+              activeOutlineId={activeOutlineId}
+            />
+          )}
 
-          <AccordionItem value="world" className="border-b">
-            <AccordionTrigger className="text-sm py-2.5 px-3 hover:no-underline">
-              世界观
-            </AccordionTrigger>
-            <AccordionContent className="p-0">
-              <WorldBibleTab
-                projectId={projectId}
-                activeEntryId={activeWorldEntryId}
-                onSelectEntry={onSelectWorldEntry}
-                onEditEntry={onEditWorldEntry}
-                onDeleteEntry={onDeleteWorldEntry}
-                onCreateEntry={onCreateWorldEntry}
-              />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+          {activeTab === 'world' && (
+            <WorldBibleTab
+              projectId={projectId}
+              activeEntryId={activeWorldEntryId}
+              onSelectEntry={onSelectWorldEntry}
+              onEditEntry={onEditWorldEntry}
+              onDeleteEntry={onDeleteWorldEntry}
+              onCreateEntry={onCreateWorldEntry}
+            />
+          )}
+        </div>
       </div>
+
+      {deleteTarget && (
+        <DeleteChapterDialog
+          chapterTitle={deleteTarget.title}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTargetId(null)}
+        />
+      )}
     </div>
+  )
+}
+
+interface ChaptersPanelProps {
+  chapters: ReturnType<typeof useChapters>['chapters']
+  sensors: ReturnType<typeof useSensors>
+  activeChapterId: string | null
+  onSelectChapter: (id: string) => void
+  onRename: ReturnType<typeof useChapters>['renameChapter']
+  onDuplicate: ReturnType<typeof useChapters>['duplicateChapter']
+  onDelete: (id: string) => void
+  onStatusToggle: ReturnType<typeof useChapters>['updateChapterStatus']
+  onDragEnd: (event: DragEndEvent) => void
+  onCreate: (title: string) => Promise<string | void>
+}
+
+function ChaptersPanel({
+  chapters,
+  sensors,
+  activeChapterId,
+  onSelectChapter,
+  onRename,
+  onDuplicate,
+  onDelete,
+  onStatusToggle,
+  onDragEnd,
+  onCreate,
+}: ChaptersPanelProps) {
+  return (
+    <>
+      <div className="flex-1 overflow-y-auto">
+        {chapters.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-1 px-4 py-10 text-sm text-muted-foreground">
+            <BookOpen className="h-7 w-7 opacity-50" strokeWidth={1.5} />
+            <p className="mt-2">还没有章节</p>
+            <p className="text-xs">在下方输入标题创建第一个章节</p>
+          </div>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={onDragEnd}
+            modifiers={[restrictToVerticalAxis]}
+          >
+            <SortableContext
+              items={chapters.map((c) => c.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {chapters.map((chapter) => (
+                <ChapterRow
+                  key={chapter.id}
+                  chapter={chapter}
+                  isActive={activeChapterId === chapter.id}
+                  onSelect={() => onSelectChapter(chapter.id)}
+                  onRename={onRename}
+                  onDuplicate={onDuplicate}
+                  onDelete={onDelete}
+                  onStatusToggle={onStatusToggle}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        )}
+      </div>
+
+      <div className="shrink-0 border-t">
+        <CreateChapterInput onCreate={onCreate} />
+      </div>
+    </>
   )
 }

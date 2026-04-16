@@ -90,10 +90,10 @@ export function ChapterRow({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group flex items-center gap-1.5 px-3 py-1.5 cursor-pointer transition-colors',
+        'group relative flex items-center gap-1.5 border-l-2 border-transparent px-3 py-1.5 cursor-pointer transition-colors',
         isActive
-          ? 'bg-accent text-accent-foreground'
-          : 'hover:bg-accent/50',
+          ? 'border-primary bg-accent/60 text-accent-foreground'
+          : 'hover:bg-accent/40',
         isDragging && 'opacity-50 shadow-lg z-50'
       )}
       onClick={() => {
@@ -101,7 +101,7 @@ export function ChapterRow({
       }}
     >
       <button
-        className="flex-shrink-0 cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+        className="flex-shrink-0 cursor-grab text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity"
         {...attributes}
         {...listeners}
         aria-label="拖动排序"
@@ -109,7 +109,7 @@ export function ChapterRow({
         <GripVertical className="h-3.5 w-3.5" />
       </button>
 
-      <span className="flex-shrink-0 text-xs text-muted-foreground min-w-[1.25rem] text-right tabular-nums">
+      <span className="flex-shrink-0 font-mono text-xs text-muted-foreground min-w-[1.25rem] text-right tabular-nums">
         {chapter.order + 1}
       </span>
 
@@ -134,7 +134,7 @@ export function ChapterRow({
       </div>
 
       {chapter.wordCount > 0 && (
-        <span className="flex-shrink-0 text-[11px] text-muted-foreground tabular-nums">
+        <span className="flex-shrink-0 text-xs text-muted-foreground tabular-nums">
           {chapter.wordCount.toLocaleString()}
         </span>
       )}

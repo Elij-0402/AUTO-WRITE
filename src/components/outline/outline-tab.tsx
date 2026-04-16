@@ -16,7 +16,7 @@ import {
 } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical } from 'lucide-react'
+import { GripVertical, ListTree } from 'lucide-react'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { cn } from '@/lib/utils'
 import type { Chapter, OutlineStatus } from '@/lib/types'
@@ -63,14 +63,16 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-colors',
-        isActive ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50',
+        'group relative flex items-center gap-2 border-l-2 border-transparent px-3 py-1.5 cursor-pointer transition-colors',
+        isActive
+          ? 'border-primary bg-accent/60 text-accent-foreground'
+          : 'hover:bg-accent/40',
         isDragging && 'opacity-50 shadow-lg z-50'
       )}
       onClick={onSelect}
     >
       <button
-        className="flex-shrink-0 cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+        className="flex-shrink-0 cursor-grab text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity"
         {...attributes}
         {...listeners}
         aria-label="拖动排序"
@@ -113,7 +115,7 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
       </div>
 
       {chapter.wordCount > 0 && !isEmptyOutline && (
-        <span className="flex-shrink-0 text-[11px] text-muted-foreground tabular-nums">
+        <span className="flex-shrink-0 text-xs text-muted-foreground tabular-nums">
           {chapter.wordCount.toLocaleString()}
         </span>
       )}
@@ -166,8 +168,9 @@ export function OutlineTab({
 
   if (chapters.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground text-sm gap-1 px-3">
-        <p>还没有章节</p>
+      <div className="flex flex-col items-center justify-center gap-1 px-4 py-10 text-sm text-muted-foreground">
+        <ListTree className="h-7 w-7 opacity-50" strokeWidth={1.5} />
+        <p className="mt-2">还没有章节</p>
         <p className="text-xs">请先在章节标签中创建章节</p>
       </div>
     )

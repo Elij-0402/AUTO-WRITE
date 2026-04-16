@@ -73,8 +73,10 @@ function WorldEntryRow({ entry, isActive, onSelect, onEdit, onDelete }: WorldEnt
   return (
     <div
       className={cn(
-        'group flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-colors',
-        isActive ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
+        'group relative flex items-center gap-2 border-l-2 border-transparent px-3 py-1.5 cursor-pointer transition-colors',
+        isActive
+          ? 'border-primary bg-accent/60 text-accent-foreground'
+          : 'hover:bg-accent/40'
       )}
       onClick={onSelect}
     >
@@ -85,7 +87,7 @@ function WorldEntryRow({ entry, isActive, onSelect, onEdit, onDelete }: WorldEnt
           {entry.name}
         </span>
         {tagPreview && (
-          <span className="block truncate text-[11px] text-muted-foreground">
+          <span className="block truncate text-xs text-muted-foreground">
             {tagPreview}
           </span>
         )}
@@ -292,7 +294,7 @@ export function WorldBibleTab({
                   <span className="text-sm font-medium">
                     {typeName}
                   </span>
-                  <span className="text-[11px] text-muted-foreground ml-1">
+                  <span className="text-xs text-muted-foreground ml-1 tabular-nums">
                     {sectionEntries.length}
                   </span>
                 </button>

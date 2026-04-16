@@ -4,8 +4,6 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MoreHorizontal, Pencil, Settings, Trash2 } from 'lucide-react'
 import { useProjects } from '@/lib/hooks/use-projects'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -95,88 +93,106 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   }
 
   return (
-    <Card
+    <div
       className={cn(
-        'group relative cursor-pointer transition-all duration-200',
-        'hover:border-primary/30 hover:shadow-md'
+        'group relative flex h-full min-h-[164px] cursor-pointer flex-col',
+        'rounded-lg border border-foreground/10 bg-card px-6 pt-6 pb-5',
+        'transition-all duration-300 ease-out',
+        'hover:border-foreground/25 hover:-translate-y-0.5'
       )}
       onClick={handleCardClick}
     >
-      <CardContent className="p-5 space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            {isEditingTitle ? (
-              <input
-                ref={inputRef}
-                value={titleValue}
-                onChange={(e) => setTitleValue(e.target.value)}
-                onBlur={handleTitleSave}
-                onKeyDown={handleTitleKeyDown}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full rounded-md border border-input px-2 py-0.5 text-base font-semibold bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-              />
-            ) : (
-              <h3
-                className="text-base font-semibold text-foreground truncate transition-colors group-hover:text-primary"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsEditingTitle(true)
-                }}
-                title="点击编辑标题"
-              >
-                {project.title}
-              </h3>
-            )}
-          </div>
+      <span
+        aria-hidden
+        className={cn(
+          'pointer-events-none absolute inset-x-5 top-0 h-px origin-left scale-x-0 bg-foreground/70',
+          'transition-transform duration-500 ease-out group-hover:scale-x-100'
+        )}
+      />
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <button
-                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100"
-                aria-label="更多操作"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-              <DropdownMenuItem onClick={onEdit}>
-                <Pencil className="h-3.5 w-3.5" />
-                打开
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsEditingTitle(true)}>
-                <Settings className="h-3.5 w-3.5" />
-                重命名
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={onDelete}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                删除
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          {isEditingTitle ? (
+            <input
+              ref={inputRef}
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+              onBlur={handleTitleSave}
+              onKeyDown={handleTitleKeyDown}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full rounded-sm border-b border-foreground/30 bg-transparent px-0 py-0.5 font-display text-xl tracking-wide text-foreground focus:outline-none focus:border-foreground"
+            />
+          ) : (
+            <h3
+              className="truncate font-display text-xl leading-tight tracking-wide text-foreground"
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsEditingTitle(true)
+              }}
+              title="点击编辑标题"
+            >
+              {project.title}
+            </h3>
+          )}
         </div>
 
-        {project.genre && (
-          <Badge variant="secondary" className="font-normal">
-            {GENRE_LABELS[project.genre] ?? project.genre}
-          </Badge>
-        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+            <button
+              className="flex h-7 w-7 -mr-1 items-center justify-center rounded-sm text-muted-foreground/60 opacity-0 transition-opacity hover:bg-foreground/5 hover:text-foreground group-hover:opacity-100"
+              aria-label="更多操作"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuItem onClick={onEdit}>
+              <Pencil className="h-3.5 w-3.5" />
+              打开
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setIsEditingTitle(true)}>
+              <Settings className="h-3.5 w-3.5" />
+              重命名
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={onDelete}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              删除
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
-          <div className="flex items-center gap-2">
-            <span className="tabular-nums">{project.wordCount.toLocaleString()} 字</span>
-            {project.todayWordCount > 0 && (
-              <span className="text-primary/70">
+      <div className="mt-3 min-h-[18px]">
+        {project.genre && (
+          <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            — {GENRE_LABELS[project.genre] ?? project.genre}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-auto flex items-center justify-between pt-5">
+        <div className="flex items-center gap-2.5 text-[11px] tabular-nums text-muted-foreground">
+          <span>
+            <span className="text-[9px] uppercase tracking-[0.2em] mr-1 text-muted-foreground/60">字</span>
+            {project.wordCount.toLocaleString()}
+          </span>
+          {project.todayWordCount > 0 && (
+            <>
+              <span aria-hidden className="h-3 w-px bg-foreground/15" />
+              <span className="text-foreground/70">
                 今日 +{project.todayWordCount.toLocaleString()}
               </span>
-            )}
-          </div>
-          <span>{formatRelativeTime(project.updatedAt)}</span>
+            </>
+          )}
         </div>
-      </CardContent>
-    </Card>
+        <span className="text-[11px] italic text-muted-foreground/80">
+          {formatRelativeTime(project.updatedAt)}
+        </span>
+      </div>
+    </div>
   )
 }

@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import type { Chapter, ProjectMeta, WorldEntry, Relation } from '../types'
+import type { Embedding } from '../rag/types'
 
 /**
  * AI configuration stored per-project in IndexedDB.
@@ -97,6 +98,7 @@ export class InkForgeProjectDB extends Dexie {
   messages!: Table<ChatMessage, string>
   consistencyExemptions!: Table<ConsistencyExemption, string>
   revisions!: Table<Revision, string>
+  embeddings!: Table<Embedding, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -178,6 +180,19 @@ export class InkForgeProjectDB extends Dexie {
       messages: 'id, projectId, role, timestamp',
       consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
       revisions: 'id, projectId, chapterId, createdAt',
+    })
+    // v8: embeddings table for hybrid-search RAG.
+    this.version(8).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+      aiConfig: 'id',
+      messages: 'id, projectId, role, timestamp',
+      consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+      revisions: 'id, projectId, chapterId, createdAt',
+      embeddings: 'id, sourceType, sourceId, embedderId, updatedAt, [sourceType+sourceId]',
     })
   }
 }

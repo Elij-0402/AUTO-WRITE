@@ -4,10 +4,10 @@ import { useAIConfig } from './use-ai-config'
 import { useWorldEntries } from './use-world-entries'
 import { useConsistencyExemptions } from './use-consistency-exemptions'
 import {
-  extractKeywords,
-  findRelevantEntries,
   trimToTokenBudget,
 } from './use-context-injection'
+import { searchRelevantEntries } from '../rag/search'
+import { getDefaultEmbedder } from '../rag/default-embedder'
 import { parseAISuggestions, type Suggestion } from '../ai/suggestion-parser'
 import { streamChat, supportsToolUse, type ProviderStreamMessage } from '../ai/client'
 import { buildSegmentedSystemPrompt } from '../ai/prompts'
@@ -50,7 +50,7 @@ function detectDraft(content: string): boolean {
 
 export function useAIChat(projectId: string, options?: UseAIChatOptions) {
   const { config } = useAIConfig(projectId)
-  const { entriesByType } = useWorldEntries(projectId)
+  const { entries, entriesByType } = useWorldEntries(projectId)
   const { exemptions, addExemption } = useConsistencyExemptions(projectId)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
@@ -89,10 +89,21 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
       throw new Error('请先配置 AI 设置：OpenAI 兼容模式需要填写 Base URL')
     }
 
-    // Find relevant world entries (keyword match, will be replaced by RAG in Stage 2).
-    const keywords = extractKeywords(content)
-    const matchedEntries = findRelevantEntries(keywords, entriesByType)
-    const trimmedEntries = trimToTokenBudget(matchedEntries, 4000)
+    // Hybrid RAG retrieval replaces the pure keyword matcher (Stage 2).
+    const db = createProjectDB(projectId)
+    const embedder = getDefaultEmbedder()
+    const relevantEntries = entries
+      ? await searchRelevantEntries({
+          db,
+          projectId,
+          embedder,
+          query: content,
+          entries,
+          entriesByType,
+          topK: 12,
+        })
+      : []
+    const trimmedEntries = trimToTokenBudget(relevantEntries, 4000)
 
     const segmentedSystem = buildSegmentedSystemPrompt({
       worldEntries: trimmedEntries,
@@ -108,7 +119,6 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
     }
     const assistantMsgId = crypto.randomUUID()
 
-    const db = createProjectDB(projectId)
     await db.table('messages').add(userMsg)
     setMessages(prev => [...prev, userMsg])
 
@@ -203,7 +213,7 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
       setStreamingContent('')
       abortControllerRef.current = null
     }
-  }, [config, messages, projectId, entriesByType, options?.selectedText])
+  }, [config, messages, projectId, entries, entriesByType, options?.selectedText])
 
   const cancelStream = useCallback(() => {
     abortControllerRef.current?.abort()

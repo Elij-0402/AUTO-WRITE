@@ -7,6 +7,7 @@ import { ChapterSidebar } from '@/components/chapter/chapter-sidebar'
 import { OutlineEditForm } from '@/components/outline/outline-edit-form'
 import { Editor } from '@/components/editor/editor'
 import { FloatingToolbar } from '@/components/editor/floating-toolbar'
+import { HistoryDrawer } from '@/components/editor/history-drawer'
 import { useChapterEditor } from '@/lib/hooks/use-chapter-editor'
 import { ThemeProvider } from '@/components/editor/theme-provider'
 import { DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
@@ -18,6 +19,8 @@ import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { Button } from '@/components/ui/button'
+import { Clock } from 'lucide-react'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
 import type { EditorHandle } from '@/components/editor/editor-types'
 
@@ -290,6 +293,12 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
   onDiscuss: (text: string) => void
 }) {
   const { content, isSaving, updateContent } = useChapterEditor(projectId, chapterId)
+  const [historyOpen, setHistoryOpen] = useState(false)
+
+  const handleRestore = useCallback((snapshot: object) => {
+    editorRef.current?.setContent(snapshot)
+    updateContent(snapshot)
+  }, [editorRef, updateContent])
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -300,9 +309,28 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
         onChange={updateContent}
         className="flex-1"
       />
-      <div className="text-xs text-muted-foreground px-4 py-1.5 text-right border-t">
-        {isSaving ? '保存中...' : '已保存'}
+      <div className="flex items-center justify-between border-t px-3 py-1.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 text-xs text-muted-foreground hover:text-foreground"
+          onClick={() => setHistoryOpen(true)}
+        >
+          <Clock className="h-3 w-3 mr-1" />
+          版本历史
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          {isSaving ? '保存中...' : '已保存'}
+        </span>
       </div>
+      <HistoryDrawer
+        projectId={projectId}
+        chapterId={chapterId}
+        currentContent={content}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        onRestore={handleRestore}
+      />
     </div>
   )
 }

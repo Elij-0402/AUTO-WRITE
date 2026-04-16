@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { createProjectDB } from '../db/project-db'
 import { updateChapterContent as updateChapterContentQuery, computeWordCount } from '../db/chapter-queries'
+import { createRevision, AUTOSNAPSHOT_INTERVAL_MS } from '../db/revisions'
 import { useAutoSave } from './use-autosave'
 import { updateTodayWordCount } from './use-word-count'
 
@@ -80,6 +81,16 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
         }
         // Update previous word count for next delta calculation
         prevWordCountRef.current = newWordCount
+        // Capture a revision snapshot at most every AUTOSNAPSHOT_INTERVAL_MS.
+        if (chapterId) {
+          await createRevision(db, {
+            projectId,
+            chapterId,
+            snapshot: content,
+            source: 'autosnapshot',
+            minIntervalMs: AUTOSNAPSHOT_INTERVAL_MS,
+          }).catch(err => console.error('Revision snapshot failed:', err))
+        }
       }
     },
     [content],

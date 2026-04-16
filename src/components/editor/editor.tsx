@@ -33,6 +33,8 @@ import type { EditorProps, EditorHandle } from './editor-types'
  * - Editor exposes insertText method via ref for draft insertion at cursor position
  */
 export const Editor = forwardRef<EditorHandle, EditorProps>(({ content, onChange, className = '' }, ref) => {
+  const prevContentRef = useRef<object | null>(content)
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -64,12 +66,16 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(({ content, onChange
     insertText: (text: string, position?: number) => {
       if (!editor) return
       editor.commands.insertContentAt(position ?? editor.state.selection.head, text)
+    },
+    setContent: (nextContent: object) => {
+      if (!editor) return
+      editor.commands.setContent(nextContent)
+      prevContentRef.current = nextContent
     }
   }), [editor])
 
   // Track previous content to detect chapter switches
   // Content only changes from hook when chapterId changes
-  const prevContentRef = useRef<object | null>(content)
 
   // Handle content changes
   useEffect(() => {

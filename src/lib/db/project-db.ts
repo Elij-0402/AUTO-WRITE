@@ -47,6 +47,27 @@ export interface ConsistencyExemption {
 }
 
 /**
+ * Per-chapter content snapshot for time-travel / undo-across-sessions.
+ * Captured periodically by the autosave layer (see use-autosave) and on
+ * demand when the user pins an explicit checkpoint.
+ *
+ * Storage guideline: we keep at most 50 revisions per chapter; older ones
+ * are pruned by createRevision().
+ */
+export interface Revision {
+  id: string
+  projectId: string
+  chapterId: string
+  /** Tiptap JSON document */
+  snapshot: object
+  wordCount: number
+  createdAt: Date
+  /** Human label if the user pinned this revision explicitly. */
+  label?: string
+  source: 'autosnapshot' | 'manual' | 'ai-draft'
+}
+
+/**
  * Layout settings stored per-project in IndexedDB per D-24.
  * sidebarWidth: persisted sidebar width in pixels per D-25
  * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world') per D-08, D-14
@@ -75,6 +96,7 @@ export class InkForgeProjectDB extends Dexie {
   aiConfig!: Table<AIConfig, string>
   messages!: Table<ChatMessage, string>
   consistencyExemptions!: Table<ConsistencyExemption, string>
+  revisions!: Table<Revision, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -145,6 +167,18 @@ export class InkForgeProjectDB extends Dexie {
           if (cfg.provider === undefined) cfg.provider = 'openai-compatible'
         })
       )
+    // v7: revisions table for per-chapter snapshots.
+    this.version(7).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+      aiConfig: 'id',
+      messages: 'id, projectId, role, timestamp',
+      consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+      revisions: 'id, projectId, chapterId, createdAt',
+    })
   }
 }
 

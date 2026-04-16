@@ -69,6 +69,22 @@ export interface Revision {
 }
 
 /**
+ * Cached AI-generated analysis artifact. Keyed by `kind` + a content hash
+ * the caller computes (e.g. SHA of concatenated chapter texts). If the hash
+ * matches the current state, we reuse; otherwise we regenerate.
+ */
+export interface AnalysisArtifact {
+  id: string
+  projectId: string
+  kind: 'style-profile' | 'arc-map'
+  /** Opaque content hash from the caller — mismatch triggers regeneration. */
+  invalidationKey: string
+  /** Structured result, kind-specific. */
+  result: unknown
+  createdAt: Date
+}
+
+/**
  * Layout settings stored per-project in IndexedDB per D-24.
  * sidebarWidth: persisted sidebar width in pixels per D-25
  * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world') per D-08, D-14
@@ -99,6 +115,7 @@ export class InkForgeProjectDB extends Dexie {
   consistencyExemptions!: Table<ConsistencyExemption, string>
   revisions!: Table<Revision, string>
   embeddings!: Table<Embedding, string>
+  analyses!: Table<AnalysisArtifact, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -193,6 +210,20 @@ export class InkForgeProjectDB extends Dexie {
       consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
       revisions: 'id, projectId, chapterId, createdAt',
       embeddings: 'id, sourceType, sourceId, embedderId, updatedAt, [sourceType+sourceId]',
+    })
+    // v9: analyses table for cached AI-generated artifacts (style, arc).
+    this.version(9).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+      aiConfig: 'id',
+      messages: 'id, projectId, role, timestamp',
+      consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+      revisions: 'id, projectId, chapterId, createdAt',
+      embeddings: 'id, sourceType, sourceId, embedderId, updatedAt, [sourceType+sourceId]',
+      analyses: 'id, kind, invalidationKey, createdAt',
     })
   }
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, Maximize2, Minimize2, Moon, Settings2, Sun } from 'lucide-react'
+import { ArrowLeft, BarChart3, Maximize2, Minimize2, Moon, Settings2, Sun } from 'lucide-react'
 import { metaDb } from '@/lib/db/meta-db'
 import { useTotalWordCount, useTodayWordCount } from '@/lib/hooks/use-word-count'
 import { useTheme } from '@/components/editor/theme-provider'
@@ -61,6 +61,17 @@ export function WorkspaceTopbar({
       <div className="flex-1" />
 
       <SyncStatusIcon />
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+            <Link href={`/projects/${projectId}/analysis`} aria-label="创作者分析">
+              <BarChart3 className="h-4 w-4" />
+            </Link>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>创作者分析</TooltipContent>
+      </Tooltip>
 
       <Tooltip>
         <TooltipTrigger asChild>

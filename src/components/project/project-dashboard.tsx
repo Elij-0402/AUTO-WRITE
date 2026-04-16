@@ -143,11 +143,11 @@ export function ProjectDashboard() {
             >
               <button
                 onClick={() => setCreateModalOpen(true)}
-                className="group relative flex h-full min-h-[164px] w-full flex-col items-center justify-center gap-3 rounded-lg border border-foreground/10 bg-transparent text-muted-foreground transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-foreground/25 hover:bg-foreground/[0.015] hover:text-foreground cursor-pointer"
+                className="group relative flex h-full min-h-[164px] w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-foreground/15 bg-transparent text-muted-foreground transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/[0.03] hover:text-primary cursor-pointer"
               >
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute inset-x-5 top-0 h-px origin-left scale-x-0 bg-foreground/70 transition-transform duration-500 ease-out group-hover:scale-x-100"
+                  className="pointer-events-none absolute inset-x-5 top-0 h-px origin-left scale-x-0 bg-primary/70 transition-transform duration-500 ease-out group-hover:scale-x-100"
                 />
                 <span className="flex h-8 w-8 items-center justify-center rounded-sm border border-current/40">
                   <Plus className="h-4 w-4" strokeWidth={1.5} />

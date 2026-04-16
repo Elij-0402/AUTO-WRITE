@@ -47,20 +47,28 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-1/2 bg-primary flex-col items-center justify-center text-primary-foreground p-12">
-        <div className="mb-6">
-          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-            <PenLine className="w-8 h-8" />
+      <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center text-foreground p-12 overflow-hidden bg-gradient-to-br from-background via-background to-card bg-grain">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,hsl(var(--primary)/0.18),transparent_70%)]"
+        />
+        <div className="relative mb-8">
+          <div className="w-20 h-20 rounded-2xl border border-primary/30 bg-primary/10 backdrop-blur-sm flex items-center justify-center shadow-[0_0_40px_-8px_hsl(var(--primary)/0.5)]">
+            <PenLine className="w-9 h-9 text-primary" strokeWidth={1.5} />
           </div>
         </div>
-        <h1 className="text-3xl font-bold mb-3">InkForge</h1>
-        <p className="text-primary-foreground/80 text-lg text-center">AI 驱动的小说创作工作台</p>
+        <h1 className="relative font-display text-6xl tracking-wide mb-4 text-foreground">
+          InkForge
+        </h1>
+        <p className="relative text-muted-foreground text-base text-center italic tracking-wide">
+          AI 驱动的小说创作工作台
+        </p>
       </div>
 
       <div className="flex-1 flex items-center justify-center bg-background p-8">
         <div className="max-w-md w-full space-y-6">
           <div className="lg:hidden text-center mb-4">
-            <h1 className="text-2xl font-bold">InkForge</h1>
+            <h1 className="font-display text-3xl tracking-wide">InkForge</h1>
             <p className="text-sm text-muted-foreground">AI 驱动的小说创作工作台</p>
           </div>
 

@@ -147,7 +147,7 @@ export function ChapterSidebar({
     <div className="flex h-full overflow-hidden">
       <nav
         aria-label="侧栏导航"
-        className="flex w-12 shrink-0 flex-col border-r bg-muted/20 py-2"
+        className="flex w-14 shrink-0 flex-col border-r bg-gradient-to-b from-card/60 to-background py-2"
       >
         {RAIL_ITEMS.map((item) => {
           const Icon = item.icon
@@ -161,18 +161,22 @@ export function ChapterSidebar({
                   aria-label={item.label}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
-                    'relative flex h-11 w-full items-center justify-center text-muted-foreground transition-colors',
-                    'hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                    'relative flex h-12 w-full items-center justify-center transition-all',
+                    'text-muted-foreground/55 hover:text-foreground hover:bg-primary/5',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                     isActive && 'text-primary'
                   )}
                 >
                   {isActive && (
                     <span
                       aria-hidden
-                      className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-primary"
+                      className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-primary shadow-[0_0_12px_0_hsl(var(--primary)/0.5)]"
                     />
                   )}
-                  <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.25 : 2} />
+                  <Icon
+                    className="h-5 w-5"
+                    strokeWidth={isActive ? 2.25 : 1.75}
+                  />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right" className="flex items-center gap-2">

@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="zh-CN"
       className={`${notoSansSC.variable} ${zcoolXiaoWei.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans bg-grain">{children}</body>
     </html>
   );
 }

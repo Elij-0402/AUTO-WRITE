@@ -98,14 +98,15 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
         'group relative flex h-full min-h-[164px] cursor-pointer flex-col',
         'rounded-lg border border-foreground/10 bg-card px-6 pt-6 pb-5',
         'transition-all duration-300 ease-out',
-        'hover:border-foreground/25 hover:-translate-y-0.5'
+        'hover:border-primary/30 hover:-translate-y-0.5',
+        'hover:shadow-[0_10px_40px_-16px_hsl(var(--primary)/0.35)]'
       )}
       onClick={handleCardClick}
     >
       <span
         aria-hidden
         className={cn(
-          'pointer-events-none absolute inset-x-5 top-0 h-px origin-left scale-x-0 bg-foreground/70',
+          'pointer-events-none absolute inset-x-5 top-0 h-px origin-left scale-x-0 bg-primary/70',
           'transition-transform duration-500 ease-out group-hover:scale-x-100'
         )}
       />

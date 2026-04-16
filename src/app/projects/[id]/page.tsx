@@ -20,7 +20,15 @@ import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
-import { Clock } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { ProjectSettingsForm } from '@/components/project/project-settings-form'
+import { useProjects } from '@/lib/hooks/use-projects'
+import { Clock, BookOpen, ListTree, Globe2 } from 'lucide-react'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
 import type { EditorHandle } from '@/components/editor/editor-types'
 
@@ -35,6 +43,7 @@ export default function ProjectPage() {
   const [activeOutlineId, setActiveOutlineId] = useState<string | null>(null)
   const [activeWorldEntryId, setActiveWorldEntryId] = useState<string | null>(null)
   const [aiConfigOpen, setAiConfigOpen] = useState(false)
+  const [projectSettingsOpen, setProjectSettingsOpen] = useState(false)
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
@@ -42,6 +51,8 @@ export default function ProjectPage() {
   const { activeTab, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(params.id)
   const { chapters } = useChapters(params.id)
   const { entries, entriesByType } = useWorldEntries(params.id)
+  const { projects, updateProject } = useProjects()
+  const currentProject = projects.find((p) => p.id === params.id)
 
   const handleSelectOutline = useCallback((chapterId: string) => {
     setActiveOutlineId(chapterId)
@@ -205,7 +216,27 @@ export default function ProjectPage() {
           focusMode={focusMode}
           onToggleFocusMode={() => setFocusMode(!focusMode)}
           onOpenAIConfig={() => setAiConfigOpen(true)}
+          onOpenProjectSettings={() => setProjectSettingsOpen(true)}
         />
+
+        <Dialog open={projectSettingsOpen} onOpenChange={setProjectSettingsOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-display text-xl tracking-wide">
+                项目设置
+              </DialogTitle>
+            </DialogHeader>
+            {currentProject && (
+              <ProjectSettingsForm
+                project={currentProject}
+                onSave={async (data) => {
+                  await updateProject(currentProject.id, data)
+                  setProjectSettingsOpen(false)
+                }}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
 
         {focusMode ? (
           <div className="flex-1 flex flex-col overflow-hidden">
@@ -309,7 +340,7 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
         onChange={updateContent}
         className="flex-1"
       />
-      <div className="flex items-center justify-between border-t px-3 py-1.5">
+      <div className="surface-elevated flex items-center justify-between px-3 py-1.5 border-t-0">
         <Button
           variant="ghost"
           size="sm"
@@ -319,8 +350,15 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
           <Clock className="h-3 w-3 mr-1" />
           版本历史
         </Button>
-        <span className="text-xs text-muted-foreground">
-          {isSaving ? '保存中...' : '已保存'}
+        <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+          <span
+            aria-hidden
+            className={
+              'h-1.5 w-1.5 rounded-full bg-primary ' +
+              (isSaving ? 'animate-amber-pulse' : 'opacity-60')
+            }
+          />
+          {isSaving ? '保存中' : '已保存'}
         </span>
       </div>
       <HistoryDrawer
@@ -336,25 +374,27 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
 }
 
 function Placeholder({ activeTab }: { activeTab: ActiveTab }) {
+  const copy =
+    activeTab === 'outline'
+      ? { hero: '梳理脉络', hint: '从左侧大纲列表中选择章节', Icon: ListTree }
+      : activeTab === 'world'
+        ? { hero: '构建世界', hint: '从左侧世界观列表中选择或创建条目', Icon: Globe2 }
+        : { hero: '夜色正好', hint: '从左侧章节列表中选择或创建章节', Icon: BookOpen }
+
+  const Icon = copy.Icon
+
   return (
-    <div className="flex-1 flex items-center justify-center">
-      <div className="text-center">
-        {activeTab === 'outline' ? (
-          <>
-            <p className="text-base text-foreground mb-1">选择一个章节查看大纲</p>
-            <p className="text-sm text-muted-foreground">从左侧大纲列表中选择章节</p>
-          </>
-        ) : activeTab === 'world' ? (
-          <>
-            <p className="text-base text-foreground mb-1">选择一个世界观条目</p>
-            <p className="text-sm text-muted-foreground">从左侧世界观列表中选择条目或创建新条目</p>
-          </>
-        ) : (
-          <>
-            <p className="text-base text-foreground mb-1">选择一个章节开始写作</p>
-            <p className="text-sm text-muted-foreground">从左侧章节列表中选择或创建章节</p>
-          </>
-        )}
+    <div className="relative flex-1 flex items-center justify-center overflow-hidden bg-amber-vignette bg-grain">
+      <div className="relative flex flex-col items-center gap-5 text-center px-6 animate-fade-up">
+        <Icon
+          className="h-14 w-14 text-primary/35"
+          strokeWidth={1.25}
+          aria-hidden
+        />
+        <h2 className="font-display text-[64px] leading-[1.1] tracking-[0.04em] text-foreground/85">
+          {copy.hero}
+        </h2>
+        <p className="text-sm text-muted-foreground max-w-xs">{copy.hint}</p>
       </div>
     </div>
   )

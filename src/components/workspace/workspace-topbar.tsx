@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, BarChart3, Maximize2, Minimize2, Moon, Settings2, Sun } from 'lucide-react'
+import { ArrowLeft, BarChart3, Maximize2, Minimize2, Moon, Settings, Settings2, Sun } from 'lucide-react'
 import { metaDb } from '@/lib/db/meta-db'
 import { useTotalWordCount, useTodayWordCount } from '@/lib/hooks/use-word-count'
 import { useTheme } from '@/components/editor/theme-provider'
@@ -19,6 +19,7 @@ interface WorkspaceTopbarProps {
   focusMode: boolean
   onToggleFocusMode: () => void
   onOpenAIConfig: () => void
+  onOpenProjectSettings: () => void
 }
 
 export function WorkspaceTopbar({
@@ -26,6 +27,7 @@ export function WorkspaceTopbar({
   focusMode,
   onToggleFocusMode,
   onOpenAIConfig,
+  onOpenProjectSettings,
 }: WorkspaceTopbarProps) {
   const project = useLiveQuery(
     () => metaDb.projectIndex.get(projectId),
@@ -35,7 +37,7 @@ export function WorkspaceTopbar({
   const todayWordCount = useTodayWordCount(projectId)
 
   return (
-    <div className="h-12 shrink-0 border-b bg-background flex items-center gap-2 px-3">
+    <div className="surface-elevated h-14 shrink-0 flex items-center gap-3 px-4 sticky top-0 z-40">
       <Tooltip>
         <TooltipTrigger asChild>
           <Button asChild variant="ghost" size="icon" className="h-8 w-8">
@@ -44,18 +46,29 @@ export function WorkspaceTopbar({
             </Link>
           </Button>
         </TooltipTrigger>
-        <TooltipContent>返回</TooltipContent>
+        <TooltipContent>返回书斋</TooltipContent>
       </Tooltip>
 
+      <div className="h-5 w-px bg-border/70" />
+
       <div className="min-w-0 flex items-center gap-3">
-        <span className="truncate text-sm font-medium" title={project?.title ?? ''}>
+        <span
+          className="font-display text-[16px] tracking-wide truncate text-foreground"
+          title={project?.title ?? ''}
+        >
           {project?.title ?? '未命名项目'}
         </span>
-        <span className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
-          <WordStat label="今日" value={todayWordCount} />
+        <div className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1 text-[11px] tabular-nums">
+          <span className="text-muted-foreground">今日</span>
+          <span className="text-primary font-medium">
+            {todayWordCount.toLocaleString()}
+          </span>
           <span className="text-border">·</span>
-          <WordStat label="总计" value={totalWordCount} />
-        </span>
+          <span className="text-muted-foreground">总计</span>
+          <span className="text-foreground/80">
+            {totalWordCount.toLocaleString()}
+          </span>
+        </div>
       </div>
 
       <div className="flex-1" />
@@ -78,8 +91,24 @@ export function WorkspaceTopbar({
           <Button
             variant="ghost"
             size="icon"
+            onClick={onOpenProjectSettings}
+            className="h-8 w-8"
+            aria-label="项目设置"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>项目设置</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onOpenAIConfig}
             className="h-8 w-8"
+            aria-label="AI 设置"
           >
             <Settings2 className="h-4 w-4" />
           </Button>
@@ -94,6 +123,7 @@ export function WorkspaceTopbar({
             size="icon"
             onClick={onToggleFocusMode}
             className="h-8 w-8"
+            aria-label={focusMode ? '退出聚焦模式' : '进入聚焦模式'}
           >
             {focusMode ? (
               <Minimize2 className="h-4 w-4" />
@@ -107,19 +137,6 @@ export function WorkspaceTopbar({
 
       <ThemeToggle />
     </div>
-  )
-}
-
-function WordStat({ label, value }: { label: string; value: number }) {
-  return (
-    <span className="inline-flex items-center gap-1">
-      <span className="text-[11px] uppercase tracking-wide text-muted-foreground/70">
-        {label}
-      </span>
-      <span className="tabular-nums text-foreground/80">
-        {value.toLocaleString()}
-      </span>
-    </span>
   )
 }
 
@@ -138,6 +155,7 @@ function ThemeToggle() {
           size="icon"
           onClick={toggleTheme}
           className="h-8 w-8"
+          aria-label={resolvedTheme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
         >
           {resolvedTheme === 'dark' ? (
             <Sun className="h-4 w-4" />

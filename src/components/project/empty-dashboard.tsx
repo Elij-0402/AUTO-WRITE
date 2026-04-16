@@ -10,10 +10,10 @@ interface EmptyDashboardProps {
 
 export function EmptyDashboard({ onCreateProject, greeting }: EmptyDashboardProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 px-6 animate-fade-up">
+    <div className="relative flex flex-col items-center justify-center py-24 px-6 animate-fade-up bg-amber-vignette">
       <div className="flex items-center gap-2.5 mb-8">
-        <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-foreground">
-          <PenLine className="h-3.5 w-3.5 text-background" strokeWidth={2.5} />
+        <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-primary">
+          <PenLine className="h-3.5 w-3.5 text-primary-foreground" strokeWidth={2.5} />
         </div>
         <span className="font-display text-base tracking-[0.08em]">InkForge</span>
       </div>
@@ -22,7 +22,7 @@ export function EmptyDashboard({ onCreateProject, greeting }: EmptyDashboardProp
         {greeting}
       </p>
 
-      <h2 className="mb-2 font-display text-4xl leading-tight tracking-wide text-foreground text-center">
+      <h2 className="mb-2 font-display text-5xl leading-tight tracking-wide text-foreground text-center">
         落笔之前，先有世界
       </h2>
 
@@ -30,13 +30,13 @@ export function EmptyDashboard({ onCreateProject, greeting }: EmptyDashboardProp
         从一个标题开始，构建你的故事宇宙
       </p>
 
-      <span aria-hidden className="mb-8 h-px w-16 bg-foreground/25" />
+      <span aria-hidden className="mb-8 h-px w-16 bg-primary/40" />
 
       <Button
         size="lg"
         variant="outline"
         onClick={onCreateProject}
-        className="font-display tracking-wide border-foreground/20 hover:border-foreground/60 hover:bg-transparent"
+        className="font-display tracking-wide border-primary/30 text-foreground hover:border-primary/70 hover:bg-primary/5 hover:text-primary"
       >
         开始第一个故事
       </Button>

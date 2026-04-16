@@ -74,7 +74,7 @@ export function CreateChapterInput({ onCreate }: CreateChapterInputProps) {
           }
         }}
         placeholder="输入章节标题"
-        className="w-full rounded-lg border border-dashed border-primary/30 bg-primary-muted px-3 py-1.5 text-sm text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+        className="w-full rounded-lg border border-dashed border-border-strong bg-surface-hover/50 px-3 py-1.5 text-sm text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
         autoFocus
       />
     </div>

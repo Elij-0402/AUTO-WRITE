@@ -62,6 +62,12 @@ export default function AuthPage() {
       {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center bg-white dark:bg-stone-950 p-8">
         <div className="max-w-md w-full space-y-8">
+          {/* Compact branding for narrow viewports (hidden on lg+ where brand panel shows) */}
+          <div className="lg:hidden text-center mb-4">
+            <h1 className="text-2xl font-bold text-foreground">InkForge</h1>
+            <p className="text-sm text-text-tertiary">AI 驱动的小说创作工作台</p>
+          </div>
+
           {/* Tab toggle */}
           <div className="flex border-b border-stone-200 dark:border-stone-800">
             <button
@@ -100,7 +106,7 @@ export default function AuthPage() {
                 onChange={e => setEmail(e.target.value)}
                 required
                 className="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50"
-                placeholder="your@email.com"
+                placeholder="请输入邮箱地址"
               />
             </div>
 

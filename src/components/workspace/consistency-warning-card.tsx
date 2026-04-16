@@ -43,19 +43,19 @@ export function ConsistencyWarningCard({
   return (
     <div
       className={`
-        border border-l-4 border-amber-500 rounded-lg p-3
-        bg-amber-100 dark:bg-amber-900
+        rounded-lg p-3
+        bg-surface-1
         ${dismissed ? 'opacity-50 grayscale' : ''}
       `}
     >
       {/* Header with icon and entry info */}
       <div className="flex items-center gap-2 mb-2">
-        <AlertTriangle className="w-4 h-4 text-amber-500" />
-        <span className="font-semibold text-stone-900 dark:text-stone-100">
+        <AlertTriangle className="w-4 h-4 text-primary" />
+        <span className="font-semibold text-foreground">
           {contradiction.entryName}
         </span>
-        <span className="text-stone-400 dark:text-stone-500">—</span>
-        <span className="text-sm text-stone-600 dark:text-stone-400">
+        <span className="text-text-tertiary">—</span>
+        <span className="text-sm text-text-secondary">
           {contradiction.entryType === 'character' ? '角色' :
            contradiction.entryType === 'location' ? '地点' :
            contradiction.entryType === 'rule' ? '规则' : '时间线'}
@@ -63,7 +63,7 @@ export function ConsistencyWarningCard({
       </div>
 
       {/* Contradiction description */}
-      <p className="text-sm text-stone-700 dark:text-stone-300 mb-3">
+      <p className="text-sm text-text-secondary mb-3">
         {contradiction.description}
       </p>
 

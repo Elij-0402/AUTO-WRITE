@@ -158,7 +158,7 @@ export function GenerationPanel({ projectId, chapterId, onClose }: GenerationPan
             <p className="text-sm mb-2">{error}</p>
             <button
               onClick={handleRetry}
-              className="px-3 py-1.5 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
+              className="px-3 py-1.5 text-sm rounded-lg bg-danger text-danger-foreground hover:bg-danger/90 transition-colors"
             >
               重试
             </button>

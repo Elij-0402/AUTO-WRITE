@@ -22,7 +22,7 @@ export function MessageBubble({ message, onInsertDraft }: MessageBubbleProps) {
           ? 'bg-primary text-primary-foreground rounded-[12px_12px_4px_12px]'
           : 'bg-surface-1 shadow-sm rounded-[12px_12px_12px_4px]'
       }`}>
-        <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+        <div className="text-sm whitespace-pre-wrap break-words overflow-hidden">{message.content}</div>
         <div className={`text-xs mt-1 ${isUser ? 'text-primary-foreground/60' : 'text-text-tertiary'}`}>
           {time}
         </div>

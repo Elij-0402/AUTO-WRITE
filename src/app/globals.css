@@ -21,11 +21,16 @@
   --border-subtle: oklch(0.85 0.008 65 / 0.5);
   --border-strong: oklch(0.70 0.01 60 / 0.4);
 
-  /* Primary accent: cinnabar/vermilion — 朱砂 */
-  --primary: oklch(0.52 0.16 25);
-  --primary-foreground: oklch(0.97 0.005 70);
-  --primary-hover: oklch(0.46 0.15 25);
-  --primary-muted: oklch(0.52 0.16 25 / 0.1);
+  /* Primary accent: scholarly blue — 藏蓝 */
+  --primary: oklch(0.52 0.12 260);
+  --primary-foreground: oklch(0.97 0.005 250);
+  --primary-hover: oklch(0.46 0.11 260);
+  --primary-muted: oklch(0.52 0.12 260 / 0.1);
+
+  /* Accent: cinnabar/vermilion — 朱砂 (decorative only) */
+  --accent: oklch(0.52 0.16 25);
+  --accent-foreground: oklch(0.97 0.005 70);
+  --accent-muted: oklch(0.52 0.16 25 / 0.1);
 
   /* Danger */
   --danger: oklch(0.58 0.2 27);
@@ -44,28 +49,33 @@
 
 /* Class-based dark mode — matches ThemeProvider .dark toggle */
 .dark {
-  /* Deep ink-black with warm sepia undertone — 墨色 */
-  --background: oklch(0.12 0.008 55);
+  /* Deep ink-black with warm sepia undertone — 墨色 (brightened for contrast) */
+  --background: oklch(0.15 0.008 55);
   --foreground: oklch(0.92 0.01 75);
 
-  --surface-0: oklch(0.14 0.007 55);
-  --surface-1: oklch(0.17 0.008 55);
-  --surface-2: oklch(0.22 0.01 52);
-  --surface-hover: oklch(0.19 0.009 55);
-  --surface-active: oklch(0.24 0.01 52);
+  --surface-0: oklch(0.17 0.007 55);
+  --surface-1: oklch(0.21 0.008 55);
+  --surface-2: oklch(0.26 0.01 52);
+  --surface-hover: oklch(0.23 0.009 55);
+  --surface-active: oklch(0.28 0.01 52);
 
-  --text-secondary: oklch(0.65 0.008 65);
-  --text-tertiary: oklch(0.50 0.007 60);
-  --text-muted: oklch(0.38 0.006 55);
+  --text-secondary: oklch(0.70 0.008 65);
+  --text-tertiary: oklch(0.55 0.007 60);
+  --text-muted: oklch(0.42 0.006 55);
 
   --border-subtle: oklch(0.95 0.005 65 / 0.08);
   --border-strong: oklch(0.95 0.005 65 / 0.14);
 
-  /* Cinnabar — slightly brighter in dark to maintain contrast */
-  --primary: oklch(0.58 0.16 25);
-  --primary-foreground: oklch(0.97 0.005 70);
-  --primary-hover: oklch(0.64 0.15 25);
-  --primary-muted: oklch(0.58 0.16 25 / 0.15);
+  /* Scholarly blue — brighter in dark to maintain contrast */
+  --primary: oklch(0.58 0.12 260);
+  --primary-foreground: oklch(0.97 0.005 250);
+  --primary-hover: oklch(0.64 0.11 260);
+  --primary-muted: oklch(0.58 0.12 260 / 0.15);
+
+  /* Accent: cinnabar — slightly brighter in dark */
+  --accent: oklch(0.58 0.16 25);
+  --accent-foreground: oklch(0.97 0.005 70);
+  --accent-muted: oklch(0.58 0.16 25 / 0.15);
 
   --danger: oklch(0.65 0.19 25);
   --danger-foreground: oklch(0.97 0.005 70);
@@ -98,6 +108,10 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
   --color-primary-muted: var(--primary-muted);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-muted: var(--accent-muted);
 
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);

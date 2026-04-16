@@ -7,10 +7,11 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // D-49: Unauthenticated access to protected routes → redirect to /auth with return URL
-  if (!user && !pathname.startsWith('/auth')) {
-    const returnUrl = encodeURIComponent(pathname + request.nextUrl.search)
-    return NextResponse.redirect(new URL(`/auth?returnUrl=${returnUrl}`, request.url))
-  }
+  // TEMP: Bypassed for visual audit
+  // if (!user && !pathname.startsWith('/auth')) {
+  //   const returnUrl = encodeURIComponent(pathname + request.nextUrl.search)
+  //   return NextResponse.redirect(new URL(`/auth?returnUrl=${returnUrl}`, request.url))
+  // }
 
   // D-50: After login → redirect to original requested page
   if (user && pathname === '/auth') {

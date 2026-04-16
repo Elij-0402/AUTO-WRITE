@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, MoreHorizontal } from 'lucide-react'
-import { getChapterNumber } from '@/lib/db/chapter-queries'
 import type { Chapter } from '@/lib/types'
 import { ChapterContextMenu } from './chapter-context-menu'
 
@@ -122,8 +121,8 @@ export function ChapterRow({
       </button>
 
       {/* Chapter number */}
-      <span className="flex-shrink-0 text-xs text-text-tertiary min-w-[3rem]">
-        {getChapterNumber(chapter.order)}
+      <span className="flex-shrink-0 text-xs text-text-muted min-w-[1.5rem] text-right tabular-nums">
+        {chapter.order + 1}
       </span>
 
       {/* Title */}

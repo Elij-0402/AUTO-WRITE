@@ -44,6 +44,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-50">
       <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-sm">
+        <h1 className="text-lg font-bold text-center mb-1">InkForge</h1>
         <h2 className="text-xl font-semibold mb-6 text-center">重置密码</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -67,6 +68,11 @@ export default function ForgotPasswordPage() {
           >
             {loading ? '发送中...' : '发送重置链接'}
           </button>
+          <div className="text-center">
+            <a href="/auth" className="text-sm text-blue-600 hover:text-blue-500">
+              返回登录
+            </a>
+          </div>
         </form>
       </div>
     </div>

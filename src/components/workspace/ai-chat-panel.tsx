@@ -11,7 +11,7 @@ import { RelationshipSuggestionCard, NewEntrySuggestionCard } from './suggestion
 import { ConsistencyWarningCard } from './consistency-warning-card'
 import { NewEntryDialog, type NewEntryPrefillData } from './new-entry-dialog'
 import { DuplicateEntryDialog } from './duplicate-entry-dialog'
-import { Send, Loader2 } from 'lucide-react'
+import { Send, Loader2, Lightbulb, AlertTriangle } from 'lucide-react'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 import type { Suggestion, RelationshipSuggestion, NewEntrySuggestion } from '@/lib/ai/suggestion-parser'
 
@@ -45,7 +45,8 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const { dismiss, filterDismissed, reset } = useDismissedSuggestions()
 
   const [input, setInput] = useState('')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [chatError, setChatError] = useState<string | null>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   // Dialog state for new entry adoption per D-10
@@ -60,9 +61,13 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   // Toast state (simple inline approach - could be replaced with a toast library)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive — use scrollTop on container
+  // instead of scrollIntoView which scrolls all ancestors (causing whole-page scroll)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const container = messagesContainerRef.current
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
   }, [messages])
 
   // Filter suggestions through dismissed
@@ -86,7 +91,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
       onDiscussComplete?.()
     } catch (err) {
       console.error('Failed to send message:', err)
-      alert(err instanceof Error ? err.message : '发送失败')
+      setChatError(err instanceof Error ? err.message : '发送失败')
     }
   }
 
@@ -222,7 +227,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const isEmpty = messages.length === 0
 
   return (
-    <div className="h-full flex flex-col bg-surface-0">
+    <div className="h-full flex flex-col overflow-hidden bg-surface-0">
       {/* Toast notification */}
       {toastMessage && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 glass-panel-elevated text-foreground text-sm rounded-lg shadow-lg">
@@ -231,7 +236,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
       )}
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-3">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden p-3">
         {isEmpty ? (
           <div className="h-full flex items-center justify-center text-text-tertiary">
             <div className="text-center">
@@ -251,9 +256,10 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
             {/* Render suggestions after AI messages */}
             {visibleSuggestions.length > 0 && (
-              <div className="mt-3 space-y-2">
-                <div className="text-xs text-text-tertiary mb-2">
-                  💡 AI 建议
+                <div className="mt-3 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-text-tertiary mb-2">
+                  <Lightbulb className="w-3 h-3" />
+                  <span>AI 建议</span>
                 </div>
                 {visibleSuggestions.map((suggestion, idx) => (
                   suggestion.type === 'relationship' ? (
@@ -283,8 +289,9 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
             {/* Render consistency warnings after AI messages */}
             {contradictions.length > 0 && (
               <div className="mt-3 space-y-2">
-                <div className="text-xs text-text-tertiary mb-2">
-                  ⚠️ 矛盾检测
+                <div className="flex items-center gap-2 text-xs text-text-tertiary mb-2">
+                  <AlertTriangle className="w-3 h-3" />
+                  <span>矛盾检测</span>
                 </div>
                 {isCheckingConsistency && (
                   <div className="flex items-center gap-2 text-text-tertiary text-sm mb-2">
@@ -314,13 +321,19 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
                 </div>
               </div>
             )}
-            <div ref={messagesEndRef} />
+            <div />
           </div>
         )}
       </div>
 
       {/* Input area */}
       <div className="border-t border-border-subtle p-3">
+        {chatError && (
+          <div className="flex items-center justify-between mb-2 px-3 py-2 rounded-lg bg-danger-muted text-danger text-sm">
+            <span>{chatError}</span>
+            <button onClick={() => setChatError(null)} className="ml-2 text-danger hover:text-danger/70 font-bold">&times;</button>
+          </div>
+        )}
         <div className="flex gap-2">
           <textarea
             ref={inputRef}

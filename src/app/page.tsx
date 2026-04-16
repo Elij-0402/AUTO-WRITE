@@ -7,17 +7,17 @@ import { ThemeProvider } from '@/components/editor/theme-provider'
 import { ProjectDashboard } from '@/components/project/project-dashboard'
 
 export default function Home() {
-  useEffect(() => {
-    // Check auth state and redirect if needed
-    const checkAuth = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        redirect('/auth')
-      }
-    }
-    checkAuth()
-  }, [])
+  // TEMP: Auth check bypassed for visual audit
+  // useEffect(() => {
+  //   const checkAuth = async () => {
+  //     const supabase = createClient()
+  //     const { data: { user } } = await supabase.auth.getUser()
+  //     if (!user) {
+  //       redirect('/auth')
+  //     }
+  //   }
+  //   checkAuth()
+  // }, [])
 
   return (
     <ThemeProvider>

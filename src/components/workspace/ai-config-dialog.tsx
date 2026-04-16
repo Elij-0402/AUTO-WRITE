@@ -109,7 +109,7 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <label htmlFor="apiKey" className="text-right text-sm">
-              API Key
+              API 密钥
             </label>
             <Input
               id="apiKey"
@@ -122,7 +122,7 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <label htmlFor="baseUrl" className="text-right text-sm">
-              Base URL
+              接口地址
             </label>
             <Input
               id="baseUrl"

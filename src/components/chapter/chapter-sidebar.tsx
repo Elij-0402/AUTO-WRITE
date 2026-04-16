@@ -15,7 +15,6 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import { BookOpen } from 'lucide-react'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { ChapterRow } from './chapter-row'
 import { CreateChapterInput } from './create-chapter-input'
@@ -138,7 +137,7 @@ export function ChapterSidebar({
 
   // Per D-13: instant tab switching, no animation
   const tabClasses = (tab: ActiveTab) =>
-    `flex-1 py-2 text-center text-sm font-medium transition-colors border-b-2 ${
+    `flex-1 py-2 text-center text-sm font-medium whitespace-nowrap truncate transition-colors border-b-2 ${
       activeTab === tab
         ? 'border-primary text-primary'
         : 'border-transparent text-text-tertiary hover:text-foreground'
@@ -167,8 +166,7 @@ export function ChapterSidebar({
           className={tabClasses('world')}
           onClick={() => onTabChange('world')}
         >
-          <BookOpen className="h-4 w-4 inline mr-1" />
-          世界观
+          世界
         </button>
       </div>
 

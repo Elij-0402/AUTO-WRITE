@@ -33,9 +33,9 @@ export function SyncProgress() {
 
   if (status === 'done') {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-[oklch(0.12_0.008_55_/_0.85)] flex items-center justify-center z-50">
         <div className="glass-panel-elevated rounded-xl p-6 max-w-sm w-full text-center">
-          <div className="text-green-500 text-4xl mb-2">✓</div>
+          <div className="text-primary text-4xl mb-2">✓</div>
           <h3 className="text-lg font-semibold mb-2">同步完成</h3>
           <p className="text-text-secondary text-sm">正在跳转...</p>
         </div>
@@ -45,9 +45,9 @@ export function SyncProgress() {
 
   if (status === 'error') {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-[oklch(0.12_0.008_55_/_0.85)] flex items-center justify-center z-50">
         <div className="glass-panel-elevated rounded-xl p-6 max-w-sm w-full text-center">
-          <div className="text-yellow-500 text-4xl mb-2">⚠</div>
+          <div className="text-primary text-4xl mb-2">⚠</div>
           <h3 className="text-lg font-semibold mb-2">同步遇到问题</h3>
           <p className="text-text-secondary text-sm mb-4">部分数据未能同步，将在下次连接时重试</p>
           <button
@@ -62,7 +62,7 @@ export function SyncProgress() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-[oklch(0.12_0.008_55_/_0.85)] flex items-center justify-center z-50">
       <div className="glass-panel-elevated rounded-xl p-6 max-w-sm w-full text-center">
         <h3 className="text-lg font-semibold mb-4">首次同步</h3>
         <div className="w-full bg-surface-2 rounded-full h-2 mb-2">

@@ -11,26 +11,22 @@ import type { WorldEntryType } from '@/lib/types'
  * - rule = purple
  * - timeline = amber
  */
-const TYPE_BADGE_COLORS: Record<WorldEntryType, { bg: string; text: string; border: string }> = {
+const TYPE_BADGE_COLORS: Record<WorldEntryType, { bg: string; text: string }> = {
   character: {
     bg: 'bg-blue-100 dark:bg-blue-900',
-    text: 'text-blue-700 dark:text-blue-300',
-    border: 'border-l-blue-500'
+    text: 'text-blue-700 dark:text-blue-300'
   },
   location: {
     bg: 'bg-green-100 dark:bg-green-900',
-    text: 'text-green-700 dark:text-green-300',
-    border: 'border-l-green-500'
+    text: 'text-green-700 dark:text-green-300'
   },
   rule: {
     bg: 'bg-purple-100 dark:bg-purple-900',
-    text: 'text-purple-700 dark:text-purple-300',
-    border: 'border-l-purple-500'
+    text: 'text-purple-700 dark:text-purple-300'
   },
   timeline: {
     bg: 'bg-amber-100 dark:bg-amber-900',
-    text: 'text-amber-700 dark:text-amber-300',
-    border: 'border-l-amber-500'
+    text: 'text-amber-700 dark:text-amber-300'
   }
 }
 
@@ -74,7 +70,7 @@ export function RelationshipSuggestionCard({
   return (
     <div
       className={`
-        border border-l-4 border-l-blue-500 rounded-lg p-3
+        rounded-lg p-3
         bg-surface-1
         ${dismissed ? 'opacity-50 grayscale' : ''}
       `}
@@ -155,9 +151,8 @@ export function NewEntrySuggestionCard({
   return (
     <div
       className={`
-        border border-l-4 rounded-lg p-3
+        rounded-lg p-3
         bg-surface-1
-        ${colors.border}
         ${dismissed ? 'opacity-50 grayscale' : ''}
       `}
     >

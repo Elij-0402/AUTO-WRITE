@@ -228,60 +228,56 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const overLimit = charCount > CHAR_LIMIT
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-background relative">
+    <div className="h-full flex flex-col overflow-hidden surface-0 bg-spotlight relative">
       {toastMessage && (
-        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 px-3 py-1.5 bg-foreground text-background text-xs rounded-md shadow-lg animate-fade-up">
+        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 px-3 py-1.5 surface-3 text-foreground film-edge text-xs rounded-[var(--radius-control)] shadow-[var(--shadow-lift-md)] animate-fade-up">
           {toastMessage}
         </div>
       )}
 
       {/* ── Header ───────────────────────────────────────── */}
-      <div className="surface-elevated h-12 flex items-center gap-2.5 px-3.5 relative">
+      <div className="surface-elevated h-11 flex items-center gap-2.5 px-3.5 relative film-edge">
         <div className="relative flex-shrink-0">
           <div
             aria-hidden
-            className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/25 flex items-center justify-center"
+            className="w-6 h-6 rounded-full bg-[hsl(var(--accent-amber))]/10 border border-[hsl(var(--accent-amber))]/40 flex items-center justify-center"
           >
-            <Feather className="h-3.5 w-3.5 text-primary" strokeWidth={2.2} />
+            <Feather className="h-3 w-3 text-[hsl(var(--accent-amber))]" strokeWidth={2.2} />
           </div>
         </div>
         <div className="flex flex-col min-w-0">
-          <span className="font-display text-[15px] tracking-wider text-foreground leading-none">
+          <span className="font-display text-[14px] tracking-wider text-foreground leading-none">
             墨客
           </span>
-          <span className="text-[10px] text-muted-foreground/80 tracking-wide leading-none mt-1">
+          <span className="text-[9px] text-muted-foreground/70 tracking-[0.15em] leading-none mt-1 uppercase">
             AI · 写作伙伴
           </span>
         </div>
         <div className="ml-auto flex items-center gap-3">
           {messages.length > 0 && (
-            <span className="text-[10px] text-muted-foreground/70 tabular-nums tracking-wider">
-              {messages.length} 条对话
+            <span className="text-[10px] text-mono text-muted-foreground/60 tabular-nums tracking-wider">
+              {messages.length}
             </span>
           )}
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wider">
             <span
               aria-hidden
               className={loading
-                ? 'h-1.5 w-1.5 rounded-full bg-primary animate-inkwell-breathe'
-                : 'h-1.5 w-1.5 rounded-full bg-primary/70'}
+                ? 'h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent-amber))] animate-inkwell-breathe'
+                : 'h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent-jade))]'}
             />
             {loading ? '思索中' : '就绪'}
           </span>
         </div>
-        <div
-          aria-hidden
-          className="absolute left-3.5 right-3.5 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/25 to-transparent"
-        />
       </div>
 
       {/* ── Selected-text indicator ────────────────────────── */}
       {selectedText && (
-        <div className="flex items-start gap-2 px-3.5 py-2 bg-primary/5 border-b border-primary/10 animate-fade-up">
-          <Quote className="w-3 h-3 text-primary/70 mt-0.5 flex-shrink-0" />
+        <div className="flex items-start gap-2 px-3.5 py-2 surface-2 border-b border-[hsl(var(--border))] animate-fade-up">
+          <Quote className="w-3 h-3 text-[hsl(var(--accent-amber))]/80 mt-0.5 flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] text-muted-foreground/80 tracking-wide mb-0.5">已选中文本</div>
-            <div className="text-[11px] text-foreground/70 line-clamp-2 leading-snug">
+            <div className="text-[10px] text-muted-foreground/80 tracking-wider uppercase mb-0.5">已选中文本</div>
+            <div className="text-[11px] text-foreground/75 line-clamp-2 leading-snug">
               {selectedText}
             </div>
           </div>
@@ -296,24 +292,24 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
       >
         {isEmpty ? (
           <div className="h-full flex items-center justify-center p-6 bg-amber-vignette">
-            <div className="max-w-[260px] w-full space-y-5">
+            <div className="max-w-[260px] w-full space-y-6">
               {/* Quill ornament */}
               <div className="flex flex-col items-center gap-3">
                 <div className="relative">
                   <div
                     aria-hidden
-                    className="absolute inset-0 rounded-full bg-primary/15 blur-xl"
+                    className="absolute inset-0 rounded-full bg-[hsl(var(--accent-amber))]/15 blur-xl"
                   />
-                  <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-background via-card to-primary/10 border border-primary/25 flex items-center justify-center shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.5)]">
-                    <Feather className="h-6 w-6 text-primary" strokeWidth={1.8} />
+                  <div className="relative w-14 h-14 rounded-full surface-2 film-edge flex items-center justify-center shadow-[var(--shadow-amber)]">
+                    <Feather className="h-6 w-6 text-[hsl(var(--accent-amber))]" strokeWidth={1.8} />
                   </div>
                 </div>
                 <div
                   aria-hidden
-                  className="w-10 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent"
+                  className="w-10 h-px bg-gradient-to-r from-transparent via-[hsl(var(--accent-amber))]/50 to-transparent"
                 />
                 <div className="text-center space-y-1.5">
-                  <p className="font-display text-xl tracking-[0.08em] text-foreground">
+                  <p className="font-display text-[22px] tracking-[0.1em] text-foreground">
                     墨落生花
                   </p>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
@@ -324,24 +320,24 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
               {/* Starter chips */}
               <div className="space-y-1.5">
-                <div className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60 text-center mb-2">
-                  · 试试这样开始 ·
+                <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60 text-center mb-2">
+                  试试这样开始
                 </div>
                 {STARTER_PROMPTS.map((starter, i) => (
                   <button
                     key={starter.label}
                     onClick={() => handleSend(starter.prompt)}
-                    className="group w-full text-left px-3 py-2 rounded-md bg-card/50 hover:bg-card border border-border/60 hover:border-primary/30 transition-all duration-200 animate-message-enter hover:translate-x-0.5"
+                    className="group w-full text-left px-3 py-2 rounded-[var(--radius-card)] surface-2 film-edge hover:film-edge-active transition-all duration-200 animate-message-enter hover:translate-x-0.5"
                     style={{ animationDelay: `${120 + i * 60}ms` }}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-primary/70 font-mono tabular-nums">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[10px] text-[hsl(var(--accent-amber))]/80 text-mono tabular-nums">
                         0{i + 1}
                       </span>
                       <span className="text-[12.5px] text-foreground/85 group-hover:text-foreground transition-colors">
                         {starter.label}
                       </span>
-                      <span className="ml-auto text-[10px] text-muted-foreground/40 group-hover:text-primary/60 transition-colors">
+                      <span className="ml-auto text-[11px] text-muted-foreground/40 group-hover:text-[hsl(var(--accent-amber))] transition-colors">
                         →
                       </span>
                     </div>
@@ -361,8 +357,8 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
             ))}
 
             {visibleSuggestions.length > 0 && (
-              <div className="mx-2 my-3 p-3 rounded-lg bg-primary/[0.03] border border-primary/10 space-y-2">
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-primary/70 mb-1">
+              <div className="mx-2 my-3 space-y-2">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--accent-violet))] px-1">
                   <Lightbulb className="w-3 h-3" />
                   <span>墨客建议</span>
                 </div>
@@ -392,13 +388,13 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
             )}
 
             {contradictions.length > 0 && (
-              <div className="mx-2 my-3 p-3 rounded-lg bg-destructive/[0.04] border border-destructive/15 space-y-2">
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-destructive/80 mb-1">
+              <div className="mx-2 my-3 space-y-2">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--accent-coral))] px-1">
                   <AlertTriangle className="w-3 h-3" />
                   <span>矛盾检测</span>
                 </div>
                 {isCheckingConsistency && (
-                  <div className="flex items-center gap-2 text-muted-foreground text-xs mb-2">
+                  <div className="flex items-center gap-2 text-muted-foreground text-xs px-1">
                     <Loader2 className="w-3 h-3 animate-spin" />
                     <span>检测矛盾中…</span>
                   </div>
@@ -418,16 +414,16 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
             {loading && (
               <div className="flex gap-2.5 py-3 pl-3 pr-1 ink-rail animate-message-enter">
                 <div className="flex-shrink-0 mt-0.5">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center">
-                    <Feather className="w-3 h-3 text-primary" strokeWidth={2.2} />
+                  <div className="w-6 h-6 rounded-full bg-[hsl(var(--accent-amber))]/10 border border-[hsl(var(--accent-amber))]/40 flex items-center justify-center">
+                    <Feather className="w-3 h-3 text-[hsl(var(--accent-amber))]" strokeWidth={2.2} />
                   </div>
                 </div>
                 <div className="flex flex-col justify-center gap-1.5 pt-1">
-                  <span className="font-display text-[13px] tracking-wide text-primary/90 leading-none">墨客</span>
+                  <span className="font-display text-[13px] tracking-wider text-[hsl(var(--accent-amber))] leading-none">墨客</span>
                   <div className="flex items-center gap-1 h-4">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ink-drop" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ink-drop" style={{ animationDelay: '160ms' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ink-drop" style={{ animationDelay: '320ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--accent-amber))] animate-ink-drop" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--accent-amber))] animate-ink-drop" style={{ animationDelay: '160ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--accent-amber))] animate-ink-drop" style={{ animationDelay: '320ms' }} />
                     <span className="ml-2 text-[11px] text-muted-foreground/80 italic">笔尖正在蘸墨…</span>
                   </div>
                 </div>
@@ -440,19 +436,19 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         {showScrollPill && (
           <button
             onClick={() => scrollToBottom('smooth')}
-            className="sticky bottom-3 left-1/2 ml-[-52px] z-20 inline-flex items-center gap-1 px-2.5 py-1 bg-card/90 backdrop-blur-md border border-border/70 rounded-full shadow-md text-[11px] text-foreground/80 hover:bg-card hover:border-primary/30 transition-all animate-fade-up"
+            className="sticky bottom-3 left-1/2 ml-[-52px] z-20 inline-flex items-center gap-1 px-2.5 py-1 surface-3 film-edge rounded-full shadow-[var(--shadow-lift-md)] text-[11px] text-foreground/80 hover:film-edge-active transition-all animate-fade-up"
             aria-label="跳到最新"
           >
-            <ArrowDown className="w-3 h-3 text-primary" />
+            <ArrowDown className="w-3 h-3 text-[hsl(var(--accent-amber))]" />
             <span>跳到最新</span>
           </button>
         )}
       </div>
 
       {/* ── Input ──────────────────────────────────────────── */}
-      <div className="surface-elevated border-t p-2.5 space-y-2">
+      <div className="surface-elevated p-2.5 space-y-2">
         {chatError && (
-          <div className="flex items-center justify-between px-2.5 py-1.5 rounded-md bg-destructive/10 text-destructive text-xs animate-fade-up">
+          <div className="flex items-center justify-between px-2.5 py-1.5 rounded-[var(--radius-control)] bg-[hsl(var(--accent-coral))]/10 border border-[hsl(var(--accent-coral))]/30 text-[hsl(var(--accent-coral))] text-xs animate-fade-up">
             <span>{chatError}</span>
             <button onClick={() => setChatError(null)} className="ml-2 hover:opacity-70">
               <X className="h-3 w-3" />
@@ -461,11 +457,11 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         )}
 
         <div
-          className={`relative rounded-lg border transition-all duration-200 ${
+          className={`relative rounded-[var(--radius-card)] border transition-all duration-200 ${
             inputFocused
-              ? 'border-primary/40 bg-background shadow-[0_0_0_3px_hsl(var(--primary)/0.08)]'
-              : 'border-border/70 bg-background/50'
-          } ${overLimit ? 'border-destructive/50' : ''}`}
+              ? 'border-[hsl(var(--accent-amber))]/50 surface-2 shadow-[0_0_0_3px_hsl(var(--accent-amber)/0.12)]'
+              : 'border-[hsl(var(--border))] surface-2'
+          } ${overLimit ? 'border-[hsl(var(--accent-coral))]/50' : ''}`}
         >
           <Textarea
             ref={inputRef}
@@ -477,38 +473,38 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
             placeholder="与墨客聊聊你的故事…"
             disabled={loading}
             rows={1}
-            className="resize-none min-h-[56px] max-h-[140px] text-[13px] leading-relaxed bg-transparent border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-3 py-2.5 pr-12"
+            className="resize-none min-h-[56px] max-h-[140px] text-[13px] leading-relaxed bg-transparent border-0 shadow-none focus-visible:shadow-none focus-visible:border-0 px-3 py-2.5 pr-12 hover:border-0"
           />
 
           {/* Send button — floating bottom-right of textarea */}
           <Button
             onClick={() => handleSend()}
             disabled={!input.trim() || loading || overLimit}
-            size="icon"
-            className="absolute bottom-1.5 right-1.5 h-7 w-7 rounded-md bg-gradient-to-br from-primary to-primary/85 hover:from-primary hover:to-primary disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_2px_8px_-2px_hsl(var(--primary)/0.5)] transition-all active:scale-95"
+            size="icon-sm"
+            className="absolute bottom-1.5 right-1.5 disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_2px_8px_-2px_hsl(var(--accent-amber)/0.45)]"
           >
             {loading ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Loader2 className="animate-spin" />
             ) : (
-              <Send className="w-3.5 h-3.5" strokeWidth={2.2} />
+              <Send strokeWidth={2.2} />
             )}
           </Button>
 
           {/* Meta row — inside border, below textarea */}
           <div className="flex items-center justify-between px-2.5 pb-1.5 text-[10px] text-muted-foreground/60 tracking-wide">
             <div className="flex items-center gap-1.5">
-              <kbd className="inline-flex items-center px-1 py-px rounded border border-border/70 bg-muted/40 font-mono text-[9px] leading-none">
+              <kbd className="inline-flex items-center px-1 py-px rounded-[3px] border border-[hsl(var(--border))] surface-3 text-mono text-[9px] leading-none">
                 Enter
               </kbd>
               <span>发送</span>
               <span className="text-muted-foreground/30">·</span>
-              <kbd className="inline-flex items-center px-1 py-px rounded border border-border/70 bg-muted/40 font-mono text-[9px] leading-none">
+              <kbd className="inline-flex items-center px-1 py-px rounded-[3px] border border-[hsl(var(--border))] surface-3 text-mono text-[9px] leading-none">
                 Shift+Enter
               </kbd>
               <span>换行</span>
             </div>
             {charCount > 0 && (
-              <span className={`tabular-nums ${overLimit ? 'text-destructive' : charCount > CHAR_LIMIT * 0.8 ? 'text-primary/80' : ''}`}>
+              <span className={`tabular-nums text-mono ${overLimit ? 'text-[hsl(var(--accent-coral))]' : charCount > CHAR_LIMIT * 0.8 ? 'text-[hsl(var(--accent-amber))]/80' : ''}`}>
                 {charCount}{overLimit && ` / ${CHAR_LIMIT}`}
               </span>
             )}

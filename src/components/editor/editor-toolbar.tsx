@@ -42,19 +42,19 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         : Heading1
 
   return (
-    <div className="editor-toolbar flex items-center gap-0.5 border-b px-3 py-1.5 bg-background sticky top-0 z-10">
+    <div className="editor-toolbar flex items-center gap-0.5 divider-hair px-3 py-1.5 surface-1 sticky top-0 z-10">
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
             className={cn(
-              'h-8 w-8',
-              editor.isActive('bold') && 'bg-accent text-accent-foreground'
+              'relative',
+              editor.isActive('bold') && 'text-[hsl(var(--accent-amber))] after:absolute after:left-1.5 after:right-1.5 after:bottom-0.5 after:h-[2px] after:bg-[hsl(var(--accent-amber))] after:rounded-full'
             )}
             onClick={() => editor.chain().focus().toggleBold().run()}
           >
-            <Bold className="h-4 w-4" />
+            <Bold />
           </Button>
         </TooltipTrigger>
         <TooltipContent>加粗 (Ctrl+B)</TooltipContent>
@@ -64,14 +64,14 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
             className={cn(
-              'h-8 w-8',
-              editor.isActive('italic') && 'bg-accent text-accent-foreground'
+              'relative',
+              editor.isActive('italic') && 'text-[hsl(var(--accent-amber))] after:absolute after:left-1.5 after:right-1.5 after:bottom-0.5 after:h-[2px] after:bg-[hsl(var(--accent-amber))] after:rounded-full'
             )}
             onClick={() => editor.chain().focus().toggleItalic().run()}
           >
-            <Italic className="h-4 w-4" />
+            <Italic />
           </Button>
         </TooltipTrigger>
         <TooltipContent>斜体 (Ctrl+I)</TooltipContent>
@@ -81,14 +81,14 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
             className={cn(
-              'h-8 w-8',
-              headingLevel > 0 && 'bg-accent text-accent-foreground'
+              'relative',
+              headingLevel > 0 && 'text-[hsl(var(--accent-amber))] after:absolute after:left-1.5 after:right-1.5 after:bottom-0.5 after:h-[2px] after:bg-[hsl(var(--accent-amber))] after:rounded-full'
             )}
             onClick={cycleHeading}
           >
-            <HeadingIcon className="h-4 w-4" />
+            <HeadingIcon />
           </Button>
         </TooltipTrigger>
         <TooltipContent>

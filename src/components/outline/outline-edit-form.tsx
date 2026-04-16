@@ -225,17 +225,17 @@ export function OutlineEditForm({
           </Select>
         </div>
 
-        <div className="px-3 py-2 rounded-md bg-muted text-sm text-muted-foreground">
+        <div className="px-3 py-2 rounded-[var(--radius-control)] surface-2 text-[12px] text-muted-foreground text-mono tabular-nums">
           {wordCountDisplay}
         </div>
 
-        <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t">
+        <div className="text-[10px] text-mono uppercase tracking-[0.15em] text-muted-foreground/70 space-y-1 pt-3 divider-hair">
           <p>创建于 {formatDateCN(chapter.createdAt)}</p>
           <p>更新于 {formatDateCN(chapter.updatedAt)}</p>
         </div>
 
         {showGenerationPanel && (
-          <div className="pt-4 border-t">
+          <div className="pt-4 divider-hair">
             <GenerationPanel
               projectId={projectId}
               chapterId={chapterId}
@@ -245,7 +245,7 @@ export function OutlineEditForm({
         )}
       </div>
 
-      <div className="flex gap-2 px-6 py-3 border-t">
+      <div className="flex gap-2 px-6 py-3 divider-hair">
         <Button
           onClick={() => setShowGenerationPanel(true)}
           disabled={!localSummary}

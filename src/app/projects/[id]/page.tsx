@@ -32,9 +32,9 @@ import { Clock, BookOpen, ListTree, Globe2 } from 'lucide-react'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
 import type { EditorHandle } from '@/components/editor/editor-types'
 
-const DEFAULT_CHAT_PANEL_WIDTH = 300
-const MIN_CHAT_PANEL_WIDTH = 280
-const MAX_CHAT_PANEL_WIDTH = 500
+const DEFAULT_CHAT_PANEL_WIDTH = 340
+const MIN_CHAT_PANEL_WIDTH = 300
+const MAX_CHAT_PANEL_WIDTH = 520
 
 export default function ProjectPage() {
   const params = useParams<{ id: string }>()
@@ -238,10 +238,13 @@ export default function ProjectPage() {
           </DialogContent>
         </Dialog>
 
+        <div
+          className={`flex-1 flex overflow-hidden transition-[opacity] duration-[var(--dur-slow)] ease-[cubic-bezier(0.16,1,0.3,1)]`}
+        >
         {focusMode ? (
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden animate-fade-in">
             {activeChapterId && (
-              <div className="px-4 py-1.5 border-b text-xs text-muted-foreground text-center">
+              <div className="px-4 py-1.5 divider-hair text-[11px] text-muted-foreground text-center uppercase tracking-[0.2em]">
                 {sortedChapters.find(c => c.id === activeChapterId)?.title || ''}
               </div>
             )}
@@ -256,7 +259,7 @@ export default function ProjectPage() {
               maxSize={400}
               groupResizeBehavior="preserve-pixel-size"
             >
-              <div className="h-full flex flex-col overflow-hidden border-r">
+              <div className="h-full flex flex-col overflow-hidden surface-1">
                 <ChapterSidebar
                   projectId={params.id}
                   activeChapterId={activeChapterId}
@@ -276,24 +279,26 @@ export default function ProjectPage() {
 
             <PanelSeparator
               onDoubleClick={handleSidebarDoubleClickReset}
-              className="group relative flex items-center justify-center w-1 shrink-0 cursor-col-resize"
+              className="group relative flex items-center justify-center w-px shrink-0 cursor-col-resize bg-[hsl(var(--border))]"
             >
-              <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-primary/10 group-active:bg-primary/20 transition-colors" />
+              <div className="absolute inset-y-0 -left-1.5 -right-1.5" />
+              <div className="absolute inset-y-0 left-0 w-px group-hover:w-[3px] group-hover:bg-[hsl(var(--accent-amber))] group-active:bg-[hsl(var(--accent-amber))] transition-[width,background-color] duration-150" />
             </PanelSeparator>
 
             <Panel id="editor-chat" minSize={500} groupResizeBehavior="preserve-relative-size">
               <Group orientation="horizontal" className="h-full overflow-hidden">
                 <Panel id="editor" groupResizeBehavior="preserve-relative-size">
-                  <div className="h-full flex flex-col overflow-hidden">
+                  <div className="h-full flex flex-col overflow-hidden surface-0">
                     {mainContent}
                   </div>
                 </Panel>
 
                 <PanelSeparator
                   onDoubleClick={handleChatPanelDoubleClickReset}
-                  className="group relative flex items-center justify-center w-1 shrink-0 cursor-col-resize"
+                  className="group relative flex items-center justify-center w-px shrink-0 cursor-col-resize bg-[hsl(var(--border))]"
                 >
-                  <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-primary/10 group-active:bg-primary/20 transition-colors" />
+                  <div className="absolute inset-y-0 -left-1.5 -right-1.5" />
+                  <div className="absolute inset-y-0 left-0 w-px group-hover:w-[3px] group-hover:bg-[hsl(var(--accent-amber))] group-active:bg-[hsl(var(--accent-amber))] transition-[width,background-color] duration-150" />
                 </PanelSeparator>
 
                 <Panel
@@ -303,7 +308,7 @@ export default function ProjectPage() {
                   maxSize={MAX_CHAT_PANEL_WIDTH}
                   groupResizeBehavior="preserve-pixel-size"
                 >
-                  <div className="h-full border-l">
+                  <div className="h-full">
                     <AIChatPanel projectId={params.id} onInsertDraft={handleInsertDraft} selectedText={selectedText} onDiscussComplete={() => setSelectedText(null)} />
                   </div>
                 </Panel>
@@ -311,6 +316,7 @@ export default function ProjectPage() {
             </Panel>
           </Group>
         )}
+        </div>
       </TooltipProvider>
     </ThemeProvider>
   )
@@ -340,22 +346,24 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
         onChange={updateContent}
         className="flex-1"
       />
-      <div className="surface-elevated flex items-center justify-between px-3 py-1.5 border-t-0">
+      <div className="surface-elevated flex items-center justify-between px-3 py-1.5 film-edge">
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs text-muted-foreground hover:text-foreground"
+          className="h-7 text-[11px] text-muted-foreground hover:text-foreground uppercase tracking-wider"
           onClick={() => setHistoryOpen(true)}
         >
           <Clock className="h-3 w-3 mr-1" />
           版本历史
         </Button>
-        <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-2 text-[11px] text-muted-foreground uppercase tracking-wider">
           <span
             aria-hidden
             className={
-              'h-1.5 w-1.5 rounded-full bg-primary ' +
-              (isSaving ? 'animate-amber-pulse' : 'opacity-60')
+              'h-1.5 w-1.5 rounded-full ' +
+              (isSaving
+                ? 'bg-[hsl(var(--accent-amber))] animate-amber-pulse'
+                : 'bg-[hsl(var(--accent-jade))]')
             }
           />
           {isSaving ? '保存中' : '已保存'}
@@ -384,14 +392,14 @@ function Placeholder({ activeTab }: { activeTab: ActiveTab }) {
   const Icon = copy.Icon
 
   return (
-    <div className="relative flex-1 flex items-center justify-center overflow-hidden bg-amber-vignette bg-grain">
+    <div className="relative flex-1 flex items-center justify-center overflow-hidden surface-0 bg-amber-vignette bg-grain">
       <div className="relative flex flex-col items-center gap-5 text-center px-6 animate-fade-up">
         <Icon
-          className="h-14 w-14 text-primary/35"
+          className="h-14 w-14 text-[hsl(var(--accent-amber))]/35"
           strokeWidth={1.25}
           aria-hidden
         />
-        <h2 className="font-display text-[64px] leading-[1.1] tracking-[0.04em] text-foreground/85">
+        <h2 className="font-display text-[64px] leading-[1.1] tracking-[0.06em] text-foreground/85">
           {copy.hero}
         </h2>
         <p className="text-sm text-muted-foreground max-w-xs">{copy.hint}</p>

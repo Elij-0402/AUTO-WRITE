@@ -4,21 +4,30 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-full border px-2 py-0.5 text-[var(--text-xs)] font-medium leading-none transition-colors",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
+          "border-[hsl(var(--accent-amber))]/40 bg-[hsl(var(--accent-amber))]/10 text-[hsl(var(--accent-amber))]",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "border-[hsl(var(--border))] surface-3 text-muted-foreground",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
-        outline: "text-foreground",
+          "border-[hsl(var(--accent-coral))]/40 bg-[hsl(var(--accent-coral))]/10 text-[hsl(var(--accent-coral))]",
+        outline:
+          "border-[hsl(var(--border-strong))] bg-transparent text-foreground",
+        amber:
+          "border-[hsl(var(--accent-amber))]/40 bg-[hsl(var(--accent-amber))]/10 text-[hsl(var(--accent-amber))]",
+        jade:
+          "border-[hsl(var(--accent-jade))]/40 bg-[hsl(var(--accent-jade))]/10 text-[hsl(var(--accent-jade))]",
+        violet:
+          "border-[hsl(var(--accent-violet))]/40 bg-[hsl(var(--accent-violet))]/10 text-[hsl(var(--accent-violet))]",
+        coral:
+          "border-[hsl(var(--accent-coral))]/40 bg-[hsl(var(--accent-coral))]/10 text-[hsl(var(--accent-coral))]",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "secondary",
     },
   }
 )

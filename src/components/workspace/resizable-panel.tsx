@@ -122,13 +122,13 @@ export function ResizablePanelGroup({
         </div>
       </Panel>
 
-      {/* Resize handle per D-01, D-03, D-06
-          disableDoubleClick: we handle it ourselves to always reset to 280px */}
+      {/* Resize handle — hair-thin, expands to amber on hover per Cinematic spec */}
       <Separator
         onDoubleClick={handleDoubleClick}
-        className="group relative flex items-center justify-center w-1 shrink-0 cursor-col-resize"
+        className="group relative flex items-center justify-center w-px shrink-0 cursor-col-resize bg-[hsl(var(--border))]"
       >
-        <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-primary/10 group-active:bg-primary/20 transition-colors" />
+        <div className="absolute inset-y-0 -left-1.5 -right-1.5 transition-colors duration-150" />
+        <div className="absolute inset-y-0 left-0 w-px group-hover:w-[3px] group-hover:bg-[hsl(var(--accent-amber))] group-hover:-left-0 group-active:bg-[hsl(var(--accent-amber))] transition-[width,background-color] duration-150" />
       </Separator>
 
       {/* Main content panel */}

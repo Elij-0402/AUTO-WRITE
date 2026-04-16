@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { WorldEntryType } from '@/lib/types'
@@ -11,7 +11,14 @@ const TYPE_LABELS: Record<WorldEntryType, string> = {
   character: '角色',
   location: '地点',
   rule: '规则',
-  timeline: '时间线'
+  timeline: '时间线',
+}
+
+const TYPE_VARIANT: Record<WorldEntryType, 'amber' | 'jade' | 'violet' | 'secondary'> = {
+  character: 'amber',
+  location: 'jade',
+  rule: 'violet',
+  timeline: 'secondary',
 }
 
 export interface RelationshipSuggestionCardProps {
@@ -29,7 +36,7 @@ export function RelationshipSuggestionCard({
   relationshipType,
   bidirectionalDescription,
   onAdopt,
-  onDismiss
+  onDismiss,
 }: RelationshipSuggestionCardProps) {
   const [dismissed, setDismissed] = useState(false)
 
@@ -39,41 +46,45 @@ export function RelationshipSuggestionCard({
   }
 
   return (
-    <Card className={cn('shadow-none', dismissed && 'opacity-50')}>
-      <CardContent className="p-3 space-y-2">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-semibold">{entry1Name}</span>
-          <span className="text-muted-foreground">—</span>
-          <span className="font-semibold">{entry2Name}</span>
-        </div>
-
-        <Badge variant="secondary" className="text-[11px]">
-          {relationshipType}
-        </Badge>
-
-        <p className="text-sm text-muted-foreground">
-          {bidirectionalDescription}
-        </p>
-
-        <div className="flex gap-2 pt-1">
-          <Button
-            size="sm"
-            onClick={onAdopt}
-            disabled={dismissed}
-          >
-            采纳
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleDismiss}
-            disabled={dismissed}
-          >
-            暂不
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <div
+      className={cn(
+        'relative rounded-[var(--radius-card)] surface-2 film-edge p-3 pl-4 animate-fade-up',
+        dismissed && 'opacity-40'
+      )}
+    >
+      <div
+        aria-hidden
+        className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[hsl(var(--accent-violet))]/70"
+      />
+      <div className="flex items-center gap-1.5 mb-2 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--accent-violet))]/85">
+        <Sparkles className="w-3 h-3" />
+        <span>关联建议</span>
+        <button
+          onClick={handleDismiss}
+          disabled={dismissed}
+          className="ml-auto p-0.5 rounded hover:bg-[hsl(var(--surface-3))] text-muted-foreground/60 hover:text-foreground"
+          aria-label="驳回"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      </div>
+      <div className="flex items-center flex-wrap gap-2 text-[13px] mb-2">
+        <span className="font-medium text-foreground">{entry1Name}</span>
+        <Badge variant="violet">{relationshipType}</Badge>
+        <span className="font-medium text-foreground">{entry2Name}</span>
+      </div>
+      <p className="text-[12.5px] leading-[1.7] text-muted-foreground mb-2.5">
+        {bidirectionalDescription}
+      </p>
+      <div className="flex justify-end gap-2">
+        <Button size="sm" variant="subtle" onClick={handleDismiss} disabled={dismissed}>
+          暂不
+        </Button>
+        <Button size="sm" onClick={onAdopt} disabled={dismissed}>
+          采纳
+        </Button>
+      </div>
+    </div>
   )
 }
 
@@ -90,7 +101,7 @@ export function NewEntrySuggestionCard({
   suggestedName,
   description,
   onAdopt,
-  onDismiss
+  onDismiss,
 }: NewEntrySuggestionCardProps) {
   const [dismissed, setDismissed] = useState(false)
 
@@ -100,38 +111,44 @@ export function NewEntrySuggestionCard({
   }
 
   return (
-    <Card className={cn('shadow-none', dismissed && 'opacity-50')}>
-      <CardContent className="p-3 space-y-2">
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-[11px]">
-            {TYPE_LABELS[entryType]}
-          </Badge>
-          <span className="font-semibold text-sm">{suggestedName}</span>
-        </div>
-
-        <p className="text-sm text-muted-foreground">
-          {description}
-        </p>
-
-        <div className="flex gap-2 pt-1">
-          <Button
-            size="sm"
-            onClick={onAdopt}
-            disabled={dismissed}
-          >
-            创建条目
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleDismiss}
-            disabled={dismissed}
-          >
-            暂不
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <div
+      className={cn(
+        'relative rounded-[var(--radius-card)] surface-2 film-edge p-3 pl-4 animate-fade-up',
+        dismissed && 'opacity-40'
+      )}
+    >
+      <div
+        aria-hidden
+        className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[hsl(var(--accent-violet))]/70"
+      />
+      <div className="flex items-center gap-1.5 mb-2 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--accent-violet))]/85">
+        <Sparkles className="w-3 h-3" />
+        <span>新条目建议</span>
+        <button
+          onClick={handleDismiss}
+          disabled={dismissed}
+          className="ml-auto p-0.5 rounded hover:bg-[hsl(var(--surface-3))] text-muted-foreground/60 hover:text-foreground"
+          aria-label="驳回"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      </div>
+      <div className="flex items-center gap-2 mb-2">
+        <Badge variant={TYPE_VARIANT[entryType]}>{TYPE_LABELS[entryType]}</Badge>
+        <span className="font-medium text-[13px] text-foreground">{suggestedName}</span>
+      </div>
+      <p className="text-[12.5px] leading-[1.7] text-muted-foreground mb-2.5">
+        {description}
+      </p>
+      <div className="flex justify-end gap-2">
+        <Button size="sm" variant="subtle" onClick={handleDismiss} disabled={dismissed}>
+          暂不
+        </Button>
+        <Button size="sm" onClick={onAdopt} disabled={dismissed}>
+          创建条目
+        </Button>
+      </div>
+    </div>
   )
 }
 

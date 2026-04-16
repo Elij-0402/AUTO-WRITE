@@ -1,20 +1,19 @@
 'use client'
 
-import { useState } from 'react'
 import { Check, RefreshCw, WifiOff } from 'lucide-react'
 import { useSync } from '@/lib/hooks/useSync'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 export function SyncStatusIcon() {
-  const { status, lastSynced, retry, isOnline } = useSync()
+  const { status, lastSynced, isOnline } = useSync()
 
   if (!isOnline) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-amber-600">
-            <WifiOff className="h-4 w-4" />
+          <Button variant="ghost" size="icon-sm" className="text-[hsl(var(--accent-coral))]">
+            <WifiOff />
           </Button>
         </TooltipTrigger>
         <TooltipContent>离线模式</TooltipContent>
@@ -26,11 +25,11 @@ export function SyncStatusIcon() {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary">
-            <RefreshCw className="h-4 w-4 animate-spin" />
+          <Button variant="ghost" size="icon-sm" className="text-[hsl(var(--accent-amber))]">
+            <RefreshCw className="animate-spin" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>同步中...</TooltipContent>
+        <TooltipContent>同步中…</TooltipContent>
       </Tooltip>
     )
   }
@@ -38,8 +37,8 @@ export function SyncStatusIcon() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600">
-          <Check className="h-4 w-4" />
+        <Button variant="ghost" size="icon-sm" className="text-[hsl(var(--accent-jade))]">
+          <Check />
         </Button>
       </TooltipTrigger>
       <TooltipContent>

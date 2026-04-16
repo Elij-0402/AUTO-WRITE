@@ -144,10 +144,10 @@ export function ChapterSidebar({
   const activeItem = RAIL_ITEMS.find((i) => i.value === activeTab) ?? RAIL_ITEMS[0]
 
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="flex h-full overflow-hidden surface-1">
       <nav
         aria-label="侧栏导航"
-        className="flex w-14 shrink-0 flex-col border-r bg-gradient-to-b from-card/60 to-background py-2"
+        className="flex w-11 shrink-0 flex-col divider-hair-v py-2"
       >
         {RAIL_ITEMS.map((item) => {
           const Icon = item.icon
@@ -161,27 +161,27 @@ export function ChapterSidebar({
                   aria-label={item.label}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
-                    'relative flex h-12 w-full items-center justify-center transition-all',
-                    'text-muted-foreground/55 hover:text-foreground hover:bg-primary/5',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-                    isActive && 'text-primary'
+                    'relative flex h-11 w-full items-center justify-center transition-[color,background-color] duration-150',
+                    'text-muted-foreground/60 hover:text-foreground hover:bg-[hsl(var(--surface-3))]/60',
+                    'focus-visible:outline-none',
+                    isActive && 'text-[hsl(var(--accent-amber))]'
                   )}
                 >
                   {isActive && (
                     <span
                       aria-hidden
-                      className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-primary shadow-[0_0_12px_0_hsl(var(--primary)/0.5)]"
+                      className="absolute left-0 top-2 bottom-2 w-[2px] rounded-r-full bg-[hsl(var(--accent-amber))]"
                     />
                   )}
                   <Icon
-                    className="h-5 w-5"
-                    strokeWidth={isActive ? 2.25 : 1.75}
+                    className="h-[18px] w-[18px]"
+                    strokeWidth={isActive ? 2 : 1.6}
                   />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right" className="flex items-center gap-2">
                 <span>{item.label}</span>
-                <kbd className="rounded border border-border bg-muted px-1 text-[10px] font-mono text-muted-foreground">
+                <kbd className="rounded-[3px] border border-[hsl(var(--border))] surface-3 px-1 text-[10px] text-mono text-muted-foreground">
                   {item.shortcut}
                 </kbd>
               </TooltipContent>
@@ -190,15 +190,16 @@ export function ChapterSidebar({
         })}
       </nav>
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="flex h-9 shrink-0 items-center justify-between border-b px-3 text-[13px] font-medium tracking-wide">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden divider-hair-v animate-slide-in-left" key={activeTab}>
+        <div className="flex h-10 shrink-0 items-center justify-between px-3 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
           <span>{activeItem.label}</span>
           {activeTab === 'chapters' && chaptersHeaderCount > 0 && (
-            <span className="text-[11px] font-normal tabular-nums text-muted-foreground">
+            <span className="text-mono text-[11px] tabular-nums text-muted-foreground/70 normal-case tracking-normal">
               {chaptersHeaderCount}
             </span>
           )}
         </div>
+        <div className="divider-hair mx-3" />
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {activeTab === 'chapters' && (
@@ -310,7 +311,7 @@ function ChaptersPanel({
         )}
       </div>
 
-      <div className="shrink-0 border-t">
+      <div className="shrink-0 divider-hair">
         <CreateChapterInput onCreate={onCreate} />
       </div>
     </>

@@ -89,9 +89,9 @@ export function RelationshipSection({
     return (
       <div
         key={relation.id}
-        className="group relative flex items-start gap-2 p-3 rounded-md border bg-card hover:border-primary/30 transition-colors"
+        className="group relative flex items-start gap-2 p-3 rounded-[var(--radius-card)] surface-2 film-edge hover:film-edge-active transition-[box-shadow] duration-[var(--dur-fast)]"
       >
-        <span className="text-muted-foreground flex-shrink-0 mt-0.5">
+        <span className="text-[hsl(var(--accent-amber))]/70 flex-shrink-0 mt-0.5">
           {isSource ? (
             <ArrowRight className="h-4 w-4" />
           ) : (
@@ -99,26 +99,26 @@ export function RelationshipSection({
           )}
         </span>
 
-        <div className="flex-1 min-w-0 space-y-1">
-          <Badge variant="secondary" className="text-[11px] font-normal">
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <Badge variant="violet">
             {CATEGORY_LABELS[relation.category]}
           </Badge>
 
           {relation.description && (
-            <p className="text-sm">
+            <p className="text-[13px] text-foreground/90">
               {relation.description}
             </p>
           )}
 
           {perspectiveLabel && (
-            <p className="text-xs text-muted-foreground italic">
+            <p className="text-[11px] text-muted-foreground italic">
               {perspectiveLabel}
             </p>
           )}
 
           <button
             onClick={() => onSelectEntry(targetId)}
-            className="text-sm font-medium text-primary hover:underline"
+            className="text-[13px] font-medium text-[hsl(var(--accent-amber))] hover:underline"
           >
             {targetEntry.name}
           </button>
@@ -126,10 +126,10 @@ export function RelationshipSection({
 
         <button
           onClick={() => handleDeleteRelation(relation.id)}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-accent transition-opacity"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 rounded-[var(--radius-control)] hover:bg-[hsl(var(--surface-3))] transition-opacity"
           aria-label="删除关联"
         >
-          <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+          <X className="h-3.5 w-3.5 text-muted-foreground hover:text-[hsl(var(--accent-coral))]" />
         </button>
       </div>
     )
@@ -141,7 +141,7 @@ export function RelationshipSection({
         <Label>关联</Label>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+            <Button variant="subtle" size="sm">
               <Plus className="h-3 w-3" />
               添加关联
             </Button>
@@ -203,7 +203,7 @@ export function RelationshipSection({
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              <Button variant="subtle" onClick={() => setDialogOpen(false)}>
                 取消
               </Button>
               <Button onClick={handleAddRelation} disabled={!targetId}>

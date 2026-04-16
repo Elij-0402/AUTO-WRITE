@@ -22,6 +22,17 @@ function getSystemTheme(): 'light' | 'dark' {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
+function applyThemeClass(resolved: 'light' | 'dark') {
+  const root = document.documentElement
+  if (resolved === 'dark') {
+    root.classList.add('dark')
+    root.classList.remove('light-root')
+  } else {
+    root.classList.remove('dark')
+    root.classList.add('light-root')
+  }
+}
+
 /**
  * ThemeProvider per D-28 to D-33:
  * - Detects system preference via window.matchMedia
@@ -39,17 +50,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
     const initial = stored || 'system'
     setThemeState(initial)
-    
-    // Resolve theme
+
     const resolved = initial === 'system' ? getSystemTheme() : initial
     setResolvedTheme(resolved)
-    
-    // Apply to document
-    if (resolved === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
+    applyThemeClass(resolved)
   }, [])
 
   // Listen for system theme changes when in 'system' mode
@@ -57,15 +61,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (theme !== 'system') return
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    
+
     const handleChange = () => {
       const resolved = getSystemTheme()
       setResolvedTheme(resolved)
-      if (resolved === 'dark') {
-        document.documentElement.classList.add('dark')
-      } else {
-        document.documentElement.classList.remove('dark')
-      }
+      applyThemeClass(resolved)
     }
 
     mediaQuery.addEventListener('change', handleChange)
@@ -75,15 +75,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme)
     localStorage.setItem(STORAGE_KEY, newTheme)
-    
+
     const resolved = newTheme === 'system' ? getSystemTheme() : newTheme
     setResolvedTheme(resolved)
-    
-    if (resolved === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
+    applyThemeClass(resolved)
   }, [])
 
   return (

@@ -354,17 +354,46 @@ export function WorldEntryEditForm({
     }
   }
 
+  const typeColorVar: Record<WorldEntryType, string> = {
+    character: 'var(--accent-amber)',
+    location: 'var(--accent-jade)',
+    rule: 'var(--accent-violet)',
+    timeline: 'var(--foreground)',
+  }
+  const badgeVariant: Record<WorldEntryType, 'amber' | 'jade' | 'violet' | 'secondary'> = {
+    character: 'amber',
+    location: 'jade',
+    rule: 'violet',
+    timeline: 'secondary',
+  }
+
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="px-6 py-3 border-b flex items-center justify-between">
-        <Badge variant="secondary" className="gap-1.5 font-normal">
+    <div className="flex-1 flex flex-col overflow-hidden surface-0 bg-spotlight">
+      <div className="relative px-6 py-3 divider-hair flex items-center justify-between">
+        <span
+          aria-hidden
+          className="absolute left-0 top-0 bottom-0 w-[3px]"
+          style={{ background: `hsl(${typeColorVar[entry.type]})` }}
+        />
+        <Badge variant={badgeVariant[entry.type]} className="gap-1.5">
           <Icon className="h-3 w-3" />
           <span>{getTypeName(entry.type)}</span>
         </Badge>
-        <span className="text-xs text-muted-foreground">{isSaving ? '保存中...' : '已保存'}</span>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground inline-flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className={
+              'h-1.5 w-1.5 rounded-full ' +
+              (isSaving
+                ? 'bg-[hsl(var(--accent-amber))] animate-amber-pulse'
+                : 'bg-[hsl(var(--accent-jade))]')
+            }
+          />
+          {isSaving ? '保存中' : '已保存'}
+        </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
         {renderTypeSpecificFields()}
 
         <div className="space-y-2">
@@ -385,15 +414,15 @@ export function WorldEntryEditForm({
           />
         </div>
 
-        <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t">
+        <div className="text-[10px] text-mono uppercase tracking-[0.15em] text-muted-foreground/70 space-y-1 pt-3 divider-hair">
           <p>创建于 {formatDateCN(entry.createdAt)}</p>
           <p>更新于 {formatDateCN(entry.updatedAt)}</p>
         </div>
       </div>
 
-      <div className="flex gap-2 px-6 py-3 border-t">
+      <div className="flex gap-2 px-6 py-3 divider-hair">
         <Button
-          variant="outline"
+          variant="subtle"
           size="sm"
           onClick={onPrevious}
           disabled={!hasPrevious}
@@ -402,7 +431,7 @@ export function WorldEntryEditForm({
           上一条
         </Button>
         <Button
-          variant="outline"
+          variant="subtle"
           size="sm"
           onClick={onNext}
           disabled={!hasNext}

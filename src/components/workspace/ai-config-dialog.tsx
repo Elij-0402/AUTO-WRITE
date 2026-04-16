@@ -181,17 +181,17 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
                     key={key}
                     type="button"
                     onClick={() => handleProviderChange(key)}
-                    className={`text-left border rounded-md px-3 py-2 transition-colors ${
+                    className={`relative text-left rounded-[var(--radius-card)] px-3 py-2.5 transition-[box-shadow,background-color] duration-[var(--dur-fast)] ${
                       active
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:bg-accent'
+                        ? 'surface-2 film-edge-active'
+                        : 'surface-2 film-edge hover:film-edge-active'
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 text-sm font-medium">
-                      {p.supportsToolUse && <Sparkles className="h-3 w-3 text-primary" />}
+                    <div className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                      {p.supportsToolUse && <Sparkles className="h-3 w-3 text-[hsl(var(--accent-amber))]" />}
                       {p.label}
                     </div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                    <div className="text-[11px] text-muted-foreground mt-1 leading-[1.55]">
                       {p.description}
                     </div>
                   </button>
@@ -229,8 +229,8 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
 
           {testResult && (
             <div
-              className={`flex items-center gap-2 text-sm ${
-                testResult === 'success' ? 'text-green-600' : 'text-destructive'
+              className={`flex items-center gap-2 text-[12px] ${
+                testResult === 'success' ? 'text-[hsl(var(--accent-jade))]' : 'text-[hsl(var(--accent-coral))]'
               }`}
             >
               {testResult === 'success' ? (
@@ -250,11 +250,11 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
           {showModels && modelList.length > 0 ? (
             <div className="space-y-2">
               <Label>模型列表</Label>
-              <div className="border rounded-md p-1 max-h-48 overflow-y-auto">
+              <div className="rounded-[var(--radius-card)] surface-2 film-edge p-1 max-h-48 overflow-y-auto">
                 {modelList.map(model => (
                   <label
                     key={model}
-                    className="flex items-center gap-2 cursor-pointer hover:bg-accent px-2 py-1 rounded-sm"
+                    className="flex items-center gap-2 cursor-pointer hover:bg-[hsl(var(--surface-3))] px-2 py-1.5 rounded-[var(--radius-control)]"
                   >
                     <input
                       type="radio"
@@ -262,9 +262,9 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
                       value={model}
                       checked={formData.model === model}
                       onChange={e => setFormData({ ...formData, model: e.target.value })}
-                      className="w-4 h-4 text-primary"
+                      className="w-3.5 h-3.5 accent-[hsl(var(--accent-amber))]"
                     />
-                    <span className="text-sm">{model}</span>
+                    <span className="text-[13px] text-mono">{model}</span>
                   </label>
                 ))}
               </div>
@@ -285,11 +285,11 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
 
         <DialogFooter>
           <Button
-            variant="outline"
+            variant="subtle"
             onClick={handleDetectModels}
             disabled={testing || !formData.apiKey}
           >
-            {testing ? '测试中...' : provider === 'anthropic' ? '验证凭证' : '自动探测模型'}
+            {testing ? '测试中…' : provider === 'anthropic' ? '验证凭证' : '自动探测模型'}
           </Button>
           <Button onClick={handleSave}>保存</Button>
         </DialogFooter>

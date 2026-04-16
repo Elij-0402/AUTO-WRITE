@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { WorldEntryType } from '@/lib/types'
 
@@ -20,11 +19,18 @@ export interface ConsistencyWarningCardProps {
   onFixWorldEntry: () => void
 }
 
+const TYPE_LABEL: Record<WorldEntryType, string> = {
+  character: '角色',
+  location: '地点',
+  rule: '规则',
+  timeline: '时间线',
+}
+
 export function ConsistencyWarningCard({
   contradiction,
   onIgnore,
   onIntentional,
-  onFixWorldEntry
+  onFixWorldEntry,
 }: ConsistencyWarningCardProps) {
   const [dismissed, setDismissed] = useState(false)
 
@@ -32,63 +38,48 @@ export function ConsistencyWarningCard({
     setDismissed(true)
     onIgnore()
   }
-
   const handleIntentional = () => {
     setDismissed(true)
     onIntentional()
   }
 
   return (
-    <Card
+    <div
       className={cn(
-        'shadow-none border-amber-500/30 bg-amber-500/5',
-        dismissed && 'opacity-50'
+        'relative rounded-[var(--radius-card)] surface-2 film-edge p-3 pl-4 animate-fade-up',
+        dismissed && 'opacity-40'
       )}
     >
-      <CardContent className="p-3 space-y-2">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-500" />
-          <span className="font-semibold text-sm">
-            {contradiction.entryName}
-          </span>
-          <span className="text-muted-foreground">—</span>
-          <span className="text-xs text-muted-foreground">
-            {contradiction.entryType === 'character' ? '角色' :
-              contradiction.entryType === 'location' ? '地点' :
-                contradiction.entryType === 'rule' ? '规则' : '时间线'}
-          </span>
-        </div>
-
-        <p className="text-sm text-foreground/80">
-          {contradiction.description}
-        </p>
-
-        <div className="flex gap-2 flex-wrap pt-1">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleIgnore}
-            disabled={dismissed}
-          >
-            忽略
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleIntentional}
-            disabled={dismissed}
-          >
-            有意为之
-          </Button>
-          <Button
-            size="sm"
-            onClick={onFixWorldEntry}
-            disabled={dismissed}
-          >
-            修改世界观
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      <div
+        aria-hidden
+        className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[hsl(var(--accent-coral))]/75"
+      />
+      <div className="flex items-center gap-1.5 mb-2 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--accent-coral))]">
+        <AlertTriangle className="w-3 h-3" />
+        <span>一致性警告</span>
+      </div>
+      <div className="flex items-baseline gap-2 mb-1.5">
+        <span className="font-medium text-[13px] text-foreground">
+          {contradiction.entryName}
+        </span>
+        <span className="text-[11px] text-muted-foreground uppercase tracking-wider">
+          {TYPE_LABEL[contradiction.entryType]}
+        </span>
+      </div>
+      <p className="text-[12.5px] leading-[1.7] text-foreground/85 mb-2.5">
+        {contradiction.description}
+      </p>
+      <div className="flex justify-end gap-2 flex-wrap">
+        <Button size="sm" variant="ghost" onClick={handleIgnore} disabled={dismissed}>
+          忽略
+        </Button>
+        <Button size="sm" variant="ghost" onClick={handleIntentional} disabled={dismissed}>
+          有意为之
+        </Button>
+        <Button size="sm" onClick={onFixWorldEntry} disabled={dismissed}>
+          去修改
+        </Button>
+      </div>
+    </div>
   )
 }

@@ -95,18 +95,18 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   return (
     <div
       className={cn(
-        'group relative flex h-full min-h-[164px] cursor-pointer flex-col',
-        'rounded-lg border border-foreground/10 bg-card px-6 pt-6 pb-5',
-        'transition-all duration-300 ease-out',
-        'hover:border-primary/30 hover:-translate-y-0.5',
-        'hover:shadow-[0_10px_40px_-16px_hsl(var(--primary)/0.35)]'
+        'group relative flex h-full min-h-[172px] cursor-pointer flex-col',
+        'rounded-[var(--radius-card)] surface-2 film-edge px-6 pt-6 pb-5 bg-spotlight',
+        'transition-[transform,box-shadow,border-color] duration-[var(--dur-slow)] ease-[cubic-bezier(0.16,1,0.3,1)]',
+        'hover:-translate-y-0.5 hover:film-edge-active'
       )}
       onClick={handleCardClick}
     >
+      {/* top amber sweep on hover */}
       <span
         aria-hidden
         className={cn(
-          'pointer-events-none absolute inset-x-5 top-0 h-px origin-left scale-x-0 bg-primary/70',
+          'pointer-events-none absolute inset-x-5 top-0 h-px origin-left scale-x-0 bg-[hsl(var(--accent-amber))]',
           'transition-transform duration-500 ease-out group-hover:scale-x-100'
         )}
       />
@@ -125,7 +125,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
             />
           ) : (
             <h3
-              className="truncate font-display text-xl leading-tight tracking-wide text-foreground"
+              className="truncate font-display text-[22px] leading-tight tracking-wide text-foreground"
               onClick={(e) => {
                 e.stopPropagation()
                 setIsEditingTitle(true)
@@ -176,21 +176,21 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
       </div>
 
       <div className="mt-auto flex items-center justify-between pt-5">
-        <div className="flex items-center gap-2.5 text-[11px] tabular-nums text-muted-foreground">
+        <div className="flex items-center gap-3 text-[11px] text-mono tabular-nums text-muted-foreground">
           <span>
-            <span className="text-[9px] uppercase tracking-[0.2em] mr-1 text-muted-foreground/60">字</span>
+            <span className="text-[9px] uppercase tracking-[0.2em] mr-1.5 text-muted-foreground/60">字</span>
             {project.wordCount.toLocaleString()}
           </span>
           {project.todayWordCount > 0 && (
             <>
-              <span aria-hidden className="h-3 w-px bg-foreground/15" />
-              <span className="text-foreground/70">
-                今日 +{project.todayWordCount.toLocaleString()}
+              <span aria-hidden className="h-3 divider-hair-v" />
+              <span className="text-[hsl(var(--accent-amber))]">
+                +{project.todayWordCount.toLocaleString()}
               </span>
             </>
           )}
         </div>
-        <span className="text-[11px] italic text-muted-foreground/80">
+        <span className="text-[11px] text-muted-foreground/70">
           {formatRelativeTime(project.updatedAt)}
         </span>
       </div>

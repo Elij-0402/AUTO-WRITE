@@ -46,56 +46,63 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center text-foreground p-12 overflow-hidden bg-gradient-to-br from-background via-background to-card bg-grain">
+    <div className="min-h-screen flex surface-0">
+      <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center text-foreground p-12 overflow-hidden surface-1 bg-grain divider-hair-v">
         <div
           aria-hidden
-          className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,hsl(var(--primary)/0.18),transparent_70%)]"
+          className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,hsl(var(--accent-amber)/0.1),transparent_70%)]"
         />
-        <div className="relative mb-8">
-          <div className="w-20 h-20 rounded-2xl border border-primary/30 bg-primary/10 backdrop-blur-sm flex items-center justify-center shadow-[0_0_40px_-8px_hsl(var(--primary)/0.5)]">
-            <PenLine className="w-9 h-9 text-primary" strokeWidth={1.5} />
+        <div className="relative mb-10">
+          <div className="w-20 h-20 rounded-[var(--radius-dialog)] film-edge surface-2 flex items-center justify-center shadow-[var(--shadow-amber)]">
+            <PenLine className="w-9 h-9 text-[hsl(var(--accent-amber))]" strokeWidth={1.5} />
           </div>
         </div>
-        <h1 className="relative font-display text-6xl tracking-wide mb-4 text-foreground">
+        <h1 className="relative font-display text-[64px] leading-none tracking-[0.06em] mb-5 text-foreground">
           InkForge
         </h1>
-        <p className="relative text-muted-foreground text-base text-center italic tracking-wide">
-          AI 驱动的小说创作工作台
+        <span aria-hidden className="relative mb-5 h-px w-16 bg-gradient-to-r from-transparent via-[hsl(var(--accent-amber))]/70 to-transparent" />
+        <p className="relative text-muted-foreground text-[13px] text-center tracking-[0.2em] uppercase">
+          AI · 小说创作工作台
         </p>
       </div>
 
-      <div className="flex-1 flex items-center justify-center bg-background p-8">
-        <div className="max-w-md w-full space-y-6">
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="max-w-[360px] w-full space-y-6">
           <div className="lg:hidden text-center mb-4">
-            <h1 className="font-display text-3xl tracking-wide">InkForge</h1>
-            <p className="text-sm text-muted-foreground">AI 驱动的小说创作工作台</p>
+            <h1 className="font-display text-[32px] tracking-[0.05em]">InkForge</h1>
+            <p className="text-sm text-muted-foreground uppercase tracking-widest">AI · 小说创作</p>
           </div>
 
-          <div className="flex border-b">
+          <div className="flex divider-hair">
             <button
               type="button"
               onClick={() => { setMode('login'); setError(null); setSuccess(null) }}
               className={cn(
-                'flex-1 pb-3 text-center text-sm font-medium transition-colors',
+                'flex-1 pb-3 text-center text-[13px] font-medium tracking-wide transition-colors relative',
                 mode === 'login'
-                  ? 'border-b-2 border-primary text-primary'
+                  ? 'text-[hsl(var(--accent-amber))]'
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
               登录
+              {mode === 'login' && (
+                <span aria-hidden className="absolute left-0 right-0 -bottom-px h-[2px] bg-[hsl(var(--accent-amber))]" />
+              )}
             </button>
             <button
               type="button"
               onClick={() => { setMode('register'); setError(null); setSuccess(null) }}
               className={cn(
-                'flex-1 pb-3 text-center text-sm font-medium transition-colors',
+                'flex-1 pb-3 text-center text-[13px] font-medium tracking-wide transition-colors relative',
                 mode === 'register'
-                  ? 'border-b-2 border-primary text-primary'
+                  ? 'text-[hsl(var(--accent-amber))]'
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
               注册
+              {mode === 'register' && (
+                <span aria-hidden className="absolute left-0 right-0 -bottom-px h-[2px] bg-[hsl(var(--accent-amber))]" />
+              )}
             </button>
           </div>
 
@@ -108,7 +115,7 @@ export default function AuthPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                placeholder="请输入邮箱地址"
+                placeholder="you@example.com"
               />
             </div>
 
@@ -126,22 +133,22 @@ export default function AuthPage() {
 
             {mode === 'login' && (
               <div className="text-right">
-                <a href="/auth/forgot-password" className="text-sm text-primary hover:underline">
+                <a href="/auth/forgot-password" className="text-[12px] text-[hsl(var(--accent-amber))]/90 hover:text-[hsl(var(--accent-amber))] hover:underline">
                   忘记密码？
                 </a>
               </div>
             )}
 
             {error && (
-              <div className="text-destructive text-sm text-center">{error}</div>
+              <div className="text-[hsl(var(--accent-coral))] text-[12px] text-center">{error}</div>
             )}
 
             {success && (
-              <div className="text-green-600 text-sm text-center">{success}</div>
+              <div className="text-[hsl(var(--accent-jade))] text-[12px] text-center">{success}</div>
             )}
 
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? '处理中...' : mode === 'login' ? '登录' : '注册'}
+            <Button type="submit" disabled={loading} className="w-full font-display tracking-[0.08em]">
+              {loading ? '处理中…' : mode === 'login' ? '登录' : '注册'}
             </Button>
           </form>
         </div>

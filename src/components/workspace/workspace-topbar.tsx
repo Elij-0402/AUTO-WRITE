@@ -37,34 +37,34 @@ export function WorkspaceTopbar({
   const todayWordCount = useTodayWordCount(projectId)
 
   return (
-    <div className="surface-elevated h-14 shrink-0 flex items-center gap-3 px-4 sticky top-0 z-40">
+    <div className="surface-elevated h-11 shrink-0 flex items-center gap-2 px-3 sticky top-0 z-40 film-edge">
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+          <Button asChild variant="ghost" size="icon-sm">
             <Link href="/" aria-label="返回项目列表">
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft />
             </Link>
           </Button>
         </TooltipTrigger>
         <TooltipContent>返回书斋</TooltipContent>
       </Tooltip>
 
-      <div className="h-5 w-px bg-border/70" />
+      <div className="h-4 divider-hair-v" />
 
       <div className="min-w-0 flex items-center gap-3">
         <span
-          className="font-display text-[16px] tracking-wide truncate text-foreground"
+          className="font-display text-[15px] tracking-wider truncate text-foreground"
           title={project?.title ?? ''}
         >
           {project?.title ?? '未命名项目'}
         </span>
-        <div className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1 text-[11px] tabular-nums">
-          <span className="text-muted-foreground">今日</span>
-          <span className="text-primary font-medium">
+        <div className="hidden sm:inline-flex items-center gap-2 text-mono text-[11px] tabular-nums">
+          <span className="text-muted-foreground/70 uppercase tracking-widest text-[10px]">今日</span>
+          <span className="text-[hsl(var(--accent-amber))] font-medium">
             {todayWordCount.toLocaleString()}
           </span>
-          <span className="text-border">·</span>
-          <span className="text-muted-foreground">总计</span>
+          <span className="text-muted-foreground/30">/</span>
+          <span className="text-muted-foreground/70 uppercase tracking-widest text-[10px]">总</span>
           <span className="text-foreground/80">
             {totalWordCount.toLocaleString()}
           </span>
@@ -77,9 +77,9 @@ export function WorkspaceTopbar({
 
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+          <Button asChild variant="ghost" size="icon-sm">
             <Link href={`/projects/${projectId}/analysis`} aria-label="创作者分析">
-              <BarChart3 className="h-4 w-4" />
+              <BarChart3 />
             </Link>
           </Button>
         </TooltipTrigger>
@@ -90,12 +90,11 @@ export function WorkspaceTopbar({
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
             onClick={onOpenProjectSettings}
-            className="h-8 w-8"
             aria-label="项目设置"
           >
-            <Settings className="h-4 w-4" />
+            <Settings />
           </Button>
         </TooltipTrigger>
         <TooltipContent>项目设置</TooltipContent>
@@ -105,12 +104,11 @@ export function WorkspaceTopbar({
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
             onClick={onOpenAIConfig}
-            className="h-8 w-8"
             aria-label="AI 设置"
           >
-            <Settings2 className="h-4 w-4" />
+            <Settings2 />
           </Button>
         </TooltipTrigger>
         <TooltipContent>AI 设置</TooltipContent>
@@ -120,16 +118,11 @@ export function WorkspaceTopbar({
         <TooltipTrigger asChild>
           <Button
             variant={focusMode ? 'secondary' : 'ghost'}
-            size="icon"
+            size="icon-sm"
             onClick={onToggleFocusMode}
-            className="h-8 w-8"
             aria-label={focusMode ? '退出聚焦模式' : '进入聚焦模式'}
           >
-            {focusMode ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
+            {focusMode ? <Minimize2 /> : <Maximize2 />}
           </Button>
         </TooltipTrigger>
         <TooltipContent>{focusMode ? '退出聚焦模式' : '进入聚焦模式'}</TooltipContent>
@@ -152,20 +145,15 @@ function ThemeToggle() {
       <TooltipTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           onClick={toggleTheme}
-          className="h-8 w-8"
-          aria-label={resolvedTheme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
+          aria-label={resolvedTheme === 'dark' ? '切换稿纸模式' : '切换暗色模式'}
         >
-          {resolvedTheme === 'dark' ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
+          {resolvedTheme === 'dark' ? <Sun /> : <Moon />}
         </Button>
       </TooltipTrigger>
       <TooltipContent>
-        {resolvedTheme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
+        {resolvedTheme === 'dark' ? '切换稿纸模式' : '切换暗色模式'}
       </TooltipContent>
     </Tooltip>
   )

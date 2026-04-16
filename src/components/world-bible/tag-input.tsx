@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 
 interface TagInputProps {
@@ -67,20 +66,16 @@ export function TagInput({ tags, onTagsChange, allTags }: TagInputProps) {
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {tags.map(tag => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="gap-1 pr-1 font-normal"
-            >
+            <span key={tag} className="chip gap-1 pr-1">
               {tag}
               <button
                 type="button"
                 onClick={() => removeTag(tag)}
-                className="hover:text-destructive transition-colors"
+                className="hover:text-[hsl(var(--accent-coral))] transition-colors"
               >
                 <X className="h-3 w-3" />
               </button>
-            </Badge>
+            </span>
           ))}
         </div>
       )}
@@ -104,12 +99,12 @@ export function TagInput({ tags, onTagsChange, allTags }: TagInputProps) {
       </div>
 
       {showDropdown && (filteredTags.length > 0 || showCreateOption) && (
-        <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-popover border rounded-md shadow-md py-1 max-h-48 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 z-10 surface-1 film-edge rounded-[var(--radius-card)] shadow-[var(--shadow-lift-md)] py-1 max-h-48 overflow-y-auto">
           {filteredTags.map(tag => (
             <button
               key={tag}
               type="button"
-              className="w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+              className="w-full px-3 py-1.5 text-left text-[13px] hover:bg-[hsl(var(--surface-3))]"
               onClick={() => addTag(tag)}
             >
               {tag}
@@ -118,7 +113,7 @@ export function TagInput({ tags, onTagsChange, allTags }: TagInputProps) {
           {showCreateOption && (
             <button
               type="button"
-              className="w-full px-3 py-1.5 text-left text-sm text-primary hover:bg-accent"
+              className="w-full px-3 py-1.5 text-left text-[13px] text-[hsl(var(--accent-amber))] hover:bg-[hsl(var(--surface-3))]"
               onClick={() => addTag(inputValue)}
             >
               + 创建 &quot;{inputValue}&quot;

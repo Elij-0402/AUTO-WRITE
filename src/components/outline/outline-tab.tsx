@@ -26,9 +26,9 @@ function getStatusDotColor(status: OutlineStatus): string {
     case 'not_started':
       return 'bg-muted-foreground/40'
     case 'in_progress':
-      return 'bg-primary'
+      return 'bg-[hsl(var(--accent-amber))]'
     case 'completed':
-      return 'bg-green-500'
+      return 'bg-[hsl(var(--accent-jade))]'
     default:
       return 'bg-muted-foreground/40'
   }
@@ -63,11 +63,12 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group relative flex items-center gap-2 border-l-2 border-transparent px-3 py-1.5 cursor-pointer transition-colors',
+        'group relative flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-[background-color,color] duration-[var(--dur-fast)]',
+        'border-l-2 border-transparent',
         isActive
-          ? 'border-primary bg-accent/60 text-accent-foreground'
-          : 'hover:bg-accent/40',
-        isDragging && 'opacity-50 shadow-lg z-50'
+          ? 'border-[hsl(var(--accent-amber))] bg-[hsl(var(--surface-3))]/70 text-foreground'
+          : 'hover:bg-[hsl(var(--surface-3))]/40 text-foreground/85',
+        isDragging && 'opacity-50 shadow-[var(--shadow-lift-md)] z-50'
       )}
       onClick={onSelect}
     >
@@ -94,7 +95,7 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
       <div className="flex-1 min-w-0">
         {isEmptyOutline ? (
           <div className="flex items-center gap-1.5">
-            <span className="text-sm text-muted-foreground truncate">
+            <span className="text-[13px] text-muted-foreground truncate">
               {chapter.title}
             </span>
             <button
@@ -102,20 +103,20 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
                 e.stopPropagation()
                 onSelect()
               }}
-              className="text-xs text-primary hover:underline shrink-0"
+              className="text-[11px] text-[hsl(var(--accent-amber))] hover:underline shrink-0"
             >
               编辑
             </button>
           </div>
         ) : (
-          <span className="block truncate text-sm">
+          <span className="block truncate text-[13px]">
             {chapter.title}
           </span>
         )}
       </div>
 
       {chapter.wordCount > 0 && !isEmptyOutline && (
-        <span className="flex-shrink-0 text-xs text-muted-foreground tabular-nums">
+        <span className="flex-shrink-0 text-mono text-[10px] text-muted-foreground/70 tabular-nums">
           {chapter.wordCount.toLocaleString()}
         </span>
       )}

@@ -130,13 +130,13 @@ export function ProjectSettingsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex border-b">
+        <div className="flex divider-hair">
           <button
             onClick={() => setActiveTab('settings')}
             className={cn(
-              'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
+              'px-4 py-2 text-[13px] font-medium border-b-2 -mb-px transition-colors',
               activeTab === 'settings'
-                ? 'border-primary text-primary'
+                ? 'border-[hsl(var(--accent-amber))] text-[hsl(var(--accent-amber))]'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             )}
           >
@@ -145,9 +145,9 @@ export function ProjectSettingsDialog({
           <button
             onClick={() => setActiveTab('export')}
             className={cn(
-              'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
+              'px-4 py-2 text-[13px] font-medium border-b-2 -mb-px transition-colors',
               activeTab === 'export'
-                ? 'border-primary text-primary'
+                ? 'border-[hsl(var(--accent-amber))] text-[hsl(var(--accent-amber))]'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             )}
           >
@@ -173,9 +173,9 @@ export function ProjectSettingsDialog({
                 <button
                   onClick={handleExportMarkdown}
                   disabled={isExporting}
-                  className="w-full flex items-center gap-3 p-4 rounded-md border hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                  className="w-full flex items-center gap-3 p-4 rounded-[var(--radius-card)] surface-2 film-edge hover:film-edge-active transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
                 >
-                  <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-[var(--radius-control)] surface-3 flex items-center justify-center">
                     <FileText className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
@@ -188,9 +188,9 @@ export function ProjectSettingsDialog({
                 <button
                   onClick={handleExportDocx}
                   disabled={isExporting}
-                  className="w-full flex items-center gap-3 p-4 rounded-md border hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                  className="w-full flex items-center gap-3 p-4 rounded-[var(--radius-card)] surface-2 film-edge hover:film-edge-active transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
                 >
-                  <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-[var(--radius-control)] surface-3 flex items-center justify-center">
                     <FileDown className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
@@ -203,9 +203,9 @@ export function ProjectSettingsDialog({
                 <button
                   onClick={handleExportEpub}
                   disabled={isExporting}
-                  className="w-full flex items-center gap-3 p-4 rounded-md border hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                  className="w-full flex items-center gap-3 p-4 rounded-[var(--radius-card)] surface-2 film-edge hover:film-edge-active transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
                 >
-                  <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-[var(--radius-control)] surface-3 flex items-center justify-center">
                     <BookOpen className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
@@ -217,14 +217,14 @@ export function ProjectSettingsDialog({
               </div>
 
               {exportStatus !== 'idle' && exportStatus !== 'error' && (
-                <div className="flex items-center gap-2 text-sm text-primary">
+                <div className="flex items-center gap-2 text-sm text-[hsl(var(--accent-amber))]">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   {getStepText()}
                 </div>
               )}
 
               {exportStatus === 'error' && exportError && (
-                <div className="text-sm text-destructive">
+                <div className="text-[13px] text-[hsl(var(--accent-coral))]">
                   {exportError}
                 </div>
               )}

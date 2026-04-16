@@ -8,10 +8,10 @@ const WIDTH = 640
 const HEIGHT = 480
 
 const TYPE_COLORS: Record<WorldEntryType, { fill: string; stroke: string; label: string }> = {
-  character: { fill: 'rgb(59 130 246 / 0.15)', stroke: 'rgb(59 130 246)', label: '角色' },
-  location: { fill: 'rgb(16 185 129 / 0.15)', stroke: 'rgb(16 185 129)', label: '地点' },
-  rule: { fill: 'rgb(245 158 11 / 0.15)', stroke: 'rgb(245 158 11)', label: '规则' },
-  timeline: { fill: 'rgb(168 85 247 / 0.15)', stroke: 'rgb(168 85 247)', label: '时间' },
+  character: { fill: 'hsl(38 92% 58% / 0.16)', stroke: 'hsl(38 92% 58%)', label: '角色' },
+  location:  { fill: 'hsl(162 44% 55% / 0.16)', stroke: 'hsl(162 44% 55%)', label: '地点' },
+  rule:      { fill: 'hsl(260 42% 70% / 0.18)', stroke: 'hsl(260 42% 70%)', label: '规则' },
+  timeline:  { fill: 'hsl(40 14% 92% / 0.12)', stroke: 'hsl(40 14% 92% / 0.8)', label: '时间' },
 }
 
 interface RelationGraphProps {
@@ -74,7 +74,7 @@ export function RelationGraph({ entries, relations }: RelationGraphProps) {
   return (
     <div className="space-y-3">
       <Legend />
-      <div className="border rounded-md bg-background overflow-hidden">
+      <div className="rounded-[var(--radius-card)] surface-2 film-edge overflow-hidden">
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           className="w-full h-auto"
@@ -94,8 +94,8 @@ export function RelationGraph({ entries, relations }: RelationGraphProps) {
                   y1={s.y}
                   x2={t.x}
                   y2={t.y}
-                  stroke="currentColor"
-                  strokeOpacity={0.25}
+                  stroke="hsl(var(--accent-amber))"
+                  strokeOpacity={0.22}
                   strokeWidth={1}
                 />
                 {rel.sourceToTargetLabel && (
@@ -121,7 +121,7 @@ export function RelationGraph({ entries, relations }: RelationGraphProps) {
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r={24}
+                  r={26}
                   fill={color.fill}
                   stroke={color.stroke}
                   strokeWidth={1.5}
@@ -130,8 +130,9 @@ export function RelationGraph({ entries, relations }: RelationGraphProps) {
                   x={node.x}
                   y={node.y + 4}
                   textAnchor="middle"
-                  fontSize={11}
+                  fontSize={12}
                   className="fill-foreground"
+                  style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.04em' }}
                 >
                   {truncate(entry.name, 4)}
                 </text>

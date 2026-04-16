@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { redirect } from 'next/navigation'
+import { ThemeProvider } from '@/components/editor/theme-provider'
 import { ProjectDashboard } from '@/components/project/project-dashboard'
 
 export default function Home() {
@@ -19,8 +20,10 @@ export default function Home() {
   }, [])
 
   return (
-    <main className="min-h-screen bg-stone-50 dark:bg-stone-950">
-      <ProjectDashboard />
-    </main>
+    <ThemeProvider>
+      <main className="min-h-screen bg-background">
+        <ProjectDashboard />
+      </main>
+    </ThemeProvider>
   )
 }

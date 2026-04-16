@@ -1,0 +1,15 @@
+[    7694ms] [ERROR] Failed to fetch RSC payload for http://localhost:3000/. Falling back to browser navigation. TypeError: Failed to fetch
+    at createFetch (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:8084:21)
+    at fetchServerResponse (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:7928:27)
+    at fetchMissingDynamicData (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:9341:75)
+    at spawnDynamicRequests (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:9149:35)
+    at navigateToKnownRoute (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:10033:54)
+    at refreshDynamicData (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:10653:49)
+    at refreshReducer (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:10627:12)
+    at clientReducer (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:11394:59)
+    at Object.action (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:11631:55)
+    at runAction (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:11536:38)
+    at dispatchAction (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:11599:9)
+    at Object.dispatch (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:11629:40)
+    at runRemainingActions (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:11526:25)
+    at handleResult (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:11552:9) @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3272

@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Noto_Sans_SC } from "next/font/google";
+import { Noto_Sans_SC, ZCOOL_XiaoWei } from "next/font/google";
 import "./globals.css";
 
 const notoSansSC = Noto_Sans_SC({
   variable: "--font-noto-sans-sc",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+});
+
+const zcoolXiaoWei = ZCOOL_XiaoWei({
+  variable: "--font-zcool-xiaowei",
+  weight: "400",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -21,7 +27,7 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className={`${notoSansSC.variable} h-full antialiased`}
+      className={`${notoSansSC.variable} ${zcoolXiaoWei.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>

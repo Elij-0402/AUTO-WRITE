@@ -1,0 +1,10 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e5]:
+      - paragraph [ref=e6]: 早安，今天想写点什么？
+      - heading "落笔之前，先有世界" [level=2] [ref=e7]
+      - paragraph [ref=e8]: 从一个标题开始，构建你的故事宇宙
+      - button "开始第一个故事" [ref=e9]
+  - button "Open Next.js Dev Tools" [ref=e15] [cursor=pointer]:
+    - img [ref=e16]
+  - alert [ref=e19]

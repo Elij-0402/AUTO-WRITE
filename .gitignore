@@ -47,3 +47,11 @@ next-env.d.ts
 
 # MCP configuration (local tooling)
 .mcp.json
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

@@ -26,7 +26,7 @@ npx vitest run src/lib/db/meta-db.test.ts
 - **Framework**: Next.js 16 (App Router), React 19, TypeScript (strict)
 - **Styling**: Tailwind CSS v4 (via `@tailwindcss/postcss`), stone palette with blue accents, dark/light theme
 - **Editor**: Tiptap (ProseMirror-based rich text)
-- **State**: Zustand for global state, React hooks for local/per-feature state
+- **State**: React hooks per feature + Dexie `useLiveQuery` for live DB reads
 - **Database**: Dexie.js (IndexedDB wrapper) — offline-first, two-tier DB pattern (see below)
 - **Cloud sync**: Supabase (auth + optional data sync), `@supabase/ssr`
 - **UI primitives**: Radix UI (Dialog, DropdownMenu, Select), Lucide icons, `react-resizable-panels`

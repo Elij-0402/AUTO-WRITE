@@ -95,22 +95,13 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   return (
     <div
       className={cn(
-        'group relative flex h-full min-h-[172px] cursor-pointer flex-col',
-        'rounded-[var(--radius-card)] surface-2 film-edge px-6 pt-6 pb-5 bg-spotlight',
-        'transition-[transform,box-shadow,border-color] duration-[var(--dur-slow)] ease-[cubic-bezier(0.16,1,0.3,1)]',
-        'hover:-translate-y-0.5 hover:film-edge-active'
+        'group relative flex h-full min-h-[160px] cursor-pointer flex-col',
+        'rounded-[var(--radius-card)] card-soft px-5 pt-5 pb-4',
+        'transition-colors duration-[var(--dur-base)]',
+        'hover:bg-[hsl(var(--surface-1))]'
       )}
       onClick={handleCardClick}
     >
-      {/* top amber sweep on hover */}
-      <span
-        aria-hidden
-        className={cn(
-          'pointer-events-none absolute inset-x-5 top-0 h-px origin-left scale-x-0 bg-[hsl(var(--accent-amber))]',
-          'transition-transform duration-500 ease-out group-hover:scale-x-100'
-        )}
-      />
-
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           {isEditingTitle ? (
@@ -121,11 +112,11 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
               onBlur={handleTitleSave}
               onKeyDown={handleTitleKeyDown}
               onClick={(e) => e.stopPropagation()}
-              className="w-full rounded-sm border-b border-foreground/30 bg-transparent px-0 py-0.5 font-display text-xl tracking-wide text-foreground focus:outline-none focus:border-foreground"
+              className="w-full rounded-sm border-b border-foreground/30 bg-transparent px-0 py-0.5 text-[17px] font-semibold text-foreground focus:outline-none focus:border-foreground"
             />
           ) : (
             <h3
-              className="truncate font-display text-[22px] leading-tight tracking-wide text-foreground"
+              className="truncate text-[17px] font-semibold leading-tight text-foreground"
               onClick={(e) => {
                 e.stopPropagation()
                 setIsEditingTitle(true)
@@ -140,7 +131,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
             <button
-              className="flex h-7 w-7 -mr-1 items-center justify-center rounded-sm text-muted-foreground/60 opacity-0 transition-opacity hover:bg-foreground/5 hover:text-foreground group-hover:opacity-100"
+              className="flex h-7 w-7 -mr-1 items-center justify-center rounded-md text-muted-foreground/70 opacity-0 transition-opacity hover:bg-[hsl(var(--surface-2))] hover:text-foreground group-hover:opacity-100"
               aria-label="更多操作"
             >
               <MoreHorizontal className="h-4 w-4" />
@@ -167,30 +158,29 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
         </DropdownMenu>
       </div>
 
-      <div className="mt-3 min-h-[18px]">
+      <div className="mt-2 min-h-[18px]">
         {project.genre && (
-          <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-            — {GENRE_LABELS[project.genre] ?? project.genre}
+          <span className="text-[12px] text-muted-foreground">
+            {GENRE_LABELS[project.genre] ?? project.genre}
           </span>
         )}
       </div>
 
-      <div className="mt-auto flex items-center justify-between pt-5">
-        <div className="flex items-center gap-3 text-[11px] text-mono tabular-nums text-muted-foreground">
+      <div className="mt-auto flex items-center justify-between pt-4">
+        <div className="flex items-center gap-3 text-[13px] tabular-nums text-muted-foreground">
           <span>
-            <span className="text-[9px] uppercase tracking-[0.2em] mr-1.5 text-muted-foreground/60">字</span>
-            {project.wordCount.toLocaleString()}
+            {project.wordCount.toLocaleString()} 字
           </span>
           {project.todayWordCount > 0 && (
             <>
-              <span aria-hidden className="h-3 divider-hair-v" />
-              <span className="text-[hsl(var(--accent-amber))]">
-                +{project.todayWordCount.toLocaleString()}
+              <span aria-hidden className="h-3 w-px bg-border" />
+              <span className="text-primary">
+                今日 +{project.todayWordCount.toLocaleString()}
               </span>
             </>
           )}
         </div>
-        <span className="text-[11px] text-muted-foreground/70">
+        <span className="text-[12px] text-muted-foreground/80">
           {formatRelativeTime(project.updatedAt)}
         </span>
       </div>

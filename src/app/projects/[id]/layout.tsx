@@ -26,7 +26,7 @@ export default function ProjectLayout({
   if (!project) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-        <div className="font-display text-3xl tracking-wide text-foreground mb-2">
+        <div className="text-[22px] font-semibold text-foreground mb-2">
           项目未找到
         </div>
         <p className="text-muted-foreground mb-6">该作品不存在或已被删除</p>
@@ -38,7 +38,7 @@ export default function ProjectLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background bg-grain">
+    <div className="h-screen flex flex-col bg-background">
       <div className="flex flex-col flex-1 overflow-hidden">{children}</div>
     </div>
   )

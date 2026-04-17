@@ -11,6 +11,7 @@ import { getDefaultEmbedder } from '../rag/default-embedder'
 import { parseAISuggestions, type Suggestion } from '../ai/suggestion-parser'
 import { streamChat, supportsToolUse, type ProviderStreamMessage } from '../ai/client'
 import { buildSegmentedSystemPrompt } from '../ai/prompts'
+import { summarizeMessages } from '../ai/summarize'
 import type {
   SuggestEntryInput,
   SuggestRelationInput,
@@ -22,6 +23,7 @@ import type { WorldEntryType } from '../types'
 export interface ChatMessage {
   id: string
   projectId: string
+  conversationId: string
   role: 'user' | 'assistant'
   content: string
   timestamp: number
@@ -48,7 +50,7 @@ function detectDraft(content: string): boolean {
   return DRAFT_INDICATORS.some(marker => content.includes(marker))
 }
 
-export function useAIChat(projectId: string, options?: UseAIChatOptions) {
+export function useAIChat(projectId: string, conversationId: string | null, options?: UseAIChatOptions) {
   const { config } = useAIConfig(projectId)
   const { entries, entriesByType } = useWorldEntries(projectId)
   const { exemptions, addExemption } = useConsistencyExemptions(projectId)
@@ -72,16 +74,25 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
   }, [entriesByType])
 
   useEffect(() => {
-    if (!projectId) return
+    if (!projectId || !conversationId) {
+      setMessages([])
+      return
+    }
     const db = createProjectDB(projectId)
     db.table('messages')
-      .where('projectId').equals(projectId)
+      .where('conversationId').equals(conversationId)
       .sortBy('timestamp')
       .then(msgs => setMessages(msgs as ChatMessage[]))
       .catch(console.error)
-  }, [projectId])
+    // Also clear per-conversation ephemeral state.
+    setSuggestions([])
+    setContradictions([])
+  }, [projectId, conversationId])
 
   const sendMessage = useCallback(async (content: string) => {
+    if (!conversationId) {
+      throw new Error('未选择对话')
+    }
     if (!config.apiKey) {
       throw new Error('请先配置 AI 设置：API Key 必填')
     }
@@ -105,14 +116,21 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
       : []
     const trimmedEntries = trimToTokenBudget(relevantEntries, 4000)
 
+    // Load the conversation for rollingSummary + window boundary.
+    const conversation = await db.table('conversations').get(conversationId) as
+      | { rollingSummary?: string; summarizedUpTo?: number; messageCount: number }
+      | undefined
+
     const segmentedSystem = buildSegmentedSystemPrompt({
       worldEntries: trimmedEntries,
       selectedText: options?.selectedText,
+      rollingSummary: conversation?.rollingSummary,
     })
 
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       projectId,
+      conversationId,
       role: 'user',
       content,
       timestamp: Date.now(),
@@ -129,13 +147,18 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
       {
         id: assistantMsgId,
         projectId,
+        conversationId,
         role: 'assistant',
         content: '',
         timestamp: Date.now(),
       },
     ])
 
-    const historicalMessages: ProviderStreamMessage[] = messages.map(m => ({
+    // Sliding window: only last WINDOW_SIZE messages get replayed; older ones
+    // are represented by rollingSummary (injected into systemPrompt above).
+    const WINDOW_SIZE = 10
+    const recentWindow = messages.slice(-WINDOW_SIZE)
+    const historicalMessages: ProviderStreamMessage[] = recentWindow.map(m => ({
       role: m.role,
       content: m.content,
     }))
@@ -180,6 +203,7 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
       const finalMsg: ChatMessage = {
         id: assistantMsgId,
         projectId,
+        conversationId,
         role: 'assistant',
         content: fullContent,
         timestamp: Date.now(),
@@ -187,6 +211,13 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
         draftId: hasDraft ? crypto.randomUUID() : undefined,
       }
       await db.table('messages').update(assistantMsgId, finalMsg)
+      // Update conversation metadata.
+      const nowTs = Date.now()
+      const newCount = (conversation?.messageCount ?? messages.length) + 2
+      await db.table('conversations').update(conversationId, {
+        updatedAt: nowTs,
+        messageCount: newCount,
+      })
 
       // Fallback suggestion parsing for providers that don't support tool use.
       if (!supportsToolUse(config.provider)) {
@@ -202,6 +233,35 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
       }
 
       setContradictions(pendingContradictions)
+
+      // Async compaction: if messages beyond window have grown by ≥ 6 since
+      // the last summary, rebuild the rollingSummary. Fire-and-forget; never
+      // block the chat UI, never throw up to the caller.
+      const totalAfter = newCount
+      const outsideWindow = Math.max(0, totalAfter - WINDOW_SIZE)
+      const summarizedUpTo = conversation?.summarizedUpTo ?? 0
+      if (outsideWindow >= 6 && outsideWindow - summarizedUpTo >= 6) {
+        void (async () => {
+          try {
+            const allMsgs = await db.table('messages')
+              .where('conversationId').equals(conversationId)
+              .sortBy('timestamp')
+            const older = (allMsgs as ChatMessage[]).slice(0, outsideWindow)
+            const summary = await summarizeMessages(
+              { provider: config.provider, apiKey: config.apiKey, baseUrl: config.baseUrl, model: config.model },
+              older.map(m => ({ role: m.role, content: m.content }))
+            )
+            if (summary) {
+              await db.table('conversations').update(conversationId, {
+                rollingSummary: summary,
+                summarizedUpTo: outsideWindow,
+              })
+            }
+          } catch (e) {
+            console.warn('[useAIChat] summarize failed:', e)
+          }
+        })()
+      }
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         // user cancelled — keep partial content
@@ -213,7 +273,7 @@ export function useAIChat(projectId: string, options?: UseAIChatOptions) {
       setStreamingContent('')
       abortControllerRef.current = null
     }
-  }, [config, messages, projectId, entries, entriesByType, options?.selectedText])
+  }, [config, messages, projectId, conversationId, entries, entriesByType, options?.selectedText])
 
   const cancelStream = useCallback(() => {
     abortControllerRef.current?.abort()

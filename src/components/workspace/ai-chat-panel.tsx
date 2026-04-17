@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAIChat, ChatMessage, type Contradiction } from '@/lib/hooks/use-ai-chat'
+import { useAIConfig } from '@/lib/hooks/use-ai-config'
+import { useConversations } from '@/lib/hooks/use-conversations'
 import { createProjectDB } from '@/lib/db/project-db'
 import { useDismissedSuggestions } from '@/lib/hooks/use-dismissed-suggestions'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
@@ -11,7 +13,8 @@ import { RelationshipSuggestionCard, NewEntrySuggestionCard } from './suggestion
 import { ConsistencyWarningCard } from './consistency-warning-card'
 import { NewEntryDialog, type NewEntryPrefillData } from './new-entry-dialog'
 import { DuplicateEntryDialog } from './duplicate-entry-dialog'
-import { Send, Loader2, Lightbulb, AlertTriangle, Feather, X, ArrowDown, Quote } from 'lucide-react'
+import { ConversationDrawer } from './conversation-drawer'
+import { Send, Loader2, Lightbulb, AlertTriangle, Feather, X, ArrowDown, Quote, Square, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
@@ -35,10 +38,25 @@ const STARTER_PROMPTS = [
 const CHAR_LIMIT = 4000
 
 export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete, onSwitchToWorldTab }: AIChatPanelProps) {
+  const { conversations, create: createConversation, rename: renameConversation, remove: removeConversation } = useConversations(projectId)
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  // Auto-select most recent conversation, or create one on first mount.
+  useEffect(() => {
+    if (activeConversationId) return
+    if (conversations.length > 0) {
+      setActiveConversationId(conversations[0].id)
+    }
+  }, [conversations, activeConversationId])
+
+  const activeConversation = conversations.find(c => c.id === activeConversationId) ?? null
+
   const {
     messages,
     loading,
     sendMessage,
+    cancelStream,
     suggestions,
     dismissSuggestion,
     clearSuggestions,
@@ -46,11 +64,30 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     isCheckingConsistency,
     addExemption,
     clearContradiction
-  } = useAIChat(projectId, { selectedText: selectedText || undefined })
+  } = useAIChat(projectId, activeConversationId, { selectedText: selectedText || undefined })
 
   const { entriesByType, addEntry } = useWorldEntries(projectId)
   const { addRelation } = useRelations(projectId)
   const { dismiss, filterDismissed, reset } = useDismissedSuggestions()
+  const { config: aiConfig, saveConfig: saveAIConfig } = useAIConfig(projectId)
+
+  const handleNewConversation = useCallback(async () => {
+    const id = await createConversation('新对话')
+    setActiveConversationId(id)
+    setDrawerOpen(false)
+  }, [createConversation])
+
+  const handleSelectConversation = useCallback((id: string) => {
+    setActiveConversationId(id)
+    setDrawerOpen(false)
+  }, [])
+
+  const handleDeleteConversation = useCallback(async (id: string) => {
+    await removeConversation(id)
+    if (activeConversationId === id) {
+      setActiveConversationId(null)
+    }
+  }, [removeConversation, activeConversationId])
 
   const [input, setInput] = useState('')
   const [chatError, setChatError] = useState<string | null>(null)
@@ -99,6 +136,23 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     const text = (overrideText ?? input).trim()
     if (!text || loading) return
     if (!overrideText) setInput('')
+
+    // Ensure a conversation exists before sending. Auto-name new conversations
+    // from the first user message (truncated to 20 chars).
+    let convId = activeConversationId
+    const isFirstMessage = convId !== null && activeConversation?.messageCount === 0
+    if (!convId) {
+      const title = text.length > 20 ? text.slice(0, 20) + '…' : text
+      convId = await createConversation(title)
+      setActiveConversationId(convId)
+      // useAIChat will pick up the new id on next render; defer sendMessage.
+      // Wait one tick so hook effect updates state before sendMessage closes over it.
+      await new Promise(r => setTimeout(r, 0))
+    } else if (isFirstMessage && activeConversation?.title === '新对话') {
+      const title = text.length > 20 ? text.slice(0, 20) + '…' : text
+      await renameConversation(convId, title)
+    }
+
     try {
       await sendMessage(text)
       onDiscussComplete?.()
@@ -228,42 +282,45 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const overLimit = charCount > CHAR_LIMIT
 
   return (
-    <div className="h-full flex flex-col overflow-hidden surface-0 bg-spotlight relative">
+    <div className="h-full flex flex-col overflow-hidden surface-0 relative">
       {toastMessage && (
-        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 px-3 py-1.5 surface-3 text-foreground film-edge text-xs rounded-[var(--radius-control)] shadow-[var(--shadow-lift-md)] animate-fade-up">
+        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 px-3 py-1.5 bg-foreground text-background text-[12px] rounded-[var(--radius-control)] shadow-[var(--shadow-lift-md)] animate-fade-up">
           {toastMessage}
         </div>
       )}
 
       {/* ── Header ───────────────────────────────────────── */}
-      <div className="surface-elevated h-11 flex items-center gap-2.5 px-3.5 relative film-edge">
-        <div className="relative flex-shrink-0">
-          <div
-            aria-hidden
-            className="w-6 h-6 rounded-full bg-[hsl(var(--accent-amber))]/10 border border-[hsl(var(--accent-amber))]/40 flex items-center justify-center"
-          >
-            <Feather className="h-3 w-3 text-[hsl(var(--accent-amber))]" strokeWidth={2.2} />
-          </div>
-        </div>
-        <div className="flex flex-col min-w-0">
-          <span className="font-display text-[14px] tracking-wider text-foreground leading-none">
-            墨客
+      <div className="surface-elevated h-12 flex items-center gap-2 px-3">
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground hover:bg-[hsl(var(--surface-2))] hover:text-foreground transition-colors"
+          aria-label="对话历史"
+          title="对话历史"
+        >
+          <History className="h-4 w-4" />
+        </button>
+        <button
+          onClick={handleNewConversation}
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground hover:bg-[hsl(var(--surface-2))] hover:text-foreground transition-colors"
+          aria-label="新建对话"
+          title="新建对话"
+        >
+          <Feather className="h-4 w-4" />
+        </button>
+        <div className="flex flex-col min-w-0 flex-1 px-1">
+          <span className="text-[14px] font-semibold text-foreground leading-none truncate" title={activeConversation?.title ?? '墨客'}>
+            {activeConversation?.title ?? '墨客'}
           </span>
-          <span className="text-[9px] text-muted-foreground/70 tracking-[0.15em] leading-none mt-1 uppercase">
-            AI · 写作伙伴
+          <span className="text-[11px] text-muted-foreground leading-none mt-1">
+            {activeConversation ? `${activeConversation.messageCount} 条消息` : 'AI 写作伙伴'}
           </span>
         </div>
-        <div className="ml-auto flex items-center gap-3">
-          {messages.length > 0 && (
-            <span className="text-[10px] text-mono text-muted-foreground/60 tabular-nums tracking-wider">
-              {messages.length}
-            </span>
-          )}
-          <span className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wider">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
             <span
               aria-hidden
               className={loading
-                ? 'h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent-amber))] animate-inkwell-breathe'
+                ? 'h-1.5 w-1.5 rounded-full bg-primary animate-pulse'
                 : 'h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent-jade))]'}
             />
             {loading ? '思索中' : '就绪'}
@@ -273,11 +330,11 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
       {/* ── Selected-text indicator ────────────────────────── */}
       {selectedText && (
-        <div className="flex items-start gap-2 px-3.5 py-2 surface-2 border-b border-[hsl(var(--border))] animate-fade-up">
-          <Quote className="w-3 h-3 text-[hsl(var(--accent-amber))]/80 mt-0.5 flex-shrink-0" />
+        <div className="flex items-start gap-2 px-4 py-2.5 bg-[hsl(var(--surface-2))] border-b border-border animate-fade-up">
+          <Quote className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] text-muted-foreground/80 tracking-wider uppercase mb-0.5">已选中文本</div>
-            <div className="text-[11px] text-foreground/75 line-clamp-2 leading-snug">
+            <div className="text-[12px] text-muted-foreground mb-0.5">已选中文本</div>
+            <div className="text-[13px] text-foreground/80 line-clamp-2 leading-snug">
               {selectedText}
             </div>
           </div>
@@ -291,56 +348,34 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         className="flex-1 overflow-y-auto overflow-x-hidden relative"
       >
         {isEmpty ? (
-          <div className="h-full flex items-center justify-center p-6 bg-amber-vignette">
-            <div className="max-w-[260px] w-full space-y-6">
-              {/* Quill ornament */}
+          <div className="h-full flex items-center justify-center p-6">
+            <div className="max-w-[280px] w-full space-y-6">
               <div className="flex flex-col items-center gap-3">
-                <div className="relative">
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 rounded-full bg-[hsl(var(--accent-amber))]/15 blur-xl"
-                  />
-                  <div className="relative w-14 h-14 rounded-full surface-2 film-edge flex items-center justify-center shadow-[var(--shadow-amber)]">
-                    <Feather className="h-6 w-6 text-[hsl(var(--accent-amber))]" strokeWidth={1.8} />
-                  </div>
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Feather className="h-5 w-5 text-primary" strokeWidth={1.75} />
                 </div>
-                <div
-                  aria-hidden
-                  className="w-10 h-px bg-gradient-to-r from-transparent via-[hsl(var(--accent-amber))]/50 to-transparent"
-                />
                 <div className="text-center space-y-1.5">
-                  <p className="font-display text-[22px] tracking-[0.1em] text-foreground">
-                    墨落生花
+                  <p className="text-[18px] font-semibold text-foreground">
+                    墨客
                   </p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    提笔之前，不妨先与墨客聊一聊
+                  <p className="text-[13px] text-muted-foreground leading-relaxed">
+                    与 AI 聊聊你的故事
                   </p>
                 </div>
               </div>
 
               {/* Starter chips */}
-              <div className="space-y-1.5">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60 text-center mb-2">
-                  试试这样开始
-                </div>
-                {STARTER_PROMPTS.map((starter, i) => (
+              <div className="space-y-2">
+                {STARTER_PROMPTS.slice(0, 3).map((starter, i) => (
                   <button
                     key={starter.label}
                     onClick={() => handleSend(starter.prompt)}
-                    className="group w-full text-left px-3 py-2 rounded-[var(--radius-card)] surface-2 film-edge hover:film-edge-active transition-all duration-200 animate-message-enter hover:translate-x-0.5"
+                    className="group w-full text-left px-3 py-2.5 rounded-[var(--radius-control)] border border-border hover:border-primary/40 hover:bg-primary/[0.03] transition-colors animate-message-enter"
                     style={{ animationDelay: `${120 + i * 60}ms` }}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-[10px] text-[hsl(var(--accent-amber))]/80 text-mono tabular-nums">
-                        0{i + 1}
-                      </span>
-                      <span className="text-[12.5px] text-foreground/85 group-hover:text-foreground transition-colors">
-                        {starter.label}
-                      </span>
-                      <span className="ml-auto text-[11px] text-muted-foreground/40 group-hover:text-[hsl(var(--accent-amber))] transition-colors">
-                        →
-                      </span>
-                    </div>
+                    <span className="text-[13px] text-foreground/85 group-hover:text-foreground">
+                      {starter.label}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -358,8 +393,8 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
             {visibleSuggestions.length > 0 && (
               <div className="mx-2 my-3 space-y-2">
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--accent-violet))] px-1">
-                  <Lightbulb className="w-3 h-3" />
+                <div className="flex items-center gap-1.5 text-[12px] font-medium text-[hsl(var(--accent-violet))] px-1">
+                  <Lightbulb className="w-3.5 h-3.5" />
                   <span>墨客建议</span>
                 </div>
                 {visibleSuggestions.map((suggestion, idx) => (
@@ -389,12 +424,12 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
             {contradictions.length > 0 && (
               <div className="mx-2 my-3 space-y-2">
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--accent-coral))] px-1">
-                  <AlertTriangle className="w-3 h-3" />
+                <div className="flex items-center gap-1.5 text-[12px] font-medium text-destructive px-1">
+                  <AlertTriangle className="w-3.5 h-3.5" />
                   <span>矛盾检测</span>
                 </div>
                 {isCheckingConsistency && (
-                  <div className="flex items-center gap-2 text-muted-foreground text-xs px-1">
+                  <div className="flex items-center gap-2 text-muted-foreground text-[12px] px-1">
                     <Loader2 className="w-3 h-3 animate-spin" />
                     <span>检测矛盾中…</span>
                   </div>
@@ -414,17 +449,17 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
             {loading && (
               <div className="flex gap-2.5 py-3 pl-3 pr-1 ink-rail animate-message-enter">
                 <div className="flex-shrink-0 mt-0.5">
-                  <div className="w-6 h-6 rounded-full bg-[hsl(var(--accent-amber))]/10 border border-[hsl(var(--accent-amber))]/40 flex items-center justify-center">
-                    <Feather className="w-3 h-3 text-[hsl(var(--accent-amber))]" strokeWidth={2.2} />
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Feather className="w-3 h-3 text-primary" strokeWidth={2} />
                   </div>
                 </div>
                 <div className="flex flex-col justify-center gap-1.5 pt-1">
-                  <span className="font-display text-[13px] tracking-wider text-[hsl(var(--accent-amber))] leading-none">墨客</span>
+                  <span className="text-[13px] font-medium text-primary leading-none">墨客</span>
                   <div className="flex items-center gap-1 h-4">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--accent-amber))] animate-ink-drop" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--accent-amber))] animate-ink-drop" style={{ animationDelay: '160ms' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--accent-amber))] animate-ink-drop" style={{ animationDelay: '320ms' }} />
-                    <span className="ml-2 text-[11px] text-muted-foreground/80 italic">笔尖正在蘸墨…</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: '160ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: '320ms' }} />
+                    <span className="ml-2 text-[12px] text-muted-foreground">思考中…</span>
                   </div>
                 </div>
               </div>
@@ -436,19 +471,19 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         {showScrollPill && (
           <button
             onClick={() => scrollToBottom('smooth')}
-            className="sticky bottom-3 left-1/2 ml-[-52px] z-20 inline-flex items-center gap-1 px-2.5 py-1 surface-3 film-edge rounded-full shadow-[var(--shadow-lift-md)] text-[11px] text-foreground/80 hover:film-edge-active transition-all animate-fade-up"
+            className="sticky bottom-3 left-1/2 ml-[-52px] z-20 inline-flex items-center gap-1 px-2.5 py-1 bg-[hsl(var(--surface-1))] border border-border rounded-full shadow-[var(--shadow-lift-md)] text-[12px] text-foreground/80 hover:bg-[hsl(var(--surface-2))] transition-colors animate-fade-up"
             aria-label="跳到最新"
           >
-            <ArrowDown className="w-3 h-3 text-[hsl(var(--accent-amber))]" />
+            <ArrowDown className="w-3 h-3 text-primary" />
             <span>跳到最新</span>
           </button>
         )}
       </div>
 
       {/* ── Input ──────────────────────────────────────────── */}
-      <div className="surface-elevated p-2.5 space-y-2">
+      <div className="p-3 space-y-2 border-t border-border">
         {chatError && (
-          <div className="flex items-center justify-between px-2.5 py-1.5 rounded-[var(--radius-control)] bg-[hsl(var(--accent-coral))]/10 border border-[hsl(var(--accent-coral))]/30 text-[hsl(var(--accent-coral))] text-xs animate-fade-up">
+          <div className="flex items-center justify-between px-2.5 py-1.5 rounded-[var(--radius-control)] bg-destructive/10 border border-destructive/30 text-destructive text-[12px] animate-fade-up">
             <span>{chatError}</span>
             <button onClick={() => setChatError(null)} className="ml-2 hover:opacity-70">
               <X className="h-3 w-3" />
@@ -457,57 +492,68 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         )}
 
         <div
-          className={`relative rounded-[var(--radius-card)] border transition-all duration-200 ${
+          className={`rounded-[var(--radius-card)] border bg-[hsl(var(--card))] transition-colors ${
             inputFocused
-              ? 'border-[hsl(var(--accent-amber))]/50 surface-2 shadow-[0_0_0_3px_hsl(var(--accent-amber)/0.12)]'
-              : 'border-[hsl(var(--border))] surface-2'
-          } ${overLimit ? 'border-[hsl(var(--accent-coral))]/50' : ''}`}
+              ? 'border-primary/60'
+              : overLimit
+                ? 'border-destructive/50'
+                : 'border-border'
+          }`}
         >
-          <Textarea
-            ref={inputRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setInputFocused(true)}
-            onBlur={() => setInputFocused(false)}
-            placeholder="与墨客聊聊你的故事…"
-            disabled={loading}
-            rows={1}
-            className="resize-none min-h-[56px] max-h-[140px] text-[13px] leading-relaxed bg-transparent border-0 shadow-none focus-visible:shadow-none focus-visible:border-0 px-3 py-2.5 pr-12 hover:border-0"
-          />
+          <div className="flex flex-col">
+            <Textarea
+              ref={inputRef}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+              placeholder="与墨客聊聊你的故事…"
+              disabled={loading}
+              rows={1}
+              className="resize-none min-h-[56px] max-h-[140px] text-[14px] leading-relaxed !bg-transparent hover:!bg-transparent focus-visible:!bg-transparent px-3 py-2.5 pr-12 border-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+            />
 
-          {/* Send button — floating bottom-right of textarea */}
-          <Button
-            onClick={() => handleSend()}
-            disabled={!input.trim() || loading || overLimit}
-            size="icon-sm"
-            className="absolute bottom-1.5 right-1.5 disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_2px_8px_-2px_hsl(var(--accent-amber)/0.45)]"
-          >
-            {loading ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              <Send strokeWidth={2.2} />
-            )}
-          </Button>
-
-          {/* Meta row — inside border, below textarea */}
-          <div className="flex items-center justify-between px-2.5 pb-1.5 text-[10px] text-muted-foreground/60 tracking-wide">
-            <div className="flex items-center gap-1.5">
-              <kbd className="inline-flex items-center px-1 py-px rounded-[3px] border border-[hsl(var(--border))] surface-3 text-mono text-[9px] leading-none">
-                Enter
-              </kbd>
-              <span>发送</span>
-              <span className="text-muted-foreground/30">·</span>
-              <kbd className="inline-flex items-center px-1 py-px rounded-[3px] border border-[hsl(var(--border))] surface-3 text-mono text-[9px] leading-none">
-                Shift+Enter
-              </kbd>
-              <span>换行</span>
+            <div className="flex items-center justify-between px-3 pb-2">
+              {aiConfig.availableModels && aiConfig.availableModels.length > 0 ? (
+                <select
+                  value={aiConfig.model || ''}
+                  onChange={(e) => { void saveAIConfig({ model: e.target.value }) }}
+                  className="max-w-[180px] truncate bg-transparent text-[12px] text-muted-foreground hover:text-foreground focus:outline-none cursor-pointer"
+                  aria-label="选择模型"
+                  title={aiConfig.model || '选择模型'}
+                >
+                  {aiConfig.availableModels.map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              ) : (
+                <span className="text-[12px] text-muted-foreground/70 truncate max-w-[180px]" title={aiConfig.model || ''}>
+                  {aiConfig.model || '未设置模型'}
+                </span>
+              )}
+              <div className="flex items-center gap-2">
+                {charCount > 0 && (
+                  <span className={`tabular-nums text-[11px] ${overLimit ? 'text-destructive' : charCount > CHAR_LIMIT * 0.8 ? 'text-primary/80' : 'text-muted-foreground'}`}>
+                    {charCount}{overLimit && ` / ${CHAR_LIMIT}`}
+                  </span>
+                )}
+                <Button
+                  onClick={() => loading ? cancelStream() : handleSend()}
+                  disabled={!loading && (!input.trim() || overLimit)}
+                  size="icon-sm"
+                  variant={loading ? 'subtle' : 'default'}
+                  aria-label={loading ? '停止生成' : '发送'}
+                  className="disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <Square className="fill-current" strokeWidth={0} />
+                  ) : (
+                    <Send strokeWidth={2} />
+                  )}
+                </Button>
+              </div>
             </div>
-            {charCount > 0 && (
-              <span className={`tabular-nums text-mono ${overLimit ? 'text-[hsl(var(--accent-coral))]' : charCount > CHAR_LIMIT * 0.8 ? 'text-[hsl(var(--accent-amber))]/80' : ''}`}>
-                {charCount}{overLimit && ` / ${CHAR_LIMIT}`}
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -535,6 +581,17 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
           onCreateNew={handleCreateNew}
         />
       )}
+
+      <ConversationDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        conversations={conversations}
+        activeId={activeConversationId}
+        onSelect={handleSelectConversation}
+        onCreate={handleNewConversation}
+        onRename={renameConversation}
+        onDelete={handleDeleteConversation}
+      />
     </div>
   )
 }

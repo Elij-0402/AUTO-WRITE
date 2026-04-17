@@ -63,11 +63,13 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
         apiKey: config.apiKey,
         baseUrl: config.baseUrl,
         model: config.model,
+        availableModels: config.availableModels ?? [],
       })
       setTestResult(null)
       setErrorMsg('')
-      setShowModels(false)
-      setModelList([])
+      const cached = config.availableModels ?? []
+      setModelList(cached)
+      setShowModels(cached.length > 0)
     }
   }, [open, config])
 
@@ -81,8 +83,10 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
       provider: next,
       baseUrl: prev.baseUrl || nextPreset.defaultBaseUrl,
       model: nextPreset.defaultModel,
+      availableModels: [],
     }))
     setShowModels(false)
+    setModelList([])
     setTestResult(null)
   }
 
@@ -147,7 +151,8 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
       setModelList(models)
       setShowModels(true)
       setTestResult('success')
-      if (!formData.model) setFormData(prev => ({ ...prev, model: models[0] }))
+      const defaultModel = formData.model && models.includes(formData.model) ? formData.model : models[0]
+      setFormData(prev => ({ ...prev, model: defaultModel, availableModels: models }))
     } catch (error) {
       const msg = error instanceof Error ? error.message : '连接失败'
       setErrorMsg(msg)

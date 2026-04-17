@@ -85,27 +85,17 @@ export function ProjectDashboard() {
           <header className="animate-fade-up">
             <div className="flex items-end justify-between gap-6">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-control)] bg-[hsl(var(--accent-amber))]">
-                  <PenLine className="h-3.5 w-3.5 text-[hsl(var(--primary-foreground))]" strokeWidth={2.5} />
+                <div className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] bg-primary">
+                  <PenLine className="h-4 w-4 text-primary-foreground" strokeWidth={2.2} />
                 </div>
-                <span className="font-display text-[17px] tracking-[0.1em] text-foreground">
+                <span className="text-[16px] font-semibold text-foreground">
                   InkForge
                 </span>
               </div>
-              <p className="text-[12px] text-muted-foreground tracking-wide">
+              <p className="text-[13px] text-muted-foreground">
                 {greeting}
               </p>
             </div>
-            <div
-              aria-hidden
-              className="mt-6 h-px w-full bg-[hsl(var(--border-strong))]"
-              style={{
-                maskImage:
-                  'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
-                WebkitMaskImage:
-                  'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
-              }}
-            />
           </header>
 
           {/* Section header */}
@@ -113,11 +103,11 @@ export function ProjectDashboard() {
             className="mt-10 mb-6 flex items-baseline justify-between animate-fade-up"
             style={{ animationDelay: '60ms' }}
           >
-            <h1 className="font-display text-[32px] tracking-[0.05em] text-foreground">
+            <h1 className="text-[24px] font-semibold tracking-tight text-foreground">
               我的书斋
             </h1>
-            <span className="text-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground/80">
-              {String(projects.length).padStart(2, '0')} · {projects.length === 1 ? 'Volume' : 'Volumes'}
+            <span className="text-[13px] text-muted-foreground">
+              共 {projects.length} 个项目
             </span>
           </div>
 
@@ -143,16 +133,12 @@ export function ProjectDashboard() {
             >
               <button
                 onClick={() => setCreateModalOpen(true)}
-                className="group relative flex h-full min-h-[172px] w-full flex-col items-center justify-center gap-3 rounded-[var(--radius-card)] border border-dashed border-[hsl(var(--border-strong))] bg-transparent text-muted-foreground transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:border-[hsl(var(--accent-amber))]/50 hover:bg-[hsl(var(--accent-amber))]/[0.04] hover:text-[hsl(var(--accent-amber))] cursor-pointer"
+                className="group flex h-full min-h-[160px] w-full flex-col items-center justify-center gap-3 rounded-[var(--radius-card)] border border-dashed border-[hsl(var(--border-strong))] bg-transparent text-muted-foreground transition-colors hover:border-primary/60 hover:bg-primary/[0.04] hover:text-primary cursor-pointer"
               >
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute inset-x-5 top-0 h-px origin-left scale-x-0 bg-[hsl(var(--accent-amber))] transition-transform duration-500 ease-out group-hover:scale-x-100"
-                />
-                <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-current/40">
-                  <Plus className="h-4 w-4" strokeWidth={1.5} />
+                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-current/50">
+                  <Plus className="h-4 w-4" strokeWidth={1.75} />
                 </span>
-                <span className="font-display text-[18px] tracking-[0.05em]">
+                <span className="text-[15px] font-medium">
                   新建项目
                 </span>
               </button>
@@ -171,7 +157,7 @@ export function ProjectDashboard() {
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl tracking-wide">删除项目</DialogTitle>
+            <DialogTitle className="text-[18px] font-semibold">删除项目</DialogTitle>
             <DialogDescription>
               确定要删除「{projectToDeleteData?.title}」吗？删除后可在回收站中恢复。
             </DialogDescription>

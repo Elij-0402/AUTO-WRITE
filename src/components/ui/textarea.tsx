@@ -14,8 +14,7 @@ const Textarea = React.forwardRef<
         "text-foreground placeholder:text-muted-foreground",
         "transition-[border-color,background-color,box-shadow] duration-[var(--dur-fast)]",
         "hover:border-[hsl(var(--border-strong))]",
-        "focus-visible:outline-none focus-visible:border-[hsl(var(--accent-amber))]/60 focus-visible:bg-[hsl(var(--surface-3))]",
-        "focus-visible:shadow-[0_0_0_3px_hsl(var(--accent-amber)/0.15)]",
+        "focus-visible:outline-none focus-visible:bg-[hsl(var(--surface-3))]",
         "disabled:cursor-not-allowed disabled:opacity-50",
         "resize-y",
         className

@@ -17,20 +17,43 @@ export interface AIConfig {
   apiKey: string
   baseUrl: string
   model?: string
+  availableModels?: string[]
 }
 
 /**
  * Chat message stored per-project in IndexedDB.
  * Used for AI chat history and draft management.
+ *
+ * `conversationId` added in v10 to support multi-thread conversations.
+ * Legacy records are backfilled to a per-project default conversation.
  */
 export interface ChatMessage {
   id: string
   projectId: string
+  conversationId: string
   role: 'user' | 'assistant'
   content: string
   timestamp: number
   hasDraft?: boolean
   draftId?: string
+}
+
+/**
+ * A conversation thread inside a project.
+ * Each project can have many conversations; messages reference them via
+ * `conversationId`. Rolling summary lets us bound context while keeping
+ * older turns semantically available.
+ */
+export interface Conversation {
+  id: string
+  projectId: string
+  title: string
+  createdAt: number
+  updatedAt: number
+  messageCount: number
+  rollingSummary?: string
+  /** Number of messages included in the current rollingSummary (index boundary). */
+  summarizedUpTo?: number
 }
 
 /**
@@ -116,6 +139,7 @@ export class InkForgeProjectDB extends Dexie {
   revisions!: Table<Revision, string>
   embeddings!: Table<Embedding, string>
   analyses!: Table<AnalysisArtifact, string>
+  conversations!: Table<Conversation, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -225,6 +249,50 @@ export class InkForgeProjectDB extends Dexie {
       embeddings: 'id, sourceType, sourceId, embedderId, updatedAt, [sourceType+sourceId]',
       analyses: 'id, kind, invalidationKey, createdAt',
     })
+    // v10: conversations table + messages.conversationId. Backfills a default
+    // "历史对话" conversation per project that has existing messages.
+    this.version(10)
+      .stores({
+        projects: 'id, updatedAt, deletedAt',
+        chapters: 'id, projectId, order, deletedAt',
+        layoutSettings: 'id',
+        worldEntries: 'id, projectId, type, name, deletedAt',
+        relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+        aiConfig: 'id',
+        messages: 'id, projectId, conversationId, role, timestamp',
+        consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+        revisions: 'id, projectId, chapterId, createdAt',
+        embeddings: 'id, sourceType, sourceId, embedderId, updatedAt, [sourceType+sourceId]',
+        analyses: 'id, kind, invalidationKey, createdAt',
+        conversations: 'id, projectId, updatedAt',
+      })
+      .upgrade(async tx => {
+        const existingMessages = await tx.table('messages').toArray() as ChatMessage[]
+        if (existingMessages.length === 0) return
+        // Group by projectId and create one default conversation per project.
+        const byProject = new Map<string, ChatMessage[]>()
+        for (const m of existingMessages) {
+          if (!byProject.has(m.projectId)) byProject.set(m.projectId, [])
+          byProject.get(m.projectId)!.push(m)
+        }
+        const conversationsTable = tx.table('conversations')
+        const messagesTable = tx.table('messages')
+        for (const [projectId, msgs] of byProject) {
+          const sorted = msgs.sort((a, b) => a.timestamp - b.timestamp)
+          const conv: Conversation = {
+            id: crypto.randomUUID(),
+            projectId,
+            title: '历史对话',
+            createdAt: sorted[0].timestamp,
+            updatedAt: sorted[sorted.length - 1].timestamp,
+            messageCount: sorted.length,
+          }
+          await conversationsTable.add(conv)
+          for (const m of sorted) {
+            await messagesTable.update(m.id, { conversationId: conv.id })
+          }
+        }
+      })
   }
 }
 

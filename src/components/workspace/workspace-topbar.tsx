@@ -37,7 +37,7 @@ export function WorkspaceTopbar({
   const todayWordCount = useTodayWordCount(projectId)
 
   return (
-    <div className="surface-elevated h-11 shrink-0 flex items-center gap-2 px-3 sticky top-0 z-40 film-edge">
+    <div className="surface-elevated h-12 shrink-0 flex items-center gap-2 px-4 sticky top-0 z-40">
       <Tooltip>
         <TooltipTrigger asChild>
           <Button asChild variant="ghost" size="icon-sm">
@@ -53,18 +53,18 @@ export function WorkspaceTopbar({
 
       <div className="min-w-0 flex items-center gap-3">
         <span
-          className="font-display text-[15px] tracking-wider truncate text-foreground"
+          className="text-[15px] font-semibold truncate text-foreground"
           title={project?.title ?? ''}
         >
           {project?.title ?? '未命名项目'}
         </span>
-        <div className="hidden sm:inline-flex items-center gap-2 text-mono text-[11px] tabular-nums">
-          <span className="text-muted-foreground/70 uppercase tracking-widest text-[10px]">今日</span>
-          <span className="text-[hsl(var(--accent-amber))] font-medium">
+        <div className="hidden sm:inline-flex items-center gap-2 text-[12px] tabular-nums">
+          <span className="text-muted-foreground">今日</span>
+          <span className="text-primary font-medium">
             {todayWordCount.toLocaleString()}
           </span>
-          <span className="text-muted-foreground/30">/</span>
-          <span className="text-muted-foreground/70 uppercase tracking-widest text-[10px]">总</span>
+          <span className="text-muted-foreground/40">·</span>
+          <span className="text-muted-foreground">总</span>
           <span className="text-foreground/80">
             {totalWordCount.toLocaleString()}
           </span>

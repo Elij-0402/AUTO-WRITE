@@ -11,6 +11,7 @@ export interface AIConfig {
   apiKey: string
   baseUrl: string
   model?: string
+  availableModels?: string[]
 }
 
 const DEFAULT_CONFIG: AIConfig = {
@@ -18,7 +19,8 @@ const DEFAULT_CONFIG: AIConfig = {
   provider: 'anthropic',
   apiKey: '',
   baseUrl: '',
-  model: 'claude-sonnet-4-5'
+  model: 'claude-sonnet-4-5',
+  availableModels: []
 }
 
 export function useAIConfig(projectId: string) {

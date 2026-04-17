@@ -87,14 +87,13 @@ export function CreateProjectModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader className="pb-2">
-          <DialogTitle className="font-display text-2xl tracking-wide">新建项目</DialogTitle>
-          <DialogDescription className="italic">
+          <DialogTitle className="text-[20px] font-semibold">新建项目</DialogTitle>
+          <DialogDescription>
             创建一个新的小说项目，开始你的写作之旅
           </DialogDescription>
         </DialogHeader>
-        <div aria-hidden className="h-px w-full bg-foreground/10" />
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5 pt-1">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5 pt-2">
           <div className="space-y-2">
             <Label htmlFor="title">
               标题 <span className="text-destructive">*</span>

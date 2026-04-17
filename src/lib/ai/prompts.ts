@@ -32,6 +32,8 @@ export interface BuildSystemPromptParams {
   worldEntries: WorldEntry[]
   /** Optional selected text the user is discussing. */
   selectedText?: string
+  /** Optional rolling summary of prior turns beyond the sliding window. */
+  rollingSummary?: string
 }
 
 /**
@@ -52,9 +54,14 @@ export function buildSegmentedSystemPrompt(
   params: BuildSystemPromptParams
 ): SegmentedSystemPrompt {
   const worldBibleContext = buildWorldBibleBlock(params.worldEntries)
-  const runtimeContext = params.selectedText
-    ? `【当前讨论】\n作者选中了以下文段进行讨论：\n${params.selectedText}`
-    : ''
+  const parts: string[] = []
+  if (params.rollingSummary && params.rollingSummary.trim()) {
+    parts.push(`【此前对话摘要】\n${params.rollingSummary.trim()}`)
+  }
+  if (params.selectedText) {
+    parts.push(`【当前讨论】\n作者选中了以下文段进行讨论：\n${params.selectedText}`)
+  }
+  const runtimeContext = parts.join('\n\n')
 
   return {
     baseInstruction: BASE_INSTRUCTION,

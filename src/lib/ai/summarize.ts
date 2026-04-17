@@ -17,27 +17,61 @@ const SUMMARY_SYSTEM: SegmentedSystemPrompt = {
 
 /**
  * Summarize the given messages in one non-streaming round.
- * Returns the summary text (may be empty on failure — caller decides fallback).
+ * Returns the summary text plus usage counts (callers may persist to aiUsage).
  */
+export interface SummarizeResult {
+  summary: string
+  inputTokens: number
+  outputTokens: number
+  cacheReadTokens: number
+  cacheWriteTokens: number
+  latencyMs: number
+}
+
 export async function summarizeMessages(
   config: AIClientConfig,
   messages: ProviderStreamMessage[]
-): Promise<string> {
-  if (messages.length === 0) return ''
+): Promise<SummarizeResult> {
+  const empty: SummarizeResult = {
+    summary: '',
+    inputTokens: 0,
+    outputTokens: 0,
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
+    latencyMs: 0,
+  }
+  if (messages.length === 0) return empty
 
   const transcript = messages
     .map(m => `【${m.role === 'user' ? '作者' : '助手'}】${m.content}`)
     .join('\n\n')
 
+  const startedAt = Date.now()
   const events = streamChat(config, {
     segmentedSystem: SUMMARY_SYSTEM,
     messages: [{ role: 'user', content: `请对以下对话做要点摘要：\n\n${transcript}` }],
   })
 
   let out = ''
+  let inputTokens = 0
+  let outputTokens = 0
+  let cacheReadTokens = 0
+  let cacheWriteTokens = 0
   for await (const ev of events) {
     if (ev.type === 'text_delta') out += ev.delta
-    else if (ev.type === 'error') throw new Error(ev.message)
+    else if (ev.type === 'usage') {
+      if (ev.inputTokens !== undefined) inputTokens = ev.inputTokens
+      if (ev.outputTokens !== undefined) outputTokens = ev.outputTokens
+      if (ev.cacheReadTokens !== undefined) cacheReadTokens = ev.cacheReadTokens
+      if (ev.cacheWriteTokens !== undefined) cacheWriteTokens = ev.cacheWriteTokens
+    } else if (ev.type === 'error') throw new Error(ev.message)
   }
-  return out.trim()
+  return {
+    summary: out.trim(),
+    inputTokens,
+    outputTokens,
+    cacheReadTokens,
+    cacheWriteTokens,
+    latencyMs: Date.now() - startedAt,
+  }
 }

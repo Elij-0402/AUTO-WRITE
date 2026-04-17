@@ -30,6 +30,8 @@ export interface SyncQueueItem {
   userId: string
   synced: boolean
   retryCount: number
+  /** ms timestamp of the most recent failed attempt; used to enforce exponential backoff. */
+  lastRetryAt?: number
 }
 
 let dbPromise: Promise<IDBPDatabase<SyncQueueDB>> | null = null
@@ -89,14 +91,17 @@ export async function markSynced(ids: string[]): Promise<void> {
 
 /**
  * Increment retry count on failed sync items.
+ * Records lastRetryAt so retryFailedSync can honor exponential backoff.
  */
 export async function incrementRetry(ids: string[]): Promise<void> {
   const db = await getQueueDB()
   const tx = db.transaction('queue', 'readwrite')
+  const now = Date.now()
   for (const id of ids) {
     const item = await tx.store.get(id)
     if (item) {
       item.retryCount++
+      item.lastRetryAt = now
       await tx.store.put(item)
     }
   }
@@ -123,14 +128,18 @@ export async function setLastSyncAt(timestamp: number): Promise<void> {
 /**
  * Clear all synced items from queue (cleanup).
  * Called after successful batch sync.
+ *
+ * Iterates all rows rather than using the `by-synced` index because booleans
+ * are not valid IndexedDB keys — the index cannot be queried reliably.
  */
 export async function clearSyncedItems(): Promise<void> {
   const db = await getQueueDB()
   const tx = db.transaction('queue', 'readwrite')
-  const index = tx.store.index('by-synced')
-  let cursor = await index.openCursor(1) // synced = true
+  let cursor = await tx.store.openCursor()
   while (cursor) {
-    await cursor.delete()
+    if ((cursor.value as SyncQueueItem).synced) {
+      await cursor.delete()
+    }
     cursor = await cursor.continue()
   }
   await tx.done

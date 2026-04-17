@@ -1,5 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { createProjectDB } from '../db/project-db'
+import type { AIUsageEvent as AIUsageRecord } from '../db/project-db'
+import { recordUsage } from '../db/ai-usage-queries'
 import { useAIConfig } from './use-ai-config'
 import { useWorldEntries } from './use-world-entries'
 import { useConsistencyExemptions } from './use-consistency-exemptions'
@@ -168,6 +170,11 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     let fullContent = ''
     const pendingSuggestions: Suggestion[] = []
     const pendingContradictions: Contradiction[] = []
+    const startedAt = Date.now()
+    let inputTokens = 0
+    let outputTokens = 0
+    let cacheReadTokens = 0
+    let cacheWriteTokens = 0
 
     try {
       const events = streamChat(
@@ -193,10 +200,16 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
           )
         } else if (event.type === 'tool_call') {
           handleToolCall(event, pendingSuggestions, pendingContradictions, exemptionsRef.current)
+        } else if (event.type === 'usage') {
+          // Last usage event wins — providers emit a partial usage mid-stream
+          // and a final one at message_stop with complete counts.
+          if (event.inputTokens !== undefined) inputTokens = event.inputTokens
+          if (event.outputTokens !== undefined) outputTokens = event.outputTokens
+          if (event.cacheReadTokens !== undefined) cacheReadTokens = event.cacheReadTokens
+          if (event.cacheWriteTokens !== undefined) cacheWriteTokens = event.cacheWriteTokens
         } else if (event.type === 'error') {
           throw new Error(event.message)
         }
-        // usage/done events are informational for now
       }
 
       const hasDraft = detectDraft(fullContent)
@@ -251,11 +264,30 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
               { provider: config.provider, apiKey: config.apiKey, baseUrl: config.baseUrl, model: config.model },
               older.map(m => ({ role: m.role, content: m.content }))
             )
-            if (summary) {
+            if (summary.summary) {
               await db.table('conversations').update(conversationId, {
-                rollingSummary: summary,
+                rollingSummary: summary.summary,
                 summarizedUpTo: outsideWindow,
               })
+            }
+            if (summary.inputTokens > 0 || summary.outputTokens > 0) {
+              const usage: AIUsageRecord = {
+                id: crypto.randomUUID(),
+                projectId,
+                conversationId,
+                kind: 'summarize',
+                provider: config.provider,
+                model: config.model ?? '',
+                inputTokens: summary.inputTokens,
+                outputTokens: summary.outputTokens,
+                cacheReadTokens: summary.cacheReadTokens,
+                cacheWriteTokens: summary.cacheWriteTokens,
+                latencyMs: summary.latencyMs,
+                createdAt: Date.now(),
+              }
+              await recordUsage(db, usage).catch(e =>
+                console.warn('[useAIChat] summarize recordUsage failed:', e)
+              )
             }
           } catch (e) {
             console.warn('[useAIChat] summarize failed:', e)
@@ -272,6 +304,29 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
       setLoading(false)
       setStreamingContent('')
       abortControllerRef.current = null
+      // Persist usage regardless of success/abort — even a cancelled stream
+      // incurred input tokens, and the prefix output tokens still cost money.
+      if (inputTokens > 0 || outputTokens > 0) {
+        const usage: AIUsageRecord = {
+          id: crypto.randomUUID(),
+          projectId,
+          conversationId,
+          kind: 'chat',
+          provider: config.provider,
+          model: config.model ?? '',
+          inputTokens,
+          outputTokens,
+          cacheReadTokens,
+          cacheWriteTokens,
+          latencyMs: Date.now() - startedAt,
+          createdAt: Date.now(),
+        }
+        try {
+          await recordUsage(db, usage)
+        } catch (e) {
+          console.warn('[useAIChat] recordUsage failed:', e)
+        }
+      }
     }
   }, [config, messages, projectId, conversationId, entries, entriesByType, options?.selectedText])
 

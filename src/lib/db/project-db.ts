@@ -108,6 +108,32 @@ export interface AnalysisArtifact {
 }
 
 /**
+ * Per-call AI usage record. Append-only; one row per underlying model call
+ * (chat, rolling-summary compaction, analysis, generation). Kept granular so
+ * long-running projects can later be re-aggregated in any dimension without
+ * having to replay lost detail — BYOK users own their full usage trail.
+ *
+ * No pricing is stored; prices change per provider/plan and are user-supplied
+ * if ever displayed. Tokens + latency + cache-split are the durable facts.
+ */
+export interface AIUsageEvent {
+  id: string
+  projectId: string
+  /** null for calls not tied to a conversation (e.g. style-profile analyses). */
+  conversationId: string | null
+  kind: 'chat' | 'summarize' | 'analyze' | 'generate'
+  provider: AIProvider
+  model: string
+  inputTokens: number
+  outputTokens: number
+  /** 0 when the provider doesn't expose cache metrics. */
+  cacheReadTokens: number
+  cacheWriteTokens: number
+  latencyMs: number
+  createdAt: number
+}
+
+/**
  * Layout settings stored per-project in IndexedDB per D-24.
  * sidebarWidth: persisted sidebar width in pixels per D-25
  * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world') per D-08, D-14
@@ -140,6 +166,7 @@ export class InkForgeProjectDB extends Dexie {
   embeddings!: Table<Embedding, string>
   analyses!: Table<AnalysisArtifact, string>
   conversations!: Table<Conversation, string>
+  aiUsage!: Table<AIUsageEvent, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -293,13 +320,48 @@ export class InkForgeProjectDB extends Dexie {
           }
         }
       })
+    // v11: aiUsage table for per-call BYOK usage logging.
+    this.version(11).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+      aiConfig: 'id',
+      messages: 'id, projectId, conversationId, role, timestamp',
+      consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+      revisions: 'id, projectId, chapterId, createdAt',
+      embeddings: 'id, sourceType, sourceId, embedderId, updatedAt, [sourceType+sourceId]',
+      analyses: 'id, kind, invalidationKey, createdAt',
+      conversations: 'id, projectId, updatedAt',
+      aiUsage: 'id, projectId, conversationId, createdAt, model',
+    })
   }
 }
 
 /**
- * Factory function to create a per-project database instance.
+ * Factory function to get or create a per-project database instance.
  * Per D-19: each project gets its own DB for isolation.
+ *
+ * Instances are cached by projectId so hot-path callers (per-render hooks,
+ * sync loops) don't spin up redundant Dexie wrappers. Production code never
+ * closes a DB, so the cache lives for the tab lifetime. Tests that call
+ * `db.close()` must call `__resetProjectDBCache()` to evict stale entries.
  */
+const instances = new Map<string, InkForgeProjectDB>()
+
 export function createProjectDB(projectId: string): InkForgeProjectDB {
-  return new InkForgeProjectDB(projectId)
+  let db = instances.get(projectId)
+  if (!db) {
+    db = new InkForgeProjectDB(projectId)
+    instances.set(projectId, db)
+  }
+  return db
+}
+
+export function __resetProjectDBCache(): void {
+  for (const db of instances.values()) {
+    try { db.close() } catch { /* already closed */ }
+  }
+  instances.clear()
 }

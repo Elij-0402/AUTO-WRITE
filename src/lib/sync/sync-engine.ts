@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/client'
-import { getPendingChanges, markSynced, incrementRetry, setLastSyncAt } from './sync-queue'
+import { getPendingChanges, markSynced, incrementRetry, setLastSyncAt, clearSyncedItems } from './sync-queue'
 import type { SyncQueueItem } from './sync-queue'
 import { resolveConflict } from './conflict-resolver'
 import { metaDb } from '@/lib/db/meta-db'
 import { createProjectDB } from '@/lib/db/project-db'
+import { mapCloudToLocal, mapLocalToCloud, type TableName } from './field-mapping'
 
 /**
  * Supabase table mapping from local table names to cloud table names.
@@ -77,14 +78,13 @@ export async function flushSyncQueue(): Promise<{ synced: number; failed: number
       continue
     }
 
-    // Prepare data for upsert - exclude aiConfig fields
-    const { id, ...rest } = item.data
-    const upsertData = {
-      ...rest,
-      id,
-      user_id: item.userId, // D-38: RLS-filtered by user_id
-      localUpdatedAt: item.localUpdatedAt,
-    }
+    // Prepare data for upsert — field-mapping owns the cloud-wire shape.
+    const upsertData = mapLocalToCloud(
+      item.table as TableName,
+      item.data,
+      item.userId,
+      item.localUpdatedAt
+    )
 
     const { error } = await supabase
       .from(tableName)
@@ -101,6 +101,9 @@ export async function flushSyncQueue(): Promise<{ synced: number; failed: number
   // Update queue status
   if (syncedIds.length > 0) {
     await markSynced(syncedIds)
+    // Physically remove synced rows. markSynced only flips a flag, so without
+    // this call the queue grows forever (one row per local write, never GC'd).
+    await clearSyncedItems()
   }
   if (failedIds.length > 0) {
     await incrementRetry(failedIds)
@@ -161,18 +164,19 @@ export async function performInitialSync(
       // Write to metaDb.projectIndex
       for (const record of data) {
         try {
+          const local = mapCloudToLocal('projectIndex', record) as Record<string, unknown>
           await metaDb.projectIndex.put({
-            id: record.id,
-            title: record.title,
-            genre: record.genre ?? '',
-            synopsis: record.synopsis ?? '',
-            coverImageId: record.coverImageId ?? null,
-            wordCount: record.wordCount ?? 0,
-            todayWordCount: record.todayWordCount ?? 0,
-            todayDate: record.todayDate ?? new Date().toISOString().split('T')[0],
-            createdAt: new Date(record.createdAt),
-            updatedAt: new Date(record.updated_at || record.localUpdatedAt),
-            deletedAt: record.deleted_at ? new Date(record.deleted_at) : null,
+            id: local.id as string,
+            title: local.title as string,
+            genre: (local.genre as string) ?? '',
+            synopsis: (local.synopsis as string) ?? '',
+            coverImageId: (local.coverImageId as string | null) ?? null,
+            wordCount: (local.wordCount as number) ?? 0,
+            todayWordCount: (local.todayWordCount as number) ?? 0,
+            todayDate: (local.todayDate as string) ?? new Date().toISOString().split('T')[0],
+            createdAt: new Date(local.createdAt as string | number),
+            updatedAt: new Date(local.updatedAt as string | number),
+            deletedAt: local.deletedAt ? new Date(local.deletedAt as string | number) : null,
           })
           merged++
         } catch (e) {
@@ -182,65 +186,67 @@ export async function performInitialSync(
     } else {
       // Per-project tables: group by projectId and write to appropriate project DB
       const projectIds = [...new Set(data.map(r => r.projectId).filter(Boolean))]
-      
+
       for (const projectId of projectIds) {
         try {
           const projectDb = createProjectDB(projectId)
-          const tableName = cloudTable === 'world_entries' ? 'worldEntries' : cloudTable
-          
+
           for (const record of data) {
             if (record.projectId !== projectId) continue
-            
+
             try {
               if (cloudTable === 'chapters') {
+                const local = mapCloudToLocal('chapters', record) as Record<string, unknown>
                 await projectDb.chapters.put({
-                  id: record.id,
-                  projectId: record.projectId,
-                  title: record.title,
-                  content: record.content ?? {},
-                  order: record.order ?? 0,
-                  wordCount: record.wordCount ?? 0,
-                  status: record.status ?? 'draft',
-                  outlineStatus: record.outlineStatus ?? 'not_started',
-                  outlineSummary: record.outlineSummary ?? '',
-                  outlineTargetWordCount: record.outlineTargetWordCount ?? null,
-                  createdAt: new Date(record.createdAt),
-                  updatedAt: new Date(record.updated_at || record.localUpdatedAt),
-                  deletedAt: record.deleted_at ? new Date(record.deleted_at) : null,
+                  id: local.id as string,
+                  projectId: local.projectId as string,
+                  title: local.title as string,
+                  content: (local.content as object) ?? {},
+                  order: (local.order as number) ?? 0,
+                  wordCount: (local.wordCount as number) ?? 0,
+                  status: (local.status as 'draft' | 'completed') ?? 'draft',
+                  outlineStatus: (local.outlineStatus as 'not_started' | 'in_progress' | 'completed') ?? 'not_started',
+                  outlineSummary: (local.outlineSummary as string) ?? '',
+                  outlineTargetWordCount: (local.outlineTargetWordCount as number | null) ?? null,
+                  createdAt: new Date(local.createdAt as string | number),
+                  updatedAt: new Date(local.updatedAt as string | number),
+                  deletedAt: local.deletedAt ? new Date(local.deletedAt as string | number) : null,
                 })
               } else if (cloudTable === 'world_entries') {
+                const local = mapCloudToLocal('worldEntries', record) as Record<string, unknown>
                 await projectDb.worldEntries.put({
-                  id: record.id,
-                  projectId: record.projectId,
-                  type: record.type,
-                  name: record.name,
-                  alias: record.alias,
-                  appearance: record.appearance,
-                  personality: record.personality,
-                  background: record.background,
-                  description: record.description,
-                  features: record.features,
-                  content: record.content,
-                  scope: record.scope,
-                  timePoint: record.timePoint,
-                  eventDescription: record.eventDescription,
-                  tags: record.tags ?? [],
-                  createdAt: new Date(record.createdAt),
-                  updatedAt: new Date(record.updated_at || record.localUpdatedAt),
-                  deletedAt: record.deleted_at ? new Date(record.deleted_at) : null,
-                })
+                  id: local.id as string,
+                  projectId: local.projectId as string,
+                  type: local.type,
+                  name: local.name as string,
+                  alias: local.alias,
+                  appearance: local.appearance,
+                  personality: local.personality,
+                  background: local.background,
+                  description: local.description,
+                  features: local.features,
+                  content: local.content,
+                  scope: local.scope,
+                  timePoint: local.timePoint,
+                  eventDescription: local.eventDescription,
+                  tags: (local.tags as string[]) ?? [],
+                  createdAt: new Date(local.createdAt as string | number),
+                  updatedAt: new Date(local.updatedAt as string | number),
+                  deletedAt: local.deletedAt ? new Date(local.deletedAt as string | number) : null,
+                } as Parameters<typeof projectDb.worldEntries.put>[0])
               } else if (cloudTable === 'relations') {
+                const local = mapCloudToLocal('relations', record) as Record<string, unknown>
                 await projectDb.relations.put({
-                  id: record.id,
-                  projectId: record.projectId,
-                  sourceEntryId: record.sourceEntryId,
-                  targetEntryId: record.targetEntryId,
-                  category: record.category,
-                  description: record.description ?? '',
-                  sourceToTargetLabel: record.sourceToTargetLabel ?? '',
-                  createdAt: new Date(record.createdAt),
-                  deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-                })
+                  id: local.id as string,
+                  projectId: local.projectId as string,
+                  sourceEntryId: local.sourceEntryId as string,
+                  targetEntryId: local.targetEntryId as string,
+                  category: local.category,
+                  description: (local.description as string) ?? '',
+                  sourceToTargetLabel: (local.sourceToTargetLabel as string) ?? '',
+                  createdAt: new Date(local.createdAt as string | number),
+                  deletedAt: local.deletedAt ? new Date(local.deletedAt as string | number) : null,
+                } as Parameters<typeof projectDb.relations.put>[0])
               }
               merged++
             } catch (e) {
@@ -291,25 +297,25 @@ export async function syncNewProject(projectId: string, userId: string): Promise
 /**
  * Retry failed syncs with exponential backoff.
  * Per D-34: automatic retry with exponential backoff.
+ * An item is eligible to retry only after BASE_RETRY_DELAY * 2^retryCount ms
+ * have passed since its last failed attempt (tracked via lastRetryAt).
  */
 export async function retryFailedSync(): Promise<{ synced: number; failed: number }> {
   const pending = await getPendingChanges()
-  const failed = pending.filter(p => p.retryCount > 0 && p.retryCount < MAX_RETRIES)
-  
-  let synced = 0
-  let stillFailed = 0
+  const now = Date.now()
+  const eligible = pending.filter(p => {
+    if (p.retryCount === 0 || p.retryCount >= MAX_RETRIES) return false
+    const delay = BASE_RETRY_DELAY * Math.pow(2, p.retryCount)
+    const lastRetryAt = p.lastRetryAt ?? 0
+    return now - lastRetryAt >= delay
+  })
 
-  for (const item of failed) {
-    // Calculate backoff delay: BASE_RETRY_DELAY * 2^retryCount
-    const delay = BASE_RETRY_DELAY * Math.pow(2, item.retryCount)
-    
-    // Check if enough time has passed
-    // (In real implementation, would track last retry time)
-    
-    const result = await flushSyncQueue()
-    synced += result.synced
-    stillFailed += result.failed
+  if (eligible.length === 0) {
+    return { synced: 0, failed: 0 }
   }
 
-  return { synced, failed: stillFailed }
+  // flushSyncQueue reads the pending queue itself and will pick up the
+  // eligible items (plus any brand-new ones) in this pass. Calling it once
+  // is enough; the previous loop-per-item implementation was redundant.
+  return flushSyncQueue()
 }

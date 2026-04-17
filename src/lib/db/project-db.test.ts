@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { createProjectDB } from './project-db'
+import { createProjectDB, __resetProjectDBCache } from './project-db'
 import type { Chapter } from '../types'
 
 describe('InkForgeProjectDB', () => {
   beforeEach(async () => {
-    // Clean up any existing databases
+    __resetProjectDBCache()
   })
 
   it('should open a per-project database with projectId suffix', async () => {
@@ -89,5 +89,20 @@ describe('InkForgeProjectDB', () => {
 
     await db1.close()
     await db2.close()
+  })
+
+  it('returns the same cached instance for the same projectId', () => {
+    const a1 = createProjectDB('cache-project')
+    const a2 = createProjectDB('cache-project')
+    const b = createProjectDB('other-project')
+    expect(a1).toBe(a2)
+    expect(a1).not.toBe(b)
+  })
+
+  it('resets the cache when __resetProjectDBCache is called', () => {
+    const first = createProjectDB('cache-reset')
+    __resetProjectDBCache()
+    const second = createProjectDB('cache-reset')
+    expect(second).not.toBe(first)
   })
 })

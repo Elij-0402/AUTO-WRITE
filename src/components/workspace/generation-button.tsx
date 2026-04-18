@@ -1,6 +1,6 @@
 'use client'
 
-import type { GenerationState } from '@/components/workspace/generation-drawer'
+import type { GenerationState } from '@/lib/hooks/use-chapter-generation'
 
 interface GenerationButtonProps {
   onOpenDrawer: () => void

@@ -254,7 +254,7 @@ export default function ProjectPage() {
           onClose={() => setGenerationDrawerOpen(false)}
           onAccept={async () => {
             if (editorRef.current) {
-              editorRef.current.insertContent(generation.streamingContent)
+              editorRef.current.insertText(generation.streamingContent)
             }
             setGenerationDrawerOpen(false)
             generation.resetGeneration()

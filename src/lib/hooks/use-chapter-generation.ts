@@ -7,9 +7,37 @@ import { useWorldEntries } from './use-world-entries'
 import { useChapters } from './use-chapters'
 import { trimToTokenBudget, DEFAULT_TOKEN_BUDGET } from './use-context-injection'
 import { streamChat, type AIClientConfig, type ProviderStreamMessage } from '../ai/client'
+import type { AIEvent } from '../ai/events'
 import { buildWorldBibleBlock, BASE_INSTRUCTION } from '../ai/prompts'
 import { searchRelevantEntries } from '../rag/search'
 import { getDefaultEmbedder } from '../rag/default-embedder'
+import { validateContent } from '../ai/content-validator'
+
+/**
+ * Wraps an async iterable with a timeout AbortController.
+ * Throws DOMException with name 'AbortError' on timeout.
+ */
+async function* withTimeout<T>(
+  iterable: AsyncIterable<T>,
+  timeoutMs: number
+): AsyncIterable<T> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    for await (const item of iterable) {
+      yield item
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+const RETRYABLE_ERRORS = ['429', '503', 'rate', 'limit']
+const MAX_RETRIES = 1
+
+function isRetryableError(message: string): boolean {
+  return RETRYABLE_ERRORS.some(e => message.toLowerCase().includes(e))
+}
 
 export interface GenerationState {
   status: 'idle' | 'generating' | 'complete' | 'error'
@@ -115,40 +143,94 @@ export function useChapterGeneration(projectId: string, chapterId: string) {
     // Reset state for new generation
     setState({ status: 'generating', streamingContent: '', error: null })
 
+    abortControllerRef.current = new AbortController()
+
+    const configForStreamChat: AIClientConfig = {
+      provider: config.provider,
+      apiKey: config.apiKey,
+      baseUrl: config.baseUrl,
+      model: config.model,
+    }
+    const segmentedSystem = {
+      baseInstruction: BASE_INSTRUCTION,
+      worldBibleContext: buildWorldBibleBlock(trimmedEntries),
+      runtimeContext,
+    }
+    const messages: ProviderStreamMessage[] = [
+      { role: 'user', content: '请基于以上大纲和世界观背景，创作一个完整的章节。' }
+    ]
+
+    const controller = new AbortController()
+    const timeoutMs = 30_000
+    let retryCount = 0
+    let fullContent = ''
+    let response: AsyncIterable<AIEvent>
+
     try {
-      abortControllerRef.current = new AbortController()
-
-      const configForStreamChat: AIClientConfig = {
-        provider: config.provider,
-        apiKey: config.apiKey,
-        baseUrl: config.baseUrl,
-        model: config.model,
-      }
-      const segmentedSystem = {
-        baseInstruction: BASE_INSTRUCTION,
-        worldBibleContext: buildWorldBibleBlock(trimmedEntries),
-        runtimeContext,
-      }
-      const messages: ProviderStreamMessage[] = [
-        { role: 'user', content: '请基于以上大纲和世界观背景，创作一个完整的章节。' }
-      ]
-
-      let fullContent = ''
-      for await (const event of streamChat(configForStreamChat, {
+      response = await streamChat(configForStreamChat, {
         segmentedSystem,
         messages,
-        signal: abortControllerRef.current.signal,
-      })) {
+        signal: controller.signal,
+      })
+    } catch (err) {
+      abortControllerRef.current = null
+      if (err instanceof Error && err.name === 'AbortError') {
+        setState(prev => ({ ...prev, status: 'idle', streamingContent: '' }))
+      } else {
+        setState(prev => ({
+          ...prev,
+          status: 'error',
+          error: err instanceof Error ? err.message : '生成失败',
+        }))
+      }
+      return
+    }
+
+    try {
+      for await (const event of withTimeout(response, timeoutMs)) {
         if (event.type === 'text_delta') {
           fullContent += event.delta
           setState(prev => ({ ...prev, streamingContent: fullContent }))
         } else if (event.type === 'error') {
+          // Retry logic for rate-limited errors
+          if (isRetryableError(event.message) && retryCount < MAX_RETRIES) {
+            retryCount++
+            // Re-fetch with new AbortController for retry
+            const retryController = new AbortController()
+            const retryResponse = await streamChat(configForStreamChat, {
+              segmentedSystem,
+              messages,
+              signal: retryController.signal,
+            })
+            for await (const retryEvent of withTimeout(retryResponse, timeoutMs)) {
+              if (retryEvent.type === 'text_delta') {
+                fullContent += retryEvent.delta
+                setState(prev => ({ ...prev, streamingContent: fullContent }))
+              } else if (retryEvent.type === 'error') {
+                throw new Error(retryEvent.message)
+              }
+            }
+            break
+          }
           throw new Error(event.message)
         }
       }
 
+      // Validate content after stream completes
+      const validationError = validateContent(fullContent)
+      if (validationError) {
+        abortControllerRef.current = null
+        setState(prev => ({
+          ...prev,
+          status: 'error',
+          error: validationError,
+        }))
+        return
+      }
+
       setState(prev => ({ ...prev, status: 'complete', streamingContent: fullContent }))
     } catch (err) {
+      abortControllerRef.current = null
       if (err instanceof Error && err.name === 'AbortError') {
         setState(prev => ({ ...prev, status: 'idle', streamingContent: '' }))
       } else {

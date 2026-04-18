@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { InkForgeMetaDB, metaDb } from './meta-db'
-import type { ProjectMeta, CreateProjectInput } from '../types'
+import { InkForgeMetaDB } from './meta-db'
+import type { ProjectMeta } from '../types'
 
 describe('InkForgeMetaDB', () => {
   let db: InkForgeMetaDB
@@ -72,13 +72,7 @@ describe('InkForgeMetaDB', () => {
 
     await db.projectIndex.bulkAdd([activeProject, deletedProject])
 
-    // Default query should exclude soft-deleted
-    const activeProjects = await db.projectIndex
-      .where('deletedAt')
-      .equals(0) // null timestamps stored as 0 for indexing
-      .toArray()
-
-    // Or use the filtered query approach
+    // Filtered query approach — null deletedAt indicates active
     const allActive = await db.projectIndex
       .filter(p => p.deletedAt === null)
       .toArray()

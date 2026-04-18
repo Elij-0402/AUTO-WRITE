@@ -26,12 +26,6 @@ export const EXPORT_STEPS = {
   TRIGGERING_DOWNLOAD: '触发下载...',
 } as const
 
-interface ChapterDoc {
-  title: string
-  content: string
-  order: number
-}
-
 /**
  * Export all chapters of a project as a DOCX blob.
  * 

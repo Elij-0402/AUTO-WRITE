@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useAIConfig, AIConfig, AIProvider } from '@/lib/hooks/use-ai-config'
+import type { ExperimentFlags } from '@/lib/ai/experiment-flags'
+import { providerCapabilities } from '@/lib/ai/experiment-flags'
+import type { UiExperimentFlags } from '@/lib/ai/ui-flags'
+import { DEFAULT_UI_FLAGS } from '@/lib/ai/ui-flags'
 import {
   Dialog,
   DialogContent,
@@ -64,6 +68,8 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
         baseUrl: config.baseUrl,
         model: config.model,
         availableModels: config.availableModels ?? [],
+        experimentFlags: config.experimentFlags ?? { citations: false, extendedCacheTtl: false, thinking: false },
+        uiFlags: config.uiFlags ?? DEFAULT_UI_FLAGS,
       })
       setTestResult(null)
       setErrorMsg('')
@@ -286,6 +292,17 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
               />
             </div>
           )}
+
+          <ExperimentFlagsSection
+            provider={provider}
+            flags={formData.experimentFlags ?? { citations: false, extendedCacheTtl: false, thinking: false }}
+            onChange={next => setFormData(prev => ({ ...prev, experimentFlags: next }))}
+          />
+
+          <UiFlagsSection
+            flags={formData.uiFlags ?? DEFAULT_UI_FLAGS}
+            onChange={next => setFormData(prev => ({ ...prev, uiFlags: next }))}
+          />
         </div>
 
         <DialogFooter>
@@ -300,5 +317,128 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+interface ExperimentFlagsSectionProps {
+  provider: AIProvider
+  flags: ExperimentFlags
+  onChange: (next: ExperimentFlags) => void
+}
+
+const FLAG_LABELS: Record<keyof ExperimentFlags, { label: string; hint: string }> = {
+  citations: {
+    label: 'Citations API 溯源',
+    hint: '强制 AI 将世界观引用标注到具体条目,防止幻觉。Phase C 启用。',
+  },
+  extendedCacheTtl: {
+    label: '1 小时 prompt cache',
+    hint: '长写作会话中世界观重用免 token,默认 5 分钟 TTL 延至 1 小时。Phase D 启用。',
+  },
+  thinking: {
+    label: '一致性深度推理 (v1.1 预览)',
+    hint: '遇到一致性检查时启用 extended thinking。仅记录实验偏好,实际行为 v1.1 上线。',
+  },
+}
+
+function ExperimentFlagsSection({ provider, flags, onChange }: ExperimentFlagsSectionProps) {
+  const caps = providerCapabilities(provider)
+  return (
+    <div className="space-y-2">
+      <Label>实验性 AI 特性</Label>
+      <div className="text-[11px] text-muted-foreground leading-[1.55]">
+        Anthropic 2026 原语处于 A/B 测试阶段。记录到分析面板用于对比。
+      </div>
+      <div className="rounded-[var(--radius-card)] surface-2 film-edge p-2 space-y-1">
+        {(Object.keys(FLAG_LABELS) as (keyof ExperimentFlags)[]).map(key => {
+          const meta = FLAG_LABELS[key]
+          const canEnable = caps[key]
+          const checked = canEnable && flags[key]
+          return (
+            <label
+              key={key}
+              className={`flex items-start gap-2 px-2 py-1.5 rounded-[var(--radius-control)] ${
+                canEnable ? 'cursor-pointer hover:bg-[hsl(var(--surface-3))]' : 'opacity-50'
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                disabled={!canEnable}
+                onChange={e => onChange({ ...flags, [key]: e.target.checked })}
+                className="mt-0.5 w-3.5 h-3.5 accent-[hsl(var(--accent-amber))]"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] text-foreground flex items-center gap-1.5">
+                  {meta.label}
+                  {!canEnable && (
+                    <span className="text-[10px] text-muted-foreground">（仅 Anthropic）</span>
+                  )}
+                </div>
+                <div className="text-[11px] text-muted-foreground mt-0.5 leading-[1.55]">
+                  {meta.hint}
+                </div>
+              </div>
+            </label>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+interface UiFlagsSectionProps {
+  flags: UiExperimentFlags
+  onChange: (next: UiExperimentFlags) => void
+}
+
+const UI_FLAG_LABELS: Record<keyof UiExperimentFlags, { label: string; hint: string }> = {
+  showGenerationPipeline: {
+    label: 'AI 章节生成',
+    hint: '在工作台和大纲里显示 "生成章节" 入口。v1 默认隐藏,需作者手动勾选。',
+  },
+  showStyleProfile: {
+    label: '文风分析面板',
+    hint: '在创作者分析页显示 "文风" 标签页。实验性功能,可能不稳定。',
+  },
+  showTimelineView: {
+    label: '时间线视图',
+    hint: '在创作者分析页显示 "时间线" 标签页。实验性功能,可能不稳定。',
+  },
+}
+
+function UiFlagsSection({ flags, onChange }: UiFlagsSectionProps) {
+  return (
+    <div className="space-y-2">
+      <Label>实验性界面模块</Label>
+      <div className="text-[11px] text-muted-foreground leading-[1.55]">
+        v1 默认只显示一致性核心工作流。以下模块代码保留但入口隐藏,按需开启。
+      </div>
+      <div className="rounded-[var(--radius-card)] surface-2 film-edge p-2 space-y-1">
+        {(Object.keys(UI_FLAG_LABELS) as (keyof UiExperimentFlags)[]).map(key => {
+          const meta = UI_FLAG_LABELS[key]
+          const checked = flags[key]
+          return (
+            <label
+              key={key}
+              className="flex items-start gap-2 px-2 py-1.5 rounded-[var(--radius-control)] cursor-pointer hover:bg-[hsl(var(--surface-3))]"
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={e => onChange({ ...flags, [key]: e.target.checked })}
+                className="mt-0.5 w-3.5 h-3.5 accent-[hsl(var(--accent-amber))]"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] text-foreground">{meta.label}</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5 leading-[1.55]">
+                  {meta.hint}
+                </div>
+              </div>
+            </label>
+          )
+        })}
+      </div>
+    </div>
   )
 }

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { useAutoSave } from '@/lib/hooks/use-autosave'
+import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { GenerationPanel } from '@/components/generation/generation-panel'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -91,6 +92,7 @@ export function OutlineEditForm({
   const [localOutlineStatus, setLocalOutlineStatus] = useState<OutlineStatus>('not_started')
   const [showGenerationPanel, setShowGenerationPanel] = useState(false)
   const [localTitle, setLocalTitle] = useState('')
+  const { uiFlags } = useAIConfig(projectId)
 
   // Sync form state when switching to a different chapter.
   // Using the "set state during render" pattern per React docs
@@ -233,7 +235,7 @@ export function OutlineEditForm({
           <p>更新于 {formatDateCN(chapter.updatedAt)}</p>
         </div>
 
-        {showGenerationPanel && (
+        {showGenerationPanel && uiFlags.showGenerationPipeline && (
           <div className="pt-4 divider-hair">
             <GenerationPanel
               projectId={projectId}
@@ -245,14 +247,16 @@ export function OutlineEditForm({
       </div>
 
       <div className="flex gap-2 px-6 py-3 divider-hair">
-        <Button
-          onClick={() => setShowGenerationPanel(true)}
-          disabled={!localSummary}
-          size="sm"
-          title={!localSummary ? '请先填写大纲摘要' : '基于大纲生成章节内容'}
-        >
-          生成章节
-        </Button>
+        {uiFlags.showGenerationPipeline && (
+          <Button
+            onClick={() => setShowGenerationPanel(true)}
+            disabled={!localSummary}
+            size="sm"
+            title={!localSummary ? '请先填写大纲摘要' : '基于大纲生成章节内容'}
+          >
+            生成章节
+          </Button>
+        )}
 
         <Button
           variant="outline"

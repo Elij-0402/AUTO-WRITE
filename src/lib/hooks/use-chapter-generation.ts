@@ -167,6 +167,9 @@ ${previousContent ? previousContent : '（无上文内容）'}
       baseInstruction: BASE_INSTRUCTION,
       worldBibleContext: buildWorldBibleBlock(trimmedEntries),
       runtimeContext,
+      worldBibleBlocks: [],
+      useCitations: false,
+      useExtendedCacheTtl: false,
     }
     const messages: ProviderStreamMessage[] = [
       { role: 'user', content: '请基于以上大纲和世界观背景，创作一个完整的章节。' }
@@ -255,7 +258,7 @@ ${previousContent ? previousContent : '（无上文内容）'}
     } finally {
       abortControllerRef.current = null
     }
-  }, [config, currentChapter, projectId, entries, entriesByType])
+  }, [config, currentChapter, projectId, entries, entriesByType]) // eslint-disable-line react-hooks/exhaustive-deps
   
   /**
    * Cancel ongoing generation per D-02.
@@ -341,7 +344,7 @@ ${previousContent ? previousContent : '（无上文内容）'}
       }))
       return { success: false }
     }
-  }, [currentChapter, state, chapters, chapterId, addChapter, updateChapterContent])
+  }, [currentChapter, state, chapters, chapterId, addChapter, updateChapterContent]) // eslint-disable-line react-hooks/exhaustive-deps
   
   /**
    * Reset state to idle.

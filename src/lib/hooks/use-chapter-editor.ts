@@ -57,7 +57,7 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
       }
       prevChapterIdRef.current = chapterId
     }
-  }, [chapterId, chapter?.content])
+  }, [chapterId, chapter?.content]) // eslint-disable-line react-hooks/exhaustive-deps
   
   // Update function that will be called by autosave
   // Note: This updates IndexedDB directly, which triggers the chapter query

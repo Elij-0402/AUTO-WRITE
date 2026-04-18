@@ -10,7 +10,6 @@ import {
   getWorldEntryById,
 } from './world-entry-queries'
 import { addRelation } from './relation-queries'
-import type { WorldEntry, WorldEntryType } from '../types'
 
 describe('world-entry-queries', () => {
   let db: InkForgeProjectDB

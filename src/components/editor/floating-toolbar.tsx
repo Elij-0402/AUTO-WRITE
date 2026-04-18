@@ -22,7 +22,7 @@ export function FloatingToolbar({ onDiscuss, editorRef }: FloatingToolbarProps) 
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const toolbarRef = useRef<HTMLDivElement>(null)
 
-  const handleMouseUp = useCallback((e: MouseEvent) => {
+  const handleMouseUp = useCallback(() => {
     // Small delay to allow selection to complete
     setTimeout(() => {
       const selection = window.getSelection()

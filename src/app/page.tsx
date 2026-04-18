@@ -1,8 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { redirect } from 'next/navigation'
 import { ThemeProvider } from '@/components/editor/theme-provider'
 import { ProjectDashboard } from '@/components/project/project-dashboard'
 

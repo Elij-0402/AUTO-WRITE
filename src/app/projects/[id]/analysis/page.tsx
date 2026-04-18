@@ -2,10 +2,11 @@
 
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { ArrowLeft, Network, Clock, Feather } from 'lucide-react'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useAllRelations } from '@/lib/hooks/use-all-relations'
+import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { RelationGraph } from '@/components/analysis/relation-graph'
 import { TimelineView } from '@/components/analysis/timeline-view'
 import { StyleProfile } from '@/components/analysis/style-profile'
@@ -14,7 +15,7 @@ import { ThemeProvider } from '@/components/editor/theme-provider'
 
 type Tab = 'relations' | 'timeline' | 'style'
 
-const TABS: Array<{ id: Tab; label: string; icon: typeof Network }> = [
+const ALL_TABS: Array<{ id: Tab; label: string; icon: typeof Network }> = [
   { id: 'relations', label: '关系图', icon: Network },
   { id: 'timeline', label: '时间线', icon: Clock },
   { id: 'style', label: '文风', icon: Feather },
@@ -25,6 +26,18 @@ export default function AnalysisPage() {
   const [tab, setTab] = useState<Tab>('relations')
   const { entries } = useWorldEntries(params.id)
   const relations = useAllRelations(params.id)
+  const { uiFlags } = useAIConfig(params.id)
+
+  const tabs = useMemo(() => {
+    return ALL_TABS.filter(t => {
+      if (t.id === 'relations') return true
+      if (t.id === 'timeline') return uiFlags.showTimelineView
+      if (t.id === 'style') return uiFlags.showStyleProfile
+      return false
+    })
+  }, [uiFlags.showTimelineView, uiFlags.showStyleProfile])
+
+  const activeTab: Tab = tabs.some(t => t.id === tab) ? tab : 'relations'
 
   return (
     <ThemeProvider>
@@ -40,9 +53,9 @@ export default function AnalysisPage() {
 
         <div className="border-b bg-background">
           <div className="mx-auto max-w-5xl px-4 flex gap-1">
-            {TABS.map(t => {
+            {tabs.map(t => {
               const Icon = t.icon
-              const active = tab === t.id
+              const active = activeTab === t.id
               return (
                 <button
                   key={t.id}
@@ -64,11 +77,11 @@ export default function AnalysisPage() {
 
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-5xl px-4 py-6">
-            {tab === 'relations' && (
+            {activeTab === 'relations' && (
               <RelationGraph entries={entries ?? []} relations={relations} />
             )}
-            {tab === 'timeline' && <TimelineView entries={entries ?? []} />}
-            {tab === 'style' && <StyleProfile projectId={params.id} />}
+            {activeTab === 'timeline' && uiFlags.showTimelineView && <TimelineView entries={entries ?? []} />}
+            {activeTab === 'style' && uiFlags.showStyleProfile && <StyleProfile projectId={params.id} />}
           </div>
         </div>
       </div>

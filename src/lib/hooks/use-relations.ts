@@ -6,7 +6,7 @@ import { createProjectDB } from '../db/project-db'
 import { metaDb } from '../db/meta-db'
 import { enqueueChange } from '../sync/sync-queue'
 import { createClient } from '../supabase/client'
-import type { Relation, RelationCategory } from '../types'
+import type { RelationCategory } from '../types'
 import {
   getRelationsForEntry as getRelationsForEntryQuery,
   addRelation as addRelationQuery,

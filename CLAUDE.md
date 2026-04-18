@@ -45,7 +45,7 @@ Data is split across two Dexie databases for project isolation:
 1. **`inkforge-meta`** (`src/lib/db/meta-db.ts`) — shared singleton, stores `projectIndex` (project listings for the dashboard)
 2. **`inkforge-project-{id}`** (`src/lib/db/project-db.ts`) — one per project, stores `chapters`, `worldEntries`, `relations`, `layoutSettings`, `aiConfig`, `messages`
 
-Create per-project DB instances via `createProjectDB(projectId)`. The project DB is currently at schema version 4.
+Create per-project DB instances via `createProjectDB(projectId)`. The project DB is currently at schema version 11 (adds `revisions`, `embeddings`, `analyses`, `conversations`, `aiUsage` tables on top of the original core tables).
 
 ### Domain Types
 
@@ -78,6 +78,16 @@ All panels are resizable via `react-resizable-panels` with per-project layout pe
 - Token budget of 4000 tokens (estimated at ~1.5 chars/token for Chinese)
 - Priority trimming order: character > location > rule > timeline
 - Injected into the system prompt as `【世界观百科】` section
+
+### Phase B-D Experiment Flags
+
+`src/lib/ai/experiment-flags.ts` defines opt-in 2026 Anthropic primitives, gated per-project via `AIConfig.experimentFlags` and resolved with provider-awareness (Anthropic-only):
+
+- **`citations`** (Phase C): world-bible is sent as a Custom Content document (one block per WorldEntry) with `citations: { enabled: true }`, enforcing grounded responses. Each assistant message persists `citations[]` for UI 溯源 chips. Implemented in `src/lib/ai/citations.ts`, `src/lib/ai/providers/anthropic.ts`, `src/components/workspace/citation-chip.tsx`.
+- **`extendedCacheTtl`** (Phase D): sends `anthropic-beta: extended-cache-ttl-2025-04-11` header for 1-hour cache TTL (default 5 min).
+- **`thinking`** (Phase C stub / v1.1): toggle exposed in UI; behavioral implementation deferred to v1.1 based on A/B data from `abTestMetrics`.
+
+Every AI chat turn writes both `aiUsage` (token/latency) and `abTestMetrics` (experiment group + citation count). See `src/lib/db/ab-metrics-queries.ts` for aggregation.
 
 ### Cloud Sync
 

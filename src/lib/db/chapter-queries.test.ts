@@ -11,7 +11,6 @@ import {
   updateChapterStatus,
   getChapterNumber,
 } from './chapter-queries'
-import type { Chapter } from '../types'
 
 describe('chapter-queries', () => {
   let db: InkForgeProjectDB

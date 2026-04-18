@@ -3,14 +3,16 @@
 import { useState } from 'react'
 import { ChatMessage } from '@/lib/hooks/use-ai-chat'
 import { DraftCard } from './draft-card'
+import { CitationChip } from './citation-chip'
 import { Feather, Check, Copy } from 'lucide-react'
 
 interface MessageBubbleProps {
   message: ChatMessage
   onInsertDraft?: (draftId: string, content: string) => void
+  onCitationClick?: (entryId: string | undefined) => void
 }
 
-export function MessageBubble({ message, onInsertDraft }: MessageBubbleProps) {
+export function MessageBubble({ message, onInsertDraft, onCitationClick }: MessageBubbleProps) {
   const isUser = message.role === 'user'
   const [copied, setCopied] = useState(false)
   const time = new Date(message.timestamp).toLocaleTimeString('zh-CN', {
@@ -76,6 +78,20 @@ export function MessageBubble({ message, onInsertDraft }: MessageBubbleProps) {
         <div className="text-[14px] text-foreground whitespace-pre-wrap break-words overflow-hidden leading-[1.8]">
           {message.content}
         </div>
+
+        {message.citations && message.citations.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-1">
+            <span className="text-[11px] text-muted-foreground self-center mr-1">溯源:</span>
+            {message.citations.map((citation, idx) => (
+              <CitationChip
+                key={`${citation.startBlockIndex}-${idx}`}
+                citation={citation}
+                index={idx}
+                onClick={onCitationClick}
+              />
+            ))}
+          </div>
+        )}
 
         {message.hasDraft && message.draftId && (
           <div className="pt-2">

@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useProjects } from './use-projects'
 import { metaDb } from '../db/meta-db'
-import type { ProjectMeta } from '../types'
 
 // We need to test the hook without actual React reactive queries
 // since useLiveQuery requires a DexieProvider. For unit tests,

@@ -34,6 +34,25 @@ export interface BuildSystemPromptParams {
   selectedText?: string
   /** Optional rolling summary of prior turns beyond the sliding window. */
   rollingSummary?: string
+  /**
+   * When true, the caller is opting in to the Citations API path. The
+   * worldBibleBlocks array is populated for document-style injection and
+   * the text-block worldBibleContext is emptied so the provider does not
+   * send it twice.
+   */
+  useCitations?: boolean
+  /** When true, opt in to the 1-hour cache TTL beta header (Anthropic-only). */
+  useExtendedCacheTtl?: boolean
+}
+
+/**
+ * One Custom Content block for the world-bible document. Block index in the
+ * resulting document content[] maps 1:1 to the index here.
+ */
+export interface WorldBibleBlock {
+  entryId: string
+  entryName: string
+  text: string
 }
 
 /**
@@ -44,16 +63,31 @@ export interface BuildSystemPromptParams {
 export interface SegmentedSystemPrompt {
   /** Stable across every request globally. */
   baseInstruction: string
-  /** Stable across a session as long as world entries don't change. */
+  /** Stable across a session as long as world entries don't change. Empty when useCitations is true. */
   worldBibleContext: string
   /** Per-message preamble describing current discussion context. */
   runtimeContext: string
+  /**
+   * When useCitations is true, world-bible is projected here as one block per
+   * entry for the Custom Content document. Anthropic provider packs these into
+   * the last user message; other providers ignore this field.
+   */
+  worldBibleBlocks: WorldBibleBlock[]
+  useCitations: boolean
+  /**
+   * Phase D — when true, the Anthropic provider sends the
+   * `anthropic-beta: extended-cache-ttl-2025-04-11` header to opt in to
+   * 1-hour cache TTL (default 5 min). Anthropic-only; ignored by other providers.
+   */
+  useExtendedCacheTtl: boolean
 }
 
 export function buildSegmentedSystemPrompt(
   params: BuildSystemPromptParams
 ): SegmentedSystemPrompt {
-  const worldBibleContext = buildWorldBibleBlock(params.worldEntries)
+  const useCitations = params.useCitations ?? false
+  const worldBibleContext = useCitations ? '' : buildWorldBibleBlock(params.worldEntries)
+  const worldBibleBlocks = useCitations ? buildWorldBibleBlocks(params.worldEntries) : []
   const parts: string[] = []
   if (params.rollingSummary && params.rollingSummary.trim()) {
     parts.push(`【此前对话摘要】\n${params.rollingSummary.trim()}`)
@@ -67,6 +101,9 @@ export function buildSegmentedSystemPrompt(
     baseInstruction: BASE_INSTRUCTION,
     worldBibleContext,
     runtimeContext,
+    worldBibleBlocks,
+    useCitations,
+    useExtendedCacheTtl: params.useExtendedCacheTtl ?? false,
   }
 }
 
@@ -76,6 +113,19 @@ export function buildWorldBibleBlock(entries: WorldEntry[]): string {
   }
   const body = entries.map(formatEntryForContext).join('\n')
   return `【世界观百科】\n${body}`
+}
+
+/**
+ * Build per-entry content blocks for the Citations API Custom Content document.
+ * Each block's text is the same as the formatted string in buildWorldBibleBlock
+ * so users see consistent phrasing; the difference is structural, not textual.
+ */
+export function buildWorldBibleBlocks(entries: WorldEntry[]): WorldBibleBlock[] {
+  return entries.map(entry => ({
+    entryId: entry.id,
+    entryName: entry.name,
+    text: formatEntryForContext(entry),
+  }))
 }
 
 /** Concatenate the segments for providers without cache support. */

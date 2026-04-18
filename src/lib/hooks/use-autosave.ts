@@ -96,7 +96,7 @@ export function useAutoSave(
         console.error('Auto-save on unmount failed:', err)
       })
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   return { isSaving, lastSaved }
 }

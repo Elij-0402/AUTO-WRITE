@@ -2,8 +2,14 @@ import { useCallback, useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { createProjectDB } from '../db/project-db'
 import type { AIProvider } from '../db/project-db'
+import type { ExperimentFlags } from '../ai/experiment-flags'
+import { resolveExperimentFlags } from '../ai/experiment-flags'
+import type { UiExperimentFlags } from '../ai/ui-flags'
+import { resolveUiFlags } from '../ai/ui-flags'
 
 export type { AIProvider } from '../db/project-db'
+export type { ExperimentFlags } from '../ai/experiment-flags'
+export type { UiExperimentFlags } from '../ai/ui-flags'
 
 export interface AIConfig {
   id: 'config'
@@ -12,6 +18,8 @@ export interface AIConfig {
   baseUrl: string
   model?: string
   availableModels?: string[]
+  experimentFlags?: ExperimentFlags
+  uiFlags?: UiExperimentFlags
 }
 
 const DEFAULT_CONFIG: AIConfig = {
@@ -40,6 +48,16 @@ export function useAIConfig(projectId: string) {
   )
   const loading = liveConfig === undefined
 
+  const experimentFlags = useMemo(
+    () => resolveExperimentFlags({ provider: config.provider, experimentFlags: config.experimentFlags }),
+    [config.provider, config.experimentFlags]
+  )
+
+  const uiFlags = useMemo(
+    () => resolveUiFlags(config.uiFlags),
+    [config.uiFlags]
+  )
+
   const saveConfig = useCallback(async (newConfig: Partial<AIConfig>) => {
     if (!projectId) return DEFAULT_CONFIG
     const updated = { ...config, ...newConfig, id: 'config' as const }
@@ -52,5 +70,5 @@ export function useAIConfig(projectId: string) {
     await db.table('aiConfig').delete('config')
   }, [projectId, db])
 
-  return { config, loading, saveConfig, clearConfig }
+  return { config, loading, saveConfig, clearConfig, experimentFlags, uiFlags }
 }

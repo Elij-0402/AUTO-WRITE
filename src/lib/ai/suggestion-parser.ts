@@ -1,5 +1,4 @@
 import type { WorldEntryType } from '../types/world-entry'
-import type { Relation } from '../types/relation'
 
 /**
  * Entry type mapping for suggestion parsing.
@@ -116,7 +115,7 @@ function parseNewEntrySuggestions(text: string): NewEntrySuggestion[] {
   while ((match = charPattern.exec(text)) !== null) {
     const name = match[1].trim()
     const description = match[2]?.trim() || ''
-    suggestions.push(createNewEntrySuggestion('character', name, description, match.index))
+    suggestions.push(createNewEntrySuggestion('character', name, description))
   }
 
   // Pattern 2: "可以创建新地点: [名称] ([描述])"
@@ -124,7 +123,7 @@ function parseNewEntrySuggestions(text: string): NewEntrySuggestion[] {
   while ((match = locationPattern.exec(text)) !== null) {
     const name = match[1].trim()
     const description = match[2]?.trim() || ''
-    suggestions.push(createNewEntrySuggestion('location', name, description, match.index))
+    suggestions.push(createNewEntrySuggestion('location', name, description))
   }
 
   // Pattern 3: "建议添加规则: [名称] - [内容]"
@@ -132,7 +131,7 @@ function parseNewEntrySuggestions(text: string): NewEntrySuggestion[] {
   while ((match = rulePattern.exec(text)) !== null) {
     const name = match[1].trim()
     const content = match[2]?.trim() || ''
-    suggestions.push(createNewEntrySuggestion('rule', name, content, match.index))
+    suggestions.push(createNewEntrySuggestion('rule', name, content))
   }
 
   // Pattern 4: "时间线上可以添加: [事件]" or "可以添加时间线: [事件]"
@@ -140,7 +139,7 @@ function parseNewEntrySuggestions(text: string): NewEntrySuggestion[] {
   while ((match = timelinePattern.exec(text)) !== null) {
     const name = match[1].trim()
     const eventDescription = match[2]?.trim() || ''
-    suggestions.push(createNewEntrySuggestion('timeline', name, eventDescription, match.index))
+    suggestions.push(createNewEntrySuggestion('timeline', name, eventDescription))
   }
 
   return suggestions
@@ -224,8 +223,6 @@ function createNewEntrySuggestion(
   entryType: WorldEntryType,
   name: string,
   description: string,
-  matchIndex: number,
-  text?: string
 ): NewEntrySuggestion {
   // Confidence scoring
   let confidence: 'high' | 'medium' | 'low' = 'medium'

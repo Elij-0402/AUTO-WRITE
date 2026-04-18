@@ -99,8 +99,8 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const [prefillEntry, setPrefillEntry] = useState<{ type: WorldEntryType; data: NewEntryPrefillData } | null>(null)
 
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
-  const [existingEntry, setExistingEntry] = useState<WorldEntry | null>(null)
-  const [duplicateEntryName, setDuplicateEntryName] = useState('')
+  const [existingEntry] = useState<WorldEntry | null>(null)
+  const [duplicateEntryName] = useState('')
 
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 

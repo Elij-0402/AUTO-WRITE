@@ -51,9 +51,9 @@ export function NewEntryDialog({
   onCreateNew
 }: NewEntryDialogProps) {
   const [name, setName] = useState('')
-  const [alias, setAlias] = useState('')
+  const [alias] = useState('')
   const [appearance, setAppearance] = useState('')
-  const [personality, setPersonality] = useState('')
+  const [personality] = useState('')
   const [background, setBackground] = useState('')
   const [description, setDescription] = useState('')
   const [features, setFeatures] = useState('')

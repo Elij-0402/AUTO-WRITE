@@ -17,6 +17,7 @@ import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
 import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
+import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
 import { GenerationDrawer } from '@/components/workspace/generation-drawer'
@@ -364,6 +365,7 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
 }) {
   const { content, isSaving, updateContent } = useChapterEditor(projectId, chapterId)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const { uiFlags } = useAIConfig(projectId)
 
   const handleRestore = useCallback((snapshot: object) => {
     editorRef.current?.setContent(snapshot)
@@ -381,10 +383,12 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
       />
       <div className="surface-elevated flex items-center justify-between px-3 py-1.5 film-edge">
         <div className="flex items-center gap-2">
-          <GenerationButton
-            onOpenDrawer={onOpenGenerationDrawer}
-            generation={generation}
-          />
+          {uiFlags.showGenerationPipeline && (
+            <GenerationButton
+              onOpenDrawer={onOpenGenerationDrawer}
+              generation={generation}
+            />
+          )}
           <Button
             variant="ghost"
             size="sm"

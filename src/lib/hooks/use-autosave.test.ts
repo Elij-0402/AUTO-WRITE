@@ -70,7 +70,7 @@ describe('useAutoSave', () => {
     )
 
     // Change content
-    const { rerender } = renderHook(
+    renderHook(
       ({ deps }) => useAutoSave(saveFn, deps, 500),
       { initialProps: { deps: ['changed'] } }
     )

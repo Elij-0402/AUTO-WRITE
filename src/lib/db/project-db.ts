@@ -1,6 +1,9 @@
 import Dexie, { type Table } from 'dexie'
 import type { Chapter, ProjectMeta, WorldEntry, Relation } from '../types'
 import type { Embedding } from '../rag/types'
+import type { ExperimentFlags } from '../ai/experiment-flags'
+import type { UiExperimentFlags } from '../ai/ui-flags'
+import type { Citation } from '../ai/citations'
 
 /**
  * AI configuration stored per-project in IndexedDB.
@@ -18,6 +21,18 @@ export interface AIConfig {
   baseUrl: string
   model?: string
   availableModels?: string[]
+  /**
+   * Phase B experiment flags for 2026 Anthropic primitives rollout.
+   * Undefined on pre-v12 records — resolved to all-false defaults via
+   * src/lib/ai/experiment-flags.ts::resolveExperimentFlags.
+   */
+  experimentFlags?: ExperimentFlags
+  /**
+   * Phase F UI surface pruning — gates non-spine features (generation pipeline,
+   * style profile, timeline view). Undefined = defaults to all-hidden. Resolved
+   * via src/lib/ai/ui-flags.ts::resolveUiFlags.
+   */
+  uiFlags?: UiExperimentFlags
 }
 
 /**
@@ -36,6 +51,12 @@ export interface ChatMessage {
   timestamp: number
   hasDraft?: boolean
   draftId?: string
+  /**
+   * Phase C Citations — populated when experimentFlags.citations was on at
+   * response time. Each citation points back to a WorldEntry block so the UI
+   * can surface 溯源 chips. Undefined on legacy messages.
+   */
+  citations?: Citation[]
 }
 
 /**
@@ -134,6 +155,37 @@ export interface AIUsageEvent {
 }
 
 /**
+ * Phase B A/B experiment metric — per deep-interview spec AC-4.
+ *
+ * One row per AI chat turn that executed under a specific experiment group.
+ * Parallel to AIUsageEvent but adds experimentGroup tagging and citation
+ * quality metrics. Never synced to Supabase (local experiment data only).
+ */
+export interface ABTestMetric {
+  id: string
+  projectId: string
+  conversationId: string | null
+  /** Foreign reference to AIUsageEvent.id or chat message id for traceability. */
+  messageId: string
+  experimentGroup: ExperimentFlags
+  latencyMs: number
+  inputTokens: number
+  outputTokens: number
+  cacheReadTokens: number
+  cacheWriteTokens: number
+  /** Number of citations in the assistant response (0 when citations flag off). */
+  citationCount: number
+  /**
+   * Fraction of messages referencing WorldEntries that produced zero citations.
+   * Undefined when the citations flag is off (nothing to measure).
+   */
+  emptyCitationRate?: number
+  /** Optional 1-5 rating; filled by author via UI. Nullable for A/B without feedback. */
+  authorRating?: number
+  createdAt: number
+}
+
+/**
  * Layout settings stored per-project in IndexedDB per D-24.
  * sidebarWidth: persisted sidebar width in pixels per D-25
  * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world') per D-08, D-14
@@ -167,6 +219,7 @@ export class InkForgeProjectDB extends Dexie {
   analyses!: Table<AnalysisArtifact, string>
   conversations!: Table<Conversation, string>
   aiUsage!: Table<AIUsageEvent, string>
+  abTestMetrics!: Table<ABTestMetric, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -335,6 +388,25 @@ export class InkForgeProjectDB extends Dexie {
       analyses: 'id, kind, invalidationKey, createdAt',
       conversations: 'id, projectId, updatedAt',
       aiUsage: 'id, projectId, conversationId, createdAt, model',
+    })
+    // v12: abTestMetrics table for Phase B A/B experiment harness.
+    // Additive-only — no column drops/renames. v11 code reading a v12 DB
+    // will simply ignore the new table.
+    this.version(12).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+      aiConfig: 'id',
+      messages: 'id, projectId, conversationId, role, timestamp',
+      consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+      revisions: 'id, projectId, chapterId, createdAt',
+      embeddings: 'id, sourceType, sourceId, embedderId, updatedAt, [sourceType+sourceId]',
+      analyses: 'id, kind, invalidationKey, createdAt',
+      conversations: 'id, projectId, updatedAt',
+      aiUsage: 'id, projectId, conversationId, createdAt, model',
+      abTestMetrics: 'id, projectId, conversationId, createdAt, [projectId+createdAt]',
     })
   }
 }

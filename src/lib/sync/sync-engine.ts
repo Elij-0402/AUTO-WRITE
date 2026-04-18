@@ -19,16 +19,6 @@ const TABLE_MAP: Record<string, string> = {
   // NOT synced: aiConfig (D-48)
 }
 
-// Reverse map: cloud table name -> local table name
-const CLOUD_TO_LOCAL: Record<string, string> = {
-  project_index: 'projectIndex',
-  chapters: 'chapters',
-  world_entries: 'worldEntries',
-  relations: 'relations',
-  messages: 'messages',
-  conversations: 'conversations',
-}
-
 const SYNC_BATCH_SIZE = 50
 const MAX_RETRIES = 5
 const BASE_RETRY_DELAY = 1000 // 1 second
@@ -145,8 +135,7 @@ export async function performInitialSync(
 
   for (let i = 0; i < cloudTables.length; i++) {
     const cloudTable = cloudTables[i]
-    const localTable = CLOUD_TO_LOCAL[cloudTable]
-    
+
     // Fetch user's cloud data for this table
     const { data, error } = await supabase
       .from(cloudTable)

@@ -10,7 +10,7 @@ interface DraftCardProps {
   onInsert: () => void
 }
 
-export function DraftCard({ draftId: _draftId, content, onInsert }: DraftCardProps) {
+export function DraftCard({ content, onInsert }: DraftCardProps) {
   const [inserted, setInserted] = useState(false)
 
   const handleInsert = () => {

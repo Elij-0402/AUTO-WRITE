@@ -2,16 +2,23 @@
  * Anthropic provider: streams Claude responses through @anthropic-ai/sdk
  * and normalizes into the provider-agnostic AIEvent stream.
  *
- * Prompt caching is enabled by marking the stable base instruction and the
- * world-bible context with cache_control: ephemeral. That covers the two
- * largest content blocks per request; typical cache hit rate in a project
- * session is >90%.
+ * Two code paths controlled by segmentedSystem.useCitations (Phase C flag):
+ *
+ *   Legacy path (useCitations=false): world-bible is a text block in
+ *   `system: [...]` with `cache_control: ephemeral`, same as pre-Phase-C.
+ *
+ *   Citations path (useCitations=true): world-bible is a Custom Content
+ *   document inserted into the LAST user message's content array with
+ *   `citations: { enabled: true }` and `cache_control: ephemeral`. Each
+ *   WorldEntry becomes one content block, enabling grounded citations.
+ *   Stream `citations_delta` events are normalized into AICitationEvent.
  */
 
 import Anthropic from '@anthropic-ai/sdk'
 import type { AIEvent, AIToolInput } from '../events'
-import type { SegmentedSystemPrompt } from '../prompts'
+import type { SegmentedSystemPrompt, WorldBibleBlock } from '../prompts'
 import { ALL_TOOL_SCHEMAS } from '../tools/schemas'
+import { normalizeCitation, enrichCitation, type AnthropicCitation } from '../citations'
 import type { ProviderStreamParams } from './types'
 
 export async function* streamAnthropic(
@@ -26,20 +33,28 @@ export async function* streamAnthropic(
   })
 
   const systemBlocks = buildSystemBlocks(segmentedSystem)
+  const anthropicMessages = buildAnthropicMessages(messages, segmentedSystem)
+  const blockMap = buildBlockMap(segmentedSystem.worldBibleBlocks)
+
+  // Phase D: when experimentFlags.extendedCacheTtl is on, opt in to the
+  // 1-hour TTL beta via request header. Keeps 5-min default otherwise.
+  const extraHeaders = segmentedSystem.useExtendedCacheTtl
+    ? { 'anthropic-beta': 'extended-cache-ttl-2025-04-11' }
+    : undefined
 
   const stream = client.messages.stream(
     {
       model: config.model || 'claude-sonnet-4-5',
       max_tokens: 4096,
       system: systemBlocks,
-      messages: messages.map(toAnthropicMessage),
+      messages: anthropicMessages,
       tools: ALL_TOOL_SCHEMAS.map((t) => ({
         name: t.name,
         description: t.description,
         input_schema: JSON.parse(JSON.stringify(t.input_schema)) as Anthropic.Tool['input_schema'],
       })),
     },
-    { signal }
+    { signal, headers: extraHeaders }
   )
 
   // Track in-flight tool_use blocks by index so we can accumulate partial JSON.
@@ -52,12 +67,17 @@ export async function* streamAnthropic(
         toolBlocks.set(event.index, { id: block.id, name: block.name, jsonBuffer: '' })
       }
     } else if (event.type === 'content_block_delta') {
-      const delta = event.delta
-      if (delta.type === 'text_delta') {
+      const delta = event.delta as { type: string; text?: string; partial_json?: string; citation?: AnthropicCitation }
+      if (delta.type === 'text_delta' && typeof delta.text === 'string') {
         yield { type: 'text_delta', delta: delta.text }
-      } else if (delta.type === 'input_json_delta') {
+      } else if (delta.type === 'input_json_delta' && typeof delta.partial_json === 'string') {
         const block = toolBlocks.get(event.index)
         if (block) block.jsonBuffer += delta.partial_json
+      } else if (delta.type === 'citations_delta' && delta.citation) {
+        const normalized = normalizeCitation(delta.citation)
+        if (normalized) {
+          yield { type: 'citation', citation: enrichCitation(normalized, blockMap), blockIndex: event.index }
+        }
       }
     } else if (event.type === 'content_block_stop') {
       const block = toolBlocks.get(event.index)
@@ -100,7 +120,9 @@ function buildSystemBlocks(
       cache_control: { type: 'ephemeral' },
     },
   ]
-  if (segments.worldBibleContext) {
+  // When using citations, worldBibleContext is empty and the bible lives in the
+  // last user message as a document block. Legacy path keeps the text block here.
+  if (!segments.useCitations && segments.worldBibleContext) {
     blocks.push({
       type: 'text',
       text: segments.worldBibleContext,
@@ -111,6 +133,58 @@ function buildSystemBlocks(
     blocks.push({ type: 'text', text: segments.runtimeContext })
   }
   return blocks
+}
+
+function buildAnthropicMessages(
+  messages: { role: 'user' | 'assistant'; content: string }[],
+  segments: SegmentedSystemPrompt
+): Anthropic.MessageParam[] {
+  const base = messages.map(toAnthropicMessage)
+  if (!segments.useCitations || segments.worldBibleBlocks.length === 0) {
+    return base
+  }
+
+  // Inject world-bible as a Custom Content document into the LAST user message.
+  let lastUserIdx = -1
+  for (let i = base.length - 1; i >= 0; i--) {
+    if (base[i].role === 'user') {
+      lastUserIdx = i
+      break
+    }
+  }
+  if (lastUserIdx < 0) return base
+
+  const lastUser = base[lastUserIdx]
+  const userText = typeof lastUser.content === 'string' ? lastUser.content : ''
+
+  const documentBlock: Anthropic.DocumentBlockParam = {
+    type: 'document',
+    source: {
+      type: 'content',
+      content: segments.worldBibleBlocks.map(b => ({
+        type: 'text' as const,
+        text: b.text,
+      })),
+    },
+    title: '世界观百科',
+    citations: { enabled: true },
+    cache_control: { type: 'ephemeral' },
+  }
+
+  const rebuilt: Anthropic.MessageParam = {
+    role: 'user',
+    content: [documentBlock, { type: 'text', text: userText }],
+  }
+
+  return [...base.slice(0, lastUserIdx), rebuilt, ...base.slice(lastUserIdx + 1)]
+}
+
+function buildBlockMap(
+  blocks: WorldBibleBlock[]
+): Map<number, { entryId: string; entryName: string }> {
+  const map = new Map<number, { entryId: string; entryName: string }>()
+  blocks.forEach((b, idx) => map.set(idx, { entryId: b.entryId, entryName: b.entryName }))
+  return map
 }
 
 function toAnthropicMessage(m: {

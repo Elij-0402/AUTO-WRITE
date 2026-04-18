@@ -45,6 +45,9 @@ next-env.d.ts
 .opencode/
 .planning/
 
+# Git worktrees (isolated development workspaces)
+.worktrees/
+
 # MCP configuration (local tooling)
 .mcp.json
 

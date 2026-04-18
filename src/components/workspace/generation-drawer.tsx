@@ -83,6 +83,12 @@ export function GenerationDrawer({
                 采纳
               </button>
               <button
+                onClick={onClose}
+                className="flex-1 px-3 py-2 text-sm font-medium rounded-md border border-border hover:bg-muted"
+              >
+                拒绝
+              </button>
+              <button
                 onClick={onRegenerate}
                 className="flex-1 px-3 py-2 text-sm font-medium rounded-md border border-border hover:bg-muted"
               >

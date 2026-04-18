@@ -21,6 +21,7 @@ export function useAutoSave(
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const saveFnRef = useRef(saveFn)
+  const isFirstRun = useRef(true)
 
   // Keep saveFn ref up to date
   useEffect(() => {
@@ -40,14 +41,18 @@ export function useAutoSave(
     }
   }, [])
 
-  // Debounce on deps change
+  // Debounce on deps change — skip the initial mount so we don't write the
+  // just-loaded content back to disk before the user has edited anything.
   useEffect(() => {
-    // Clear any existing timer
+    if (isFirstRun.current) {
+      isFirstRun.current = false
+      return
+    }
+
     if (timerRef.current) {
       clearTimeout(timerRef.current)
     }
 
-    // Set a new debounced save
     timerRef.current = setTimeout(() => {
       doSave()
     }, debounceMs)

@@ -5,7 +5,7 @@
  * and context assembly for world bible entries to be injected into AI system prompts.
  */
 
-import type { WorldEntry, WorldEntryType } from '../types/world-entry'
+import type { WorldEntry } from '../types/world-entry'
 
 /** Entry type groupings for context injection — per D-09 */
 export interface EntriesByType {
@@ -17,9 +17,6 @@ export interface EntriesByType {
 
 /** Token budget per D-01: 4000 tokens max for context */
 export const DEFAULT_TOKEN_BUDGET = 4000
-
-/** Priority order for trimming per D-07: character > location > rule > timeline */
-const TYPE_PRIORITY: WorldEntryType[] = ['character', 'location', 'rule', 'timeline']
 
 /**
  * Extract keywords from user input for matching against entry names/fields.
@@ -146,73 +143,66 @@ export function calculateTokenCount(entries: WorldEntry[]): number {
 
 /**
  * Format a single entry for injection into system prompt.
- * Per D-26: 【角色】Name: 姓名 X, 外貌 X, 性格 X, 背景 X
- * Per D-11: Name + core description fields only (no tags, no relations)
+ * Per D-26: 【角色】Name｜外貌: X｜性格: X｜背景: X
+ * Empty fields are omitted so we don't burn tokens on "外貌 , 性格 ,".
  */
 export function formatEntryForContext(entry: WorldEntry): string {
-  switch (entry.type) {
-    case 'character':
-      return `【角色】${entry.name}: 姓名 ${entry.name || ''}, 外貌 ${entry.appearance || ''}, 性格 ${entry.personality || ''}, 背景 ${entry.background || ''}`
-    
-    case 'location':
-      return `【地点】${entry.name}: 名称 ${entry.name || ''}, 描述 ${entry.description || ''}, 特征 ${entry.features || ''}`
-    
-    case 'rule':
-      return `【规则】${entry.name}: 名称 ${entry.name || ''}, 内容 ${entry.content || ''}, 适用范围 ${entry.scope || ''}`
-    
-    case 'timeline':
-      return `【时间线】${entry.name}: 名称 ${entry.name || ''}, 时间点 ${entry.timePoint || ''}, 事件 ${entry.eventDescription || ''}`
-    
-    default:
-      return `【${entry.type}】${entry.name}`
+  const prefix =
+    entry.type === 'character' ? '【角色】'
+      : entry.type === 'location' ? '【地点】'
+        : entry.type === 'rule' ? '【规则】'
+          : entry.type === 'timeline' ? '【时间线】'
+            : `【${entry.type}】`
+
+  const parts: string[] = [`${prefix}${entry.name}`]
+  const push = (label: string, value: string | undefined) => {
+    const v = value?.trim()
+    if (v) parts.push(`${label}: ${v}`)
   }
+
+  if (entry.type === 'character') {
+    push('别名', entry.alias)
+    push('外貌', entry.appearance)
+    push('性格', entry.personality)
+    push('背景', entry.background)
+  } else if (entry.type === 'location') {
+    push('描述', entry.description)
+    push('特征', entry.features)
+  } else if (entry.type === 'rule') {
+    push('内容', entry.content)
+    push('适用范围', entry.scope)
+  } else if (entry.type === 'timeline') {
+    push('时间点', entry.timePoint)
+    push('事件', entry.eventDescription)
+  }
+
+  const tags = entry.tags?.filter(t => t?.trim()).join(',')
+  if (tags) parts.push(`标签: ${tags}`)
+
+  return parts.join('｜')
 }
 
 /**
  * Trim entries to fit within token budget.
- * Per D-07: Priority-based trimming (character > location > rule > timeline).
- * Keeps trimming until under budget.
+ * Preserves caller ordering — RAG/relevance ranking wins over type priority.
+ * Stops as soon as the next entry would exceed budget.
  */
 export function trimToTokenBudget(
   entries: WorldEntry[],
   maxTokens: number = DEFAULT_TOKEN_BUDGET
 ): WorldEntry[] {
   if (entries.length === 0) return []
-  
-  // Group by priority
-  const byPriority = new Map<WorldEntryType, WorldEntry[]>()
-  for (const type of TYPE_PRIORITY) {
-    byPriority.set(type, [])
-  }
-  
-  for (const entry of entries) {
-    const list = byPriority.get(entry.type)
-    if (list) list.push(entry)
-  }
-  
-  // Build result in priority order
+
   const result: WorldEntry[] = []
   let currentTokens = 0
-  
-  for (const type of TYPE_PRIORITY) {
-    const entriesOfType = byPriority.get(type) || []
-    
-    for (const entry of entriesOfType) {
-      const entryTokens = Math.ceil(formatEntryForContext(entry).length / 1.5)
-      
-      if (currentTokens + entryTokens <= maxTokens) {
-        result.push(entry)
-        currentTokens += entryTokens
-      } else {
-        // Stop adding - over budget
-        break
-      }
-    }
-    
-    // If we just hit budget, stop adding
-    if (currentTokens >= maxTokens) break
+
+  for (const entry of entries) {
+    const entryTokens = Math.ceil(formatEntryForContext(entry).length / 1.5)
+    if (currentTokens + entryTokens > maxTokens) break
+    result.push(entry)
+    currentTokens += entryTokens
   }
-  
+
   return result
 }
 

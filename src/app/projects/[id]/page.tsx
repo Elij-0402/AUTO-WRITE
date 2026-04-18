@@ -18,6 +18,7 @@ import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-fo
 import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
+import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import {
@@ -50,7 +51,7 @@ export default function ProjectPage() {
 
   const { activeTab, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(params.id)
   const { chapters } = useChapters(params.id)
-  const { entries, entriesByType } = useWorldEntries(params.id)
+  const { entries, entriesByType, addEntry } = useWorldEntries(params.id)
   const { projects, updateProject } = useProjects()
   const currentProject = projects.find((p) => p.id === params.id)
 
@@ -66,7 +67,12 @@ export default function ProjectPage() {
     setActiveWorldEntryId(entryId)
   }, [])
 
-  const handleCreateWorldEntry = useCallback((_type: import('@/lib/types').WorldEntryType) => {}, [])
+  const handleCreateWorldEntry = useCallback(async (type: import('@/lib/types').WorldEntryType) => {
+    const id = await addEntry(type)
+    saveActiveTab('world')
+    setActiveOutlineId(null)
+    setActiveWorldEntryId(id)
+  }, [addEntry, saveActiveTab])
 
   const handleDeleteWorldEntry = useCallback((entryId: string) => {
     if (entryId === activeWorldEntryId) {
@@ -248,7 +254,7 @@ export default function ProjectPage() {
                 {sortedChapters.find(c => c.id === activeChapterId)?.title || ''}
               </div>
             )}
-            {mainContent}
+            <PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>
           </div>
         ) : (
           <Group orientation="horizontal" className="flex-1 flex overflow-hidden">
@@ -260,20 +266,22 @@ export default function ProjectPage() {
               groupResizeBehavior="preserve-pixel-size"
             >
               <div className="h-full flex flex-col overflow-hidden surface-1">
-                <ChapterSidebar
-                  projectId={params.id}
-                  activeChapterId={activeChapterId}
-                  onSelectChapter={setActiveChapterId}
-                  activeTab={activeTab}
-                  onTabChange={handleTabChange}
-                  activeOutlineId={activeOutlineId}
-                  onSelectOutline={handleSelectOutline}
-                  activeWorldEntryId={activeWorldEntryId}
-                  onSelectWorldEntry={handleSelectWorldEntry}
-                  onEditWorldEntry={handleEditWorldEntry}
-                  onDeleteWorldEntry={handleDeleteWorldEntry}
-                  onCreateWorldEntry={handleCreateWorldEntry}
-                />
+                <PanelErrorBoundary label="侧边栏">
+                  <ChapterSidebar
+                    projectId={params.id}
+                    activeChapterId={activeChapterId}
+                    onSelectChapter={setActiveChapterId}
+                    activeTab={activeTab}
+                    onTabChange={handleTabChange}
+                    activeOutlineId={activeOutlineId}
+                    onSelectOutline={handleSelectOutline}
+                    activeWorldEntryId={activeWorldEntryId}
+                    onSelectWorldEntry={handleSelectWorldEntry}
+                    onEditWorldEntry={handleEditWorldEntry}
+                    onDeleteWorldEntry={handleDeleteWorldEntry}
+                    onCreateWorldEntry={handleCreateWorldEntry}
+                  />
+                </PanelErrorBoundary>
               </div>
             </Panel>
 
@@ -289,7 +297,7 @@ export default function ProjectPage() {
               <Group orientation="horizontal" className="h-full overflow-hidden">
                 <Panel id="editor" groupResizeBehavior="preserve-relative-size">
                   <div className="h-full flex flex-col overflow-hidden surface-0">
-                    {mainContent}
+                    <PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>
                   </div>
                 </Panel>
 
@@ -309,7 +317,9 @@ export default function ProjectPage() {
                   groupResizeBehavior="preserve-pixel-size"
                 >
                   <div className="h-full">
-                    <AIChatPanel projectId={params.id} onInsertDraft={handleInsertDraft} selectedText={selectedText} onDiscussComplete={() => setSelectedText(null)} />
+                    <PanelErrorBoundary label="AI 对话">
+                      <AIChatPanel projectId={params.id} onInsertDraft={handleInsertDraft} selectedText={selectedText} onDiscussComplete={() => setSelectedText(null)} />
+                    </PanelErrorBoundary>
                   </div>
                 </Panel>
               </Group>

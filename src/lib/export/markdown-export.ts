@@ -5,7 +5,7 @@
 
 import { createProjectDB } from '../db/project-db'
 import { getChapters, getChapterNumber } from '../db/chapter-queries'
-import { extractTextFromContent } from '../db/chapter-queries'
+import { proseMirrorToMarkdown } from './prosemirror-markdown'
 
 /**
  * Export steps labels per UI-SPEC.
@@ -19,43 +19,36 @@ export const EXPORT_STEPS = {
 
 /**
  * Export all chapters of a project as a single Markdown blob.
- * 
+ *
  * @param projectId - The project ID to export
  * @returns Promise<Blob> - UTF-8 encoded Markdown file
- * 
+ *
  * Format per D-13:
  * - Chapter separator: `# 第X章 标题`
- * - Chapter content follows as body
+ * - Chapter content follows as body, rendered from the Tiptap document so
+ *   bold/italic/headings/lists/blockquotes round-trip as Markdown.
  */
 export async function exportToMarkdown(projectId: string): Promise<Blob> {
-  // Step 1: Prepare - open project database
   const db = createProjectDB(projectId)
-  
-  // Step 2: Gather all chapters
   const chapters = await getChapters(db)
-  
-  // Step 3: Build Markdown content
+
   const lines: string[] = []
-  
+
   for (const chapter of chapters) {
-    // Chapter heading: 第X章 标题
     const chapterNum = getChapterNumber(chapter.order)
     lines.push(`# ${chapterNum} ${chapter.title}`)
     lines.push('')
-    
-    // Chapter content - extract plain text from Tiptap structure
+
     if (chapter.content) {
-      const text = extractTextFromContent(chapter.content)
-      lines.push(text)
+      const body = proseMirrorToMarkdown(chapter.content)
+      if (body) lines.push(body)
     }
-    
-    // Add separator between chapters
+
     lines.push('')
     lines.push('---')
     lines.push('')
   }
-  
-  // Step 4: Create blob with UTF-8 encoding
+
   const content = lines.join('\n')
   return new Blob([content], { type: 'text/markdown;charset=utf-8' })
 }

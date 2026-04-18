@@ -18,6 +18,7 @@ export type TableName =
   | 'worldEntries'
   | 'relations'
   | 'messages'
+  | 'conversations'
 
 /**
  * Convert a cloud record (mixed casing) into a canonical camelCase object.

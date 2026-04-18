@@ -158,13 +158,22 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
 
     // Sliding window: only last WINDOW_SIZE messages get replayed; older ones
     // are represented by rollingSummary (injected into systemPrompt above).
+    // Read from Dexie instead of React state so rapid successive sends don't
+    // drop the previous user message from history.
     const WINDOW_SIZE = 10
-    const recentWindow = messages.slice(-WINDOW_SIZE)
+    const persistedHistory = await db.table('messages')
+      .where('conversationId').equals(conversationId)
+      .sortBy('timestamp') as ChatMessage[]
+    const recentWindow = persistedHistory
+      .filter(m => m.id !== assistantMsgId && m.content.length > 0)
+      .slice(-WINDOW_SIZE)
     const historicalMessages: ProviderStreamMessage[] = recentWindow.map(m => ({
       role: m.role,
       content: m.content,
     }))
-    historicalMessages.push({ role: 'user', content })
+    if (recentWindow[recentWindow.length - 1]?.id !== userMsg.id) {
+      historicalMessages.push({ role: 'user', content })
+    }
 
     abortControllerRef.current = new AbortController()
     let fullContent = ''
@@ -226,7 +235,7 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
       await db.table('messages').update(assistantMsgId, finalMsg)
       // Update conversation metadata.
       const nowTs = Date.now()
-      const newCount = (conversation?.messageCount ?? messages.length) + 2
+      const newCount = (conversation?.messageCount ?? persistedHistory.length) + 2
       await db.table('conversations').update(conversationId, {
         updatedAt: nowTs,
         messageCount: newCount,
@@ -328,7 +337,7 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
         }
       }
     }
-  }, [config, messages, projectId, conversationId, entries, entriesByType, options?.selectedText])
+  }, [config, projectId, conversationId, entries, entriesByType, options?.selectedText])
 
   const cancelStream = useCallback(() => {
     abortControllerRef.current?.abort()

@@ -277,7 +277,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     onSwitchToWorldTab?.()
   }
 
-  const isEmpty = messages.length === 0
+  const isEmpty = messages.every(m => !m.content.trim())
   const charCount = input.length
   const overLimit = charCount > CHAR_LIMIT
 
@@ -366,7 +366,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
               {/* Starter chips */}
               <div className="space-y-2">
-                {STARTER_PROMPTS.slice(0, 3).map((starter, i) => (
+                {STARTER_PROMPTS.map((starter, i) => (
                   <button
                     key={starter.label}
                     onClick={() => handleSend(starter.prompt)}

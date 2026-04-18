@@ -1,7 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
 import { getPendingChanges, markSynced, incrementRetry, setLastSyncAt, clearSyncedItems } from './sync-queue'
-import type { SyncQueueItem } from './sync-queue'
-import { resolveConflict } from './conflict-resolver'
 import { metaDb } from '@/lib/db/meta-db'
 import { createProjectDB } from '@/lib/db/project-db'
 import { mapCloudToLocal, mapLocalToCloud, type TableName } from './field-mapping'
@@ -17,6 +15,7 @@ const TABLE_MAP: Record<string, string> = {
   worldEntries: 'world_entries',
   relations: 'relations',
   messages: 'messages',
+  conversations: 'conversations',
   // NOT synced: aiConfig (D-48)
 }
 
@@ -27,6 +26,7 @@ const CLOUD_TO_LOCAL: Record<string, string> = {
   world_entries: 'worldEntries',
   relations: 'relations',
   messages: 'messages',
+  conversations: 'conversations',
 }
 
 const SYNC_BATCH_SIZE = 50
@@ -36,83 +36,92 @@ const BASE_RETRY_DELAY = 1000 // 1 second
 /**
  * Flush pending changes to Supabase.
  * Called every 30 seconds by SyncManager.
+ *
+ * Drains up to `maxDurationMs` worth of pending items in batches, so a user
+ * who comes back online with hundreds of queued edits doesn't wait 30s per 50
+ * changes to catch up.
  */
-export async function flushSyncQueue(): Promise<{ synced: number; failed: number }> {
+export async function flushSyncQueue(
+  maxDurationMs: number = 10_000
+): Promise<{ synced: number; failed: number }> {
   const supabase = createClient()
-  const pending = await getPendingChanges()
-  
-  if (pending.length === 0) {
-    return { synced: 0, failed: 0 }
-  }
+  const start = Date.now()
+  let totalSynced = 0
+  let totalFailed = 0
 
-  // D-30: Batch every 30 seconds
-  const batch = pending.slice(0, SYNC_BATCH_SIZE)
-  const syncedIds: string[] = []
-  const failedIds: string[] = []
+  while (Date.now() - start < maxDurationMs) {
+    const pending = await getPendingChanges()
+    if (pending.length === 0) break
 
-  for (const item of batch) {
-    // Skip aiConfig - D-48: AI config stored locally only
-    if (item.table === 'aiConfig') {
-      syncedIds.push(item.id) // Mark as synced without uploading
-      continue
+    const batch = pending.slice(0, SYNC_BATCH_SIZE)
+    const syncedIds: string[] = []
+    const failedIds: string[] = []
+
+    for (const item of batch) {
+      // Skip aiConfig - D-48: AI config stored locally only
+      if (item.table === 'aiConfig') {
+        syncedIds.push(item.id) // Mark as synced without uploading
+        continue
+      }
+
+      const tableName = TABLE_MAP[item.table]
+      if (!tableName) {
+        console.warn(`Unknown table for sync: ${item.table}`)
+        syncedIds.push(item.id)
+        continue
+      }
+
+      // D-33: Last-Write-Wins conflict resolution
+      // Check for existing cloud record
+      const { data: existing } = await supabase
+        .from(tableName)
+        .select('localUpdatedAt')
+        .eq('id', item.data.id)
+        .single()
+
+      if (existing && existing.localUpdatedAt > item.localUpdatedAt) {
+        // Cloud record is newer - skip (LWW)
+        syncedIds.push(item.id)
+        continue
+      }
+
+      // Prepare data for upsert — field-mapping owns the cloud-wire shape.
+      const upsertData = mapLocalToCloud(
+        item.table as TableName,
+        item.data,
+        item.userId,
+        item.localUpdatedAt
+      )
+
+      const { error } = await supabase
+        .from(tableName)
+        .upsert(upsertData, { onConflict: 'id' })
+
+      if (error) {
+        console.error(`Sync error for ${tableName}:`, error)
+        failedIds.push(item.id)
+      } else {
+        syncedIds.push(item.id)
+      }
     }
 
-    const tableName = TABLE_MAP[item.table]
-    if (!tableName) {
-      console.warn(`Unknown table for sync: ${item.table}`)
-      syncedIds.push(item.id)
-      continue
+    if (syncedIds.length > 0) {
+      await markSynced(syncedIds)
+      await clearSyncedItems()
+    }
+    if (failedIds.length > 0) {
+      await incrementRetry(failedIds)
     }
 
-    // D-33: Last-Write-Wins conflict resolution
-    // Check for existing cloud record
-    const { data: existing } = await supabase
-      .from(tableName)
-      .select('localUpdatedAt')
-      .eq('id', item.data.id)
-      .single()
+    totalSynced += syncedIds.length
+    totalFailed += failedIds.length
 
-    if (existing && existing.localUpdatedAt > item.localUpdatedAt) {
-      // Cloud record is newer - skip (LWW)
-      syncedIds.push(item.id)
-      continue
-    }
-
-    // Prepare data for upsert — field-mapping owns the cloud-wire shape.
-    const upsertData = mapLocalToCloud(
-      item.table as TableName,
-      item.data,
-      item.userId,
-      item.localUpdatedAt
-    )
-
-    const { error } = await supabase
-      .from(tableName)
-      .upsert(upsertData, { onConflict: 'id' })
-
-    if (error) {
-      console.error(`Sync error for ${tableName}:`, error)
-      failedIds.push(item.id)
-    } else {
-      syncedIds.push(item.id)
-    }
+    // If the whole batch failed, don't spin — let retry-with-backoff kick in.
+    if (syncedIds.length === 0) break
   }
 
-  // Update queue status
-  if (syncedIds.length > 0) {
-    await markSynced(syncedIds)
-    // Physically remove synced rows. markSynced only flips a flag, so without
-    // this call the queue grows forever (one row per local write, never GC'd).
-    await clearSyncedItems()
-  }
-  if (failedIds.length > 0) {
-    await incrementRetry(failedIds)
-  }
-
-  // Update last sync timestamp
   await setLastSyncAt(Date.now())
-
-  return { synced: syncedIds.length, failed: failedIds.length }
+  return { synced: totalSynced, failed: totalFailed }
 }
 
 /**
@@ -130,7 +139,7 @@ export async function performInitialSync(
   await flushSyncQueue()
   
   // Then pull cloud data
-  const cloudTables = ['project_index', 'chapters', 'world_entries', 'relations']
+  const cloudTables = ['project_index', 'chapters', 'world_entries', 'relations', 'conversations']
   let merged = 0
   let errors = 0
 
@@ -247,6 +256,18 @@ export async function performInitialSync(
                   createdAt: new Date(local.createdAt as string | number),
                   deletedAt: local.deletedAt ? new Date(local.deletedAt as string | number) : null,
                 } as Parameters<typeof projectDb.relations.put>[0])
+              } else if (cloudTable === 'conversations') {
+                const local = mapCloudToLocal('conversations', record) as Record<string, unknown>
+                await projectDb.conversations.put({
+                  id: local.id as string,
+                  projectId: local.projectId as string,
+                  title: (local.title as string) ?? '对话',
+                  createdAt: Number(local.createdAt ?? Date.now()),
+                  updatedAt: Number(local.updatedAt ?? Date.now()),
+                  messageCount: Number(local.messageCount ?? 0),
+                  rollingSummary: local.rollingSummary as string | undefined,
+                  summarizedUpTo: local.summarizedUpTo as number | undefined,
+                })
               }
               merged++
             } catch (e) {

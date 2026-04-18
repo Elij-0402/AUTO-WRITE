@@ -19,6 +19,9 @@ import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
+import { GenerationDrawer } from '@/components/workspace/generation-drawer'
+import { GenerationButton } from '@/components/workspace/generation-button'
+import { useChapterGeneration } from '@/lib/hooks/use-chapter-generation'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import {
@@ -48,12 +51,14 @@ export default function ProjectPage() {
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
+  const [generationDrawerOpen, setGenerationDrawerOpen] = useState(false)
 
   const { activeTab, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(params.id)
   const { chapters } = useChapters(params.id)
   const { entries, entriesByType, addEntry } = useWorldEntries(params.id)
   const { projects, updateProject } = useProjects()
   const currentProject = projects.find((p) => p.id === params.id)
+  const generation = useChapterGeneration(params.id, activeChapterId ?? '')
 
   const handleSelectOutline = useCallback((chapterId: string) => {
     setActiveOutlineId(chapterId)
@@ -203,7 +208,7 @@ export default function ProjectPage() {
         allEntries={entries || []}
       />
     ) : activeChapterId ? (
-      <EditorWithStatus projectId={params.id} chapterId={activeChapterId} editorRef={editorRef} editorContentRef={editorContentRef} onDiscuss={handleDiscuss} />
+      <EditorWithStatus projectId={params.id} chapterId={activeChapterId} editorRef={editorRef} editorContentRef={editorContentRef} onDiscuss={handleDiscuss} onOpenGenerationDrawer={() => setGenerationDrawerOpen(true)} generation={generation} />
     ) : (
       <Placeholder activeTab={activeTab} />
     )
@@ -243,6 +248,23 @@ export default function ProjectPage() {
             )}
           </DialogContent>
         </Dialog>
+
+        <GenerationDrawer
+          open={generationDrawerOpen}
+          onClose={() => setGenerationDrawerOpen(false)}
+          onAccept={async () => {
+            if (editorRef.current) {
+              editorRef.current.insertContent(generation.streamingContent)
+            }
+            setGenerationDrawerOpen(false)
+            generation.resetGeneration()
+          }}
+          onRegenerate={() => generation.startGeneration()}
+          streamingContent={generation.streamingContent}
+          status={generation.status}
+          error={generation.error}
+          editorRef={editorRef}
+        />
 
         <div
           className={`flex-1 flex overflow-hidden transition-[opacity] duration-[var(--dur-slow)] ease-[cubic-bezier(0.16,1,0.3,1)]`}
@@ -332,12 +354,14 @@ export default function ProjectPage() {
   )
 }
 
-function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, onDiscuss }: {
+function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, onDiscuss, onOpenGenerationDrawer, generation }: {
   projectId: string;
   chapterId: string;
   editorRef: RefObject<EditorHandle | null>
   editorContentRef: RefObject<HTMLDivElement | null>
   onDiscuss: (text: string) => void
+  onOpenGenerationDrawer: () => void
+  generation: ReturnType<typeof useChapterGeneration>
 }) {
   const { content, isSaving, updateContent } = useChapterEditor(projectId, chapterId)
   const [historyOpen, setHistoryOpen] = useState(false)
@@ -357,15 +381,21 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
         className="flex-1"
       />
       <div className="surface-elevated flex items-center justify-between px-3 py-1.5 film-edge">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 text-[11px] text-muted-foreground hover:text-foreground uppercase tracking-wider"
-          onClick={() => setHistoryOpen(true)}
-        >
-          <Clock className="h-3 w-3 mr-1" />
-          版本历史
-        </Button>
+        <div className="flex items-center gap-2">
+          <GenerationButton
+            onOpenDrawer={onOpenGenerationDrawer}
+            generation={generation}
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-[11px] text-muted-foreground hover:text-foreground uppercase tracking-wider"
+            onClick={() => setHistoryOpen(true)}
+          >
+            <Clock className="h-3 w-3 mr-1" />
+            版本历史
+          </Button>
+        </div>
         <span className="inline-flex items-center gap-2 text-[11px] text-muted-foreground uppercase tracking-wider">
           <span
             aria-hidden

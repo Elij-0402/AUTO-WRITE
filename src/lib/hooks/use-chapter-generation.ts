@@ -12,6 +12,7 @@ import { buildWorldBibleBlock, BASE_INSTRUCTION } from '../ai/prompts'
 import { searchRelevantEntries } from '../rag/search'
 import { getDefaultEmbedder } from '../rag/default-embedder'
 import { validateContent } from '../ai/content-validator'
+import { extractTextFromContent } from '../db/chapter-queries'
 
 /**
  * Wraps an async iterable with a timeout AbortController.
@@ -110,6 +111,14 @@ export function useChapterGeneration(projectId: string, chapterId: string) {
       return
     }
 
+    // Find previous chapter content for continuity context (up to 500 chars)
+    const previousChapter = chapters
+      .filter(c => c.order < currentChapter.order && !c.deletedAt)
+      .sort((a, b) => b.order - a.order)[0]
+    const previousContent = previousChapter?.content
+      ? extractTextFromContent(previousChapter.content).slice(-500)
+      : null
+
     // Build context: hybrid RAG retrieval for relevant world bible entries
     const db = createProjectDB(projectId)
     const embedder = getDefaultEmbedder()
@@ -127,7 +136,10 @@ export function useChapterGeneration(projectId: string, chapterId: string) {
     const trimmedEntries = trimToTokenBudget(matchedEntries, DEFAULT_TOKEN_BUDGET)
 
     // Build chapter-specific runtime context
-    const runtimeContext = `【章节大纲】
+    const runtimeContext = `【上文摘要】
+${previousContent ? previousContent : '（无上文内容）'}
+
+【章节大纲】
 标题：${title}
 摘要：${outlineSummary}
 目标字数：${outlineTargetWordCount ? `${outlineTargetWordCount}字` : '未设定'}

@@ -30,6 +30,19 @@ function getTypeIcon(type: WorldEntryType) {
   }
 }
 
+function TypeIcon({ type, className, strokeWidth }: { type: WorldEntryType; className?: string; strokeWidth?: number }) {
+  switch (type) {
+    case 'character':
+      return <User className={className} strokeWidth={strokeWidth} />
+    case 'location':
+      return <MapPin className={className} strokeWidth={strokeWidth} />
+    case 'rule':
+      return <BookOpen className={className} strokeWidth={strokeWidth} />
+    case 'timeline':
+      return <Clock className={className} strokeWidth={strokeWidth} />
+  }
+}
+
 function getTypeName(type: WorldEntryType): string {
   switch (type) {
     case 'character':
@@ -85,7 +98,6 @@ interface WorldEntryRowProps {
 }
 
 function WorldEntryRow({ entry, isActive, onSelect, onEdit, onDelete }: WorldEntryRowProps) {
-  const Icon = getTypeIcon(entry.type)
   const tagPreview = entry.tags.slice(0, 2).join(' · ')
   const colorClass = getTypeColorClass(entry.type)
   const railClass = getTypeRailClass(entry.type)
@@ -103,7 +115,7 @@ function WorldEntryRow({ entry, isActive, onSelect, onEdit, onDelete }: WorldEnt
       {isActive && (
         <span aria-hidden className={cn('absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r-full', railClass)} />
       )}
-      <Icon className={cn('h-3.5 w-3.5 flex-shrink-0', colorClass)} strokeWidth={1.8} />
+      <TypeIcon type={entry.type} className={cn('h-3.5 w-3.5 flex-shrink-0', colorClass)} strokeWidth={1.8} />
 
       <div className="flex-1 min-w-0">
         <span className="block truncate text-[13px] text-foreground/90">

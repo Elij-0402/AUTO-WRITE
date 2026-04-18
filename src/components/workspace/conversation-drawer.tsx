@@ -84,7 +84,7 @@ export function ConversationDrawer({
             <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
               <MessageSquare className="h-6 w-6 text-muted-foreground/50" />
               <p className="text-[13px] text-muted-foreground">还没有对话</p>
-              <p className="text-[12px] text-muted-foreground/70">点击"新建"开始第一条</p>
+              <p className="text-[12px] text-muted-foreground/70">点击&ldquo;新建&rdquo;开始第一条</p>
             </div>
           ) : (
             conversations.map(c => {

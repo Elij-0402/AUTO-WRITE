@@ -125,3 +125,5 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(({ content, onChange
     </div>
   )
 })
+
+Editor.displayName = 'Editor'

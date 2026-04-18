@@ -42,19 +42,22 @@ function applyThemeClass(resolved: 'light' | 'dark') {
  * - Theme switching is instant (no animation)
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('system')
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
+  // Lazy-init from localStorage (SSR-safe: falls back to defaults when window
+  // is unavailable). Avoids setState-in-effect cascading renders.
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'system'
+    return (localStorage.getItem(STORAGE_KEY) as Theme | null) || 'system'
+  })
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') return 'light'
+    const stored = (localStorage.getItem(STORAGE_KEY) as Theme | null) || 'system'
+    return stored === 'system' ? getSystemTheme() : stored
+  })
 
-  // Initialize theme on mount
+  // Apply resolved theme class to <html> on mount and whenever it changes.
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
-    const initial = stored || 'system'
-    setThemeState(initial)
-
-    const resolved = initial === 'system' ? getSystemTheme() : initial
-    setResolvedTheme(resolved)
-    applyThemeClass(resolved)
-  }, [])
+    applyThemeClass(resolvedTheme)
+  }, [resolvedTheme])
 
   // Listen for system theme changes when in 'system' mode
   useEffect(() => {

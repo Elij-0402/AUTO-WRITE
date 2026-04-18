@@ -13,7 +13,6 @@ interface GenerationDrawerProps {
   streamingContent: string
   status: GenerationStatus
   error: string | null
-  editorRef: React.RefObject<{ insertContent: (content: string) => void } | null>
 }
 
 export function GenerationDrawer({
@@ -24,8 +23,6 @@ export function GenerationDrawer({
   streamingContent,
   status,
   error,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  editorRef,
 }: GenerationDrawerProps) {
   const [localContent, setLocalContent] = useState(streamingContent)
 

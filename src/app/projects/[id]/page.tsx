@@ -263,7 +263,6 @@ export default function ProjectPage() {
           streamingContent={generation.streamingContent}
           status={generation.status}
           error={generation.error}
-          editorRef={editorRef}
         />
 
         <div

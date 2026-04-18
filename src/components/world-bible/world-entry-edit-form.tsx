@@ -13,16 +13,16 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 
-function getTypeIcon(type: WorldEntryType) {
+function TypeIcon({ type, className }: { type: WorldEntryType; className?: string }) {
   switch (type) {
     case 'character':
-      return User
+      return <User className={className} />
     case 'location':
-      return MapPin
+      return <MapPin className={className} />
     case 'rule':
-      return BookOpen
+      return <BookOpen className={className} />
     case 'timeline':
-      return Clock
+      return <Clock className={className} />
   }
 }
 
@@ -117,22 +117,26 @@ export function WorldEntryEditForm({
   const [localEventDescription, setLocalEventDescription] = useState('')
   const [localTags, setLocalTags] = useState<string[]>([])
 
-  useEffect(() => {
-    if (entry) {
-      setLocalName(entry.name || '')
-      setLocalAlias(entry.alias || '')
-      setLocalAppearance(entry.appearance || '')
-      setLocalPersonality(entry.personality || '')
-      setLocalBackground(entry.background || '')
-      setLocalDescription(entry.description || '')
-      setLocalFeatures(entry.features || '')
-      setLocalContent(entry.content || '')
-      setLocalScope(entry.scope || '')
-      setLocalTimePoint(entry.timePoint || '')
-      setLocalEventDescription(entry.eventDescription || '')
-      setLocalTags(entry.tags || [])
-    }
-  }, [entry?.id, entry?.name, entry?.alias, entry?.appearance, entry?.personality, entry?.background, entry?.description, entry?.features, entry?.content, entry?.scope, entry?.timePoint, entry?.eventDescription, entry?.tags])
+  // Sync form state when switching to a different entry.
+  // Using the "set state during render" pattern per React docs
+  // (https://react.dev/reference/react/useState#storing-information-from-previous-renders)
+  // to avoid useEffect cascading renders.
+  const [prevEntryId, setPrevEntryId] = useState<string | null>(entry?.id ?? null)
+  if (entry && entry.id !== prevEntryId) {
+    setPrevEntryId(entry.id)
+    setLocalName(entry.name || '')
+    setLocalAlias(entry.alias || '')
+    setLocalAppearance(entry.appearance || '')
+    setLocalPersonality(entry.personality || '')
+    setLocalBackground(entry.background || '')
+    setLocalDescription(entry.description || '')
+    setLocalFeatures(entry.features || '')
+    setLocalContent(entry.content || '')
+    setLocalScope(entry.scope || '')
+    setLocalTimePoint(entry.timePoint || '')
+    setLocalEventDescription(entry.eventDescription || '')
+    setLocalTags(entry.tags || [])
+  }
 
   const { isSaving } = useAutoSave(
     async () => {
@@ -180,8 +184,6 @@ export function WorldEntryEditForm({
       </div>
     )
   }
-
-  const Icon = getTypeIcon(entry.type)
 
   const renderTypeSpecificFields = () => {
     switch (entry.type) {
@@ -376,7 +378,7 @@ export function WorldEntryEditForm({
           style={{ background: `hsl(${typeColorVar[entry.type]})` }}
         />
         <Badge variant={badgeVariant[entry.type]} className="gap-1.5">
-          <Icon className="h-3 w-3" />
+          <TypeIcon type={entry.type} className="h-3 w-3" />
           <span>{getTypeName(entry.type)}</span>
         </Badge>
         <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground inline-flex items-center gap-1.5">

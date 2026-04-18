@@ -90,25 +90,24 @@ export function OutlineEditForm({
   const [localTargetWordCount, setLocalTargetWordCount] = useState<string>('')
   const [localOutlineStatus, setLocalOutlineStatus] = useState<OutlineStatus>('not_started')
   const [showGenerationPanel, setShowGenerationPanel] = useState(false)
-
-  useEffect(() => {
-    if (chapter) {
-      setLocalSummary(chapter.outlineSummary || '')
-      setLocalTargetWordCount(
-        chapter.outlineTargetWordCount !== null
-          ? String(chapter.outlineTargetWordCount)
-          : ''
-      )
-      setLocalOutlineStatus(chapter.outlineStatus || 'not_started')
-    }
-  }, [chapter?.id, chapter?.outlineSummary, chapter?.outlineTargetWordCount, chapter?.outlineStatus])
-
   const [localTitle, setLocalTitle] = useState('')
-  useEffect(() => {
-    if (chapter) {
-      setLocalTitle(chapter.title)
-    }
-  }, [chapter?.id, chapter?.title])
+
+  // Sync form state when switching to a different chapter.
+  // Using the "set state during render" pattern per React docs
+  // (https://react.dev/reference/react/useState#storing-information-from-previous-renders)
+  // to avoid useEffect cascading renders.
+  const [prevChapterId, setPrevChapterId] = useState<string | null>(chapter?.id ?? null)
+  if (chapter && chapter.id !== prevChapterId) {
+    setPrevChapterId(chapter.id)
+    setLocalSummary(chapter.outlineSummary || '')
+    setLocalTargetWordCount(
+      chapter.outlineTargetWordCount !== null
+        ? String(chapter.outlineTargetWordCount)
+        : ''
+    )
+    setLocalOutlineStatus(chapter.outlineStatus || 'not_started')
+    setLocalTitle(chapter.title)
+  }
 
   const { isSaving } = useAutoSave(
     async () => {

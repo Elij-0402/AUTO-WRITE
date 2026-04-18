@@ -42,13 +42,12 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  // Auto-select most recent conversation, or create one on first mount.
-  useEffect(() => {
-    if (activeConversationId) return
-    if (conversations.length > 0) {
-      setActiveConversationId(conversations[0].id)
-    }
-  }, [conversations, activeConversationId])
+  // Auto-select most recent conversation when the list first loads a conversation
+  // (or replace the active one when it vanishes). Using "set state during render"
+  // per React docs to avoid useEffect cascading renders.
+  if (activeConversationId === null && conversations.length > 0) {
+    setActiveConversationId(conversations[0].id)
+  }
 
   const activeConversation = conversations.find(c => c.id === activeConversationId) ?? null
 

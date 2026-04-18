@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -66,7 +66,13 @@ export function NewEntryDialog({
   const [duplicateEntry, setDuplicateEntry] = useState<WorldEntry | null>(null)
   const [checkingDuplicate, setCheckingDuplicate] = useState(false)
 
-  useEffect(() => {
+  // Reset form when dialog opens or prefillData changes, using the
+  // "set state during render" pattern per React docs.
+  const [lastOpen, setLastOpen] = useState(false)
+  const [lastPrefillData, setLastPrefillData] = useState(prefillData)
+  if (open !== lastOpen || prefillData !== lastPrefillData) {
+    setLastOpen(open)
+    setLastPrefillData(prefillData)
     if (open) {
       setName(prefillData.name || '')
       setAppearance(prefillData.appearance || '')
@@ -80,7 +86,7 @@ export function NewEntryDialog({
       setDuplicateEntry(null)
       setSaving(false)
     }
-  }, [open, prefillData])
+  }
 
   const buildEntry = (): Partial<WorldEntry> => {
     const base = {

@@ -96,7 +96,7 @@ export function useWorldEntries(projectId: string) {
         })
       }
     }
-  }, [db, updateProjectTimestamp, getUserId])
+  }, [db, projectId, updateProjectTimestamp, getUserId])
 
   const updateEntryFields = useCallback(async (
     id: string,
@@ -119,7 +119,7 @@ export function useWorldEntries(projectId: string) {
         })
       }
     }
-  }, [db, updateProjectTimestamp, getUserId])
+  }, [db, projectId, updateProjectTimestamp, getUserId])
 
   const softDeleteEntry = useCallback(async (id: string): Promise<void> => {
     await softDeleteWorldEntryQuery(db, id)

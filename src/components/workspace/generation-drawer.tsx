@@ -51,7 +51,7 @@ export function GenerationDrawer({
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {/* Streaming content as paragraphs */}
           {paragraphs.map((para, idx) => (
-            <p key={idx} className="text-sm leading-relaxed text-foreground">
+            <p key={idx} className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
               {para}
             </p>
           ))}

@@ -153,13 +153,14 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
       await renameConversation(convId, title)
     }
 
-    try {
-      await sendMessage(text)
-      onDiscussComplete?.()
-    } catch (err) {
-      console.error('Failed to send message:', err)
-      setChatError(err instanceof Error ? err.message : '发送失败')
+    const result = await sendMessage(text)
+    if (!result.success && result.needsConfig) {
+      // Open config dialog - the panel has no prop for this, so show a toast message
+      // instructing the user to configure their API key
+      showToast('请先在设置中配置 API 密钥')
+      return
     }
+    onDiscussComplete?.()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

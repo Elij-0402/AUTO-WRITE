@@ -1,15 +1,15 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef } from 'react'
+import { createProjectDB } from '../db/project-db'
 import { useAIConfig } from './use-ai-config'
 import { useWorldEntries } from './use-world-entries'
 import { useChapters } from './use-chapters'
-import {
-  extractKeywords,
-  findRelevantEntries,
-  trimToTokenBudget,
-  buildContextPrompt,
-} from './use-context-injection'
+import { trimToTokenBudget, DEFAULT_TOKEN_BUDGET } from './use-context-injection'
+import { streamChat, type AIClientConfig, type ProviderStreamMessage } from '../ai/client'
+import { buildWorldBibleBlock, BASE_INSTRUCTION } from '../ai/prompts'
+import { searchRelevantEntries } from '../rag/search'
+import { getDefaultEmbedder } from '../rag/default-embedder'
 
 export interface GenerationState {
   status: 'idle' | 'generating' | 'complete' | 'error'
@@ -18,30 +18,18 @@ export interface GenerationState {
 }
 
 /**
- * Generation system prompt per D-04, D-06.
- * Builds prompt with chapter data + world bible context.
+ * Split plain text into Tiptap paragraph nodes.
+ * Each \n\n separator creates a new paragraph.
  */
-function buildGenerationSystemPrompt(
-  chapterTitle: string,
-  outlineSummary: string,
-  targetWordCount: number | null,
-  worldBibleContext: string
-): string {
-  return `【世界观百科】
-${worldBibleContext || '(暂无相关世界观条目)'}
-
-【章节大纲】
-标题：${chapterTitle}
-摘要：${outlineSummary}
-目标字数：${targetWordCount ? `${targetWordCount}字` : '未设定'}
-
-【你的任务】
-基于以上大纲和世界观背景，创作一个完整的章节。
-要求：
-- 内容丰富，情节完整
-- 遵循网文写作风格
-- 适当使用对话和动作描写
-- 章节结尾留有悬念或自然过渡`
+function splitIntoParagraphs(text: string): object[] {
+  return text
+    .split(/\n\n+/)
+    .map(para => para.trim())
+    .filter(para => para.length > 0)
+    .map(para => ({
+      type: 'paragraph' as const,
+      content: para ? [{ type: 'text' as const, text: para }] : []
+    }))
 }
 
 /**
@@ -55,22 +43,16 @@ ${worldBibleContext || '(暂无相关世界观条目)'}
  */
 export function useChapterGeneration(projectId: string, chapterId: string) {
   const { config } = useAIConfig(projectId)
-  const { entriesByType } = useWorldEntries(projectId)
+  const { entries, entriesByType } = useWorldEntries(projectId)
   const { chapters, addChapter, updateChapterContent, reorderChapters } = useChapters(projectId)
-  
+
   const [state, setState] = useState<GenerationState>({
     status: 'idle',
     streamingContent: '',
     error: null,
   })
-  
+
   const abortControllerRef = useRef<AbortController | null>(null)
-  const entriesByTypeRef = useRef(entriesByType)
-  
-  // Keep entriesByTypeRef updated
-  useEffect(() => {
-    entriesByTypeRef.current = entriesByType
-  }, [entriesByType])
   
   const currentChapter = chapters.find(c => c.id === chapterId)
   
@@ -79,8 +61,12 @@ export function useChapterGeneration(projectId: string, chapterId: string) {
    * Streams output to GenerationPanel via streamingContent state.
    */
   const startGeneration = useCallback(async () => {
-    if (!config.apiKey || !config.baseUrl) {
-      setState(prev => ({ ...prev, status: 'error', error: '请先配置 AI 设置' }))
+    if (!config.apiKey) {
+      setState(prev => ({ ...prev, status: 'error', error: '请先配置 AI 设置：API Key 必填' }))
+      return
+    }
+    if (config.provider === 'openai-compatible' && !config.baseUrl) {
+      setState(prev => ({ ...prev, status: 'error', error: '请先配置 AI 设置：OpenAI 兼容模式需要填写 Base URL' }))
       return
     }
     
@@ -95,110 +81,87 @@ export function useChapterGeneration(projectId: string, chapterId: string) {
       setState(prev => ({ ...prev, status: 'error', error: '请先填写章节大纲摘要' }))
       return
     }
-    
-    // Build context: extract keywords from outline summary, find relevant world bible entries
-    const keywords = extractKeywords(outlineSummary)
-    const matchedEntries = findRelevantEntries(keywords, entriesByTypeRef.current)
-    const trimmedEntries = trimToTokenBudget(matchedEntries, 4000)
-    const worldBibleContext = buildContextPrompt(trimmedEntries)
-    
-    // Build generation prompt
-    const systemPrompt = buildGenerationSystemPrompt(
-      title,
-      outlineSummary,
-      outlineTargetWordCount,
-      worldBibleContext
-    )
-    
+
+    // Build context: hybrid RAG retrieval for relevant world bible entries
+    const db = createProjectDB(projectId)
+    const embedder = getDefaultEmbedder()
+    const matchedEntries = entries
+      ? await searchRelevantEntries({
+          db,
+          projectId,
+          embedder,
+          query: outlineSummary,
+          entries,
+          entriesByType,
+          topK: 12,
+        })
+      : []
+    const trimmedEntries = trimToTokenBudget(matchedEntries, DEFAULT_TOKEN_BUDGET)
+
+    // Build chapter-specific runtime context
+    const runtimeContext = `【章节大纲】
+标题：${title}
+摘要：${outlineSummary}
+目标字数：${outlineTargetWordCount ? `${outlineTargetWordCount}字` : '未设定'}
+
+【你的任务】
+基于以上大纲和世界观背景，创作一个完整的章节。
+要求：
+- 内容丰富，情节完整
+- 遵循网文写作风格
+- 适当使用对话和动作描写
+- 章节结尾留有悬念或自然过渡`
+
     // Reset state for new generation
-    setState({
-      status: 'generating',
-      streamingContent: '',
-      error: null,
-    })
-    
+    setState({ status: 'generating', streamingContent: '', error: null })
+
     try {
       abortControllerRef.current = new AbortController()
-      
-      const response = await fetch(`${config.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.apiKey}`
-        },
-        body: JSON.stringify({
-          model: config.model || 'gpt-4',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: '请基于以上大纲和世界观背景，创作一个完整的章节。' }
-          ],
-          stream: true
-        }),
-        signal: abortControllerRef.current.signal
-      })
-      
-      if (!response.ok) {
-        throw new Error(`API错误: ${response.status}`)
+
+      const configForStreamChat: AIClientConfig = {
+        provider: config.provider,
+        apiKey: config.apiKey,
+        baseUrl: config.baseUrl,
+        model: config.model,
       }
-      
-      // Handle streaming response per D-02
-      const reader = response.body?.getReader()
-      if (!reader) throw new Error('无法读取响应流')
-      
+      const segmentedSystem = {
+        baseInstruction: BASE_INSTRUCTION,
+        worldBibleContext: buildWorldBibleBlock(trimmedEntries),
+        runtimeContext,
+      }
+      const messages: ProviderStreamMessage[] = [
+        { role: 'user', content: '请基于以上大纲和世界观背景，创作一个完整的章节。' }
+      ]
+
       let fullContent = ''
-      const decoder = new TextDecoder()
-      
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        
-        const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') continue
-            
-            try {
-              const parsed = JSON.parse(data)
-              const delta = parsed.choices?.[0]?.delta?.content
-              if (delta) {
-                fullContent += delta
-                setState(prev => ({
-                  ...prev,
-                  streamingContent: fullContent
-                }))
-              }
-            } catch {
-              // Skip malformed JSON
-            }
-          }
+      for await (const event of streamChat(configForStreamChat, {
+        segmentedSystem,
+        messages,
+        signal: abortControllerRef.current.signal,
+      })) {
+        if (event.type === 'text_delta') {
+          fullContent += event.delta
+          setState(prev => ({ ...prev, streamingContent: fullContent }))
+        } else if (event.type === 'error') {
+          throw new Error(event.message)
         }
       }
-      
-      // Generation complete per D-03
-      setState(prev => ({
-        ...prev,
-        status: 'complete',
-        streamingContent: fullContent
-      }))
-      
+
+      setState(prev => ({ ...prev, status: 'complete', streamingContent: fullContent }))
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
-        // User cancelled
         setState(prev => ({ ...prev, status: 'idle', streamingContent: '' }))
       } else {
         setState(prev => ({
           ...prev,
           status: 'error',
-          error: err instanceof Error ? err.message : '生成失败'
+          error: err instanceof Error ? err.message : '生成失败',
         }))
       }
     } finally {
       abortControllerRef.current = null
     }
-  }, [config, currentChapter, projectId])
+  }, [config, currentChapter, projectId, entries, entriesByType])
   
   /**
    * Cancel ongoing generation per D-02.
@@ -238,15 +201,10 @@ export function useChapterGeneration(projectId: string, chapterId: string) {
         const newChapterTitle = `${currentChapter.title} (AI草稿)`
         const newChapterId = await addChapter(newChapterTitle)
         
-        // Insert content into new chapter
+        // Insert content into new chapter (multi-paragraph preserved)
         await updateChapterContent(newChapterId, {
           type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: generatedContent }]
-            }
-          ]
+          content: splitIntoParagraphs(generatedContent)
         })
         
         // Find current chapter index and reorder so new chapter is placed after current
@@ -270,15 +228,10 @@ export function useChapterGeneration(projectId: string, chapterId: string) {
         
         return { success: true, newChapterId }
       } else {
-        // Chapter is empty - update content directly
+        // Chapter is empty - update content directly (multi-paragraph preserved)
         await updateChapterContent(chapterId, {
           type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: generatedContent }]
-            }
-          ]
+          content: splitIntoParagraphs(generatedContent)
         })
         
         // Reset state

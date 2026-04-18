@@ -91,15 +91,15 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     setContradictions([])
   }, [projectId, conversationId])
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string): Promise<{ success: true } | { success: false; needsConfig: true; message: string }> => {
     if (!conversationId) {
-      throw new Error('未选择对话')
+      return { success: false, needsConfig: true, message: '未选择对话' }
     }
     if (!config.apiKey) {
-      throw new Error('请先配置 AI 设置：API Key 必填')
+      return { success: false, needsConfig: true, message: '还没设置 API 密钥，去设置一下？' }
     }
     if (config.provider === 'openai-compatible' && !config.baseUrl) {
-      throw new Error('请先配置 AI 设置：OpenAI 兼容模式需要填写 Base URL')
+      return { success: false, needsConfig: true, message: '还没填写接口地址，去设置一下？' }
     }
 
     // Hybrid RAG retrieval replaces the pure keyword matcher (Stage 2).
@@ -337,6 +337,7 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
         }
       }
     }
+    return { success: true }
   }, [config, projectId, conversationId, entries, entriesByType, options?.selectedText])
 
   const cancelStream = useCallback(() => {

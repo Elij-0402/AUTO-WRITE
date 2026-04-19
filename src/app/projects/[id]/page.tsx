@@ -20,9 +20,6 @@ import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
-import { GenerationDrawer } from '@/components/workspace/generation-drawer'
-import { GenerationButton } from '@/components/workspace/generation-button'
-import { useChapterGeneration } from '@/lib/hooks/use-chapter-generation'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import {
@@ -54,7 +51,6 @@ export default function ProjectPage() {
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
-  const [generationDrawerOpen, setGenerationDrawerOpen] = useState(false)
 
   const { activeTab, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(params.id)
   const { chapters } = useChapters(params.id)
@@ -63,7 +59,6 @@ export default function ProjectPage() {
   const { config, loading: aiConfigLoading } = useAIConfig(params.id)
   const [onboardingOpen, setOnboardingOpen] = useState(false)
   const currentProject = projects.find((p) => p.id === params.id)
-  const generation = useChapterGeneration(params.id, activeChapterId ?? '')
 
   // 强制引导：只有在 aiConfig 加载完、确认没 key 时才弹
   // （否则 Dexie 还在读的时候会误触发）
@@ -237,8 +232,6 @@ export default function ProjectPage() {
         editorRef={editorRef}
         editorContentRef={editorContentRef}
         onDiscuss={handleDiscuss}
-        onOpenGenerationDrawer={() => setGenerationDrawerOpen(true)}
-        generation={generation}
       />
     ) : (
       <Placeholder activeTab={activeTab} />
@@ -288,22 +281,6 @@ export default function ProjectPage() {
             )}
           </DialogContent>
         </Dialog>
-
-        <GenerationDrawer
-          open={generationDrawerOpen}
-          onClose={() => setGenerationDrawerOpen(false)}
-          onAccept={async () => {
-            if (editorRef.current) {
-              editorRef.current.insertText(generation.streamingContent)
-            }
-            setGenerationDrawerOpen(false)
-            generation.resetGeneration()
-          }}
-          onRegenerate={() => generation.startGeneration()}
-          streamingContent={generation.streamingContent}
-          status={generation.status}
-          error={generation.error}
-        />
 
         <div
           className={`flex-1 flex overflow-hidden transition-[opacity] duration-[var(--dur-slow)] ease-[cubic-bezier(0.16,1,0.3,1)]`}
@@ -401,7 +378,7 @@ export default function ProjectPage() {
   )
 }
 
-function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editorRef, editorContentRef, onDiscuss, onOpenGenerationDrawer, generation }: {
+function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editorRef, editorContentRef, onDiscuss }: {
   projectId: string;
   chapterId: string;
   chapter: Chapter | undefined;
@@ -409,12 +386,9 @@ function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editor
   editorRef: RefObject<EditorHandle | null>
   editorContentRef: RefObject<HTMLDivElement | null>
   onDiscuss: (text: string) => void
-  onOpenGenerationDrawer: () => void
-  generation: ReturnType<typeof useChapterGeneration>
 }) {
   const { content, isSaving, updateContent } = useChapterEditor(projectId, chapterId)
   const [historyOpen, setHistoryOpen] = useState(false)
-  const { uiFlags } = useAIConfig(projectId)
 
   const handleRestore = useCallback((snapshot: object) => {
     editorRef.current?.setContent(snapshot)
@@ -439,12 +413,6 @@ function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editor
       />
       <div className="surface-elevated flex items-center justify-between px-3 py-1.5 film-edge">
         <div className="flex items-center gap-2">
-          {uiFlags.showGenerationPipeline && (
-            <GenerationButton
-              onOpenDrawer={onOpenGenerationDrawer}
-              generation={generation}
-            />
-          )}
           <Button
             variant="ghost"
             size="sm"

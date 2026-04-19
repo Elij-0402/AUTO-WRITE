@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -62,3 +63,4 @@ node_modules/
 
 # graphify knowledge-graph output (generated)
 /graphify-out/
+.gstack/

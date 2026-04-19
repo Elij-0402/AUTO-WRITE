@@ -381,4 +381,60 @@ describe('world-entry-queries', () => {
       expect(relation).toBeDefined()
     })
   })
+
+  describe('v13 inferredVoice field (T4)', () => {
+    it('persists character inferredVoice with userEdit only', async () => {
+      const id = await addWorldEntry(db, 'proj-1', 'character', '小明')
+      const generatedAt = new Date()
+      await updateWorldEntryFields(db, id, {
+        inferredVoice: {
+          aiDraft: '',
+          userEdit: '说话温和，爱用反问句。',
+          generatedAt,
+        },
+      })
+      const entry = await db.worldEntries.get(id)
+      expect(entry?.inferredVoice?.aiDraft).toBe('')
+      expect(entry?.inferredVoice?.userEdit).toBe('说话温和，爱用反问句。')
+    })
+
+    it('persists location inferredVoice with aiDraft + userEdit (dual column)', async () => {
+      const id = await addWorldEntry(db, 'proj-1', 'location', '青云寺')
+      await updateWorldEntryFields(db, id, {
+        inferredVoice: {
+          aiDraft: '叙述时多用雾、钟声、远山等意象，节奏舒缓。',
+          userEdit: '叙述时多用雾、钟声、远山；节奏要再慢一点。',
+          generatedAt: new Date(),
+        },
+      })
+      const entry = await db.worldEntries.get(id)
+      expect(entry?.inferredVoice?.aiDraft).toBeTruthy()
+      expect(entry?.inferredVoice?.userEdit).toBeTruthy()
+      // userEdit should differ from aiDraft — we keep the diff.
+      expect(entry?.inferredVoice?.userEdit).not.toBe(entry?.inferredVoice?.aiDraft)
+    })
+
+    it('leaves inferredVoice undefined on rule + timeline entries (v0.3 scope)', async () => {
+      const ruleId = await addWorldEntry(db, 'proj-1', 'rule', '门派规矩')
+      const timeId = await addWorldEntry(db, 'proj-1', 'timeline', '开国年')
+      const rule = await db.worldEntries.get(ruleId)
+      const time = await db.worldEntries.get(timeId)
+      expect(rule?.inferredVoice).toBeUndefined()
+      expect(time?.inferredVoice).toBeUndefined()
+    })
+
+    it('clears inferredVoice by setting it undefined', async () => {
+      const id = await addWorldEntry(db, 'proj-1', 'character', '小红')
+      await updateWorldEntryFields(db, id, {
+        inferredVoice: {
+          aiDraft: '',
+          userEdit: 'first',
+          generatedAt: new Date(),
+        },
+      })
+      await updateWorldEntryFields(db, id, { inferredVoice: undefined })
+      const entry = await db.worldEntries.get(id)
+      expect(entry?.inferredVoice).toBeUndefined()
+    })
+  })
 })

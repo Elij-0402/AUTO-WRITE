@@ -2,8 +2,6 @@
  * UI experimental flags — post-v0.3 surface state.
  *
  * These gate UI entry points for:
- * - style profile tab in /projects/[id]/analysis (to be repositioned under
- *   WorldEntry in T4; flag kept until migration lands)
  * - timeline view tab in /projects/[id]/analysis
  *
  * Defaults are all-on; legacy stored `false` values are ignored so every
@@ -12,21 +10,21 @@
  *
  * Distinct from ExperimentFlags (Anthropic 2026 primitives).
  *
- * Removed in v0.3 T9:
- * - showGenerationPipeline — GenerationDrawer + GenerationButton + the
- *   entire chapter-generation pipeline were deleted. AI-assisted drafts
- *   now live inside the AI chat panel only.
+ * Removed in v0.3:
+ * - T9: showGenerationPipeline — GenerationDrawer + GenerationButton + the
+ *   chapter-generation pipeline were deleted. AI-assisted drafts now live
+ *   inside the AI chat panel only.
+ * - T4: showStyleProfile — the project-wide style-profile analysis tab was
+ *   retired. Style-fingerprint information moved to a per-WorldEntry
+ *   `inferredVoice` field on the edit form (character + location only).
  */
 
 export interface UiExperimentFlags {
-  /** Show the "文风" (style) tab in /projects/[id]/analysis. */
-  showStyleProfile: boolean
   /** Show the "时间线" (timeline) tab in /projects/[id]/analysis. */
   showTimelineView: boolean
 }
 
 export const DEFAULT_UI_FLAGS: UiExperimentFlags = {
-  showStyleProfile: true,
   showTimelineView: true,
 }
 

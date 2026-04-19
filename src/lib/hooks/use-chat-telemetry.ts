@@ -49,13 +49,17 @@ export interface RecordChatTurnParams {
  * Does nothing (returns early) if no tokens were consumed — avoids polluting
  * aiUsage with zero-token "errored before first byte" rows that would skew
  * dev-stats aggregates.
+ *
+ * Id stability: the aiUsage row id is derived from the assistant message id
+ * (`chat:${messageId}`) so later T1 draft-adoption writes can patch the row
+ * without needing an indexed messageId column.
  */
 export async function recordChatTurn(params: RecordChatTurnParams): Promise<void> {
   const { inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens } = params.counters
   if (inputTokens <= 0 && outputTokens <= 0) return
 
   const usage: AIUsageEvent = {
-    id: crypto.randomUUID(),
+    id: `chat:${params.assistantMessageId}`,
     projectId: params.projectId,
     conversationId: params.conversationId,
     kind: 'chat',

@@ -110,6 +110,8 @@ export function MessageBubble({
             <DraftCard
               draftId={message.draftId}
               content={message.content}
+              projectId={projectId}
+              messageId={message.id}
               onInsert={() => onInsertDraft?.(message.draftId!, message.content)}
             />
           </div>

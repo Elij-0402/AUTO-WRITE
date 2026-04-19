@@ -27,6 +27,13 @@ import {
   deleteEmbeddingsBySource,
   listEmbeddings,
 } from './vector-store'
+import { recordIndexerLatency } from './indexer-latency'
+
+function nowMs(): number {
+  return typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now()
+}
 
 export interface IndexWorldEntriesParams {
   projectId: string
@@ -38,6 +45,7 @@ export async function indexWorldEntries(
   db: RagDB,
   params: IndexWorldEntriesParams
 ): Promise<{ added: number; skipped: number; removed: number }> {
+  const t0 = nowMs()
   const existing = await listEmbeddings(db, {
     sourceType: 'worldEntry',
     embedderId: params.embedder.id,
@@ -85,7 +93,17 @@ export async function indexWorldEntries(
     await deleteEmbeddingsBySource(db, 'worldEntry', s.sourceId)
   }
 
-  return { added, skipped, removed: stale.length }
+  const result = { added, skipped, removed: stale.length }
+  recordIndexerLatency({
+    projectId: params.projectId,
+    kind: 'worldEntry',
+    ms: nowMs() - t0,
+    added: result.added,
+    skipped: result.skipped,
+    removed: result.removed,
+    at: Date.now(),
+  })
+  return result
 }
 
 /**
@@ -169,6 +187,7 @@ export async function indexChapters(
   db: RagDB,
   params: IndexChaptersParams
 ): Promise<{ added: number; skipped: number; removed: number }> {
+  const t0 = nowMs()
   const existing = await listEmbeddings(db, {
     sourceType: 'chapterChunk',
     embedderId: params.embedder.id,
@@ -230,5 +249,15 @@ export async function indexChapters(
     await db.table('embeddings').delete(s.id)
   }
 
-  return { added, skipped, removed: stale.length }
+  const result = { added, skipped, removed: stale.length }
+  recordIndexerLatency({
+    projectId: params.projectId,
+    kind: 'chapterChunk',
+    ms: nowMs() - t0,
+    added: result.added,
+    skipped: result.skipped,
+    removed: result.removed,
+    at: Date.now(),
+  })
+  return result
 }

@@ -337,6 +337,20 @@ html.dark *::-webkit-scrollbar-thumb:hover {
     border-color: hsl(var(--border-strong));
   }
 
+  /* Paper — centered manuscript-style card wrapper.
+     Used in Focus Mode to give the editor a "page" ground against
+     the app background, without changing the editor's inner column. */
+  .paper {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-lift-lg);
+    max-width: 768px;
+    width: 100%;
+    margin-inline: auto;
+    overflow: hidden;
+  }
+
   /* Ghost button — flat, text-only until hover */
   .btn-ghost {
     background: transparent;

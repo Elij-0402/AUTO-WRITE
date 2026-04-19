@@ -36,6 +36,8 @@ import { useProjects } from '@/lib/hooks/use-projects'
 import { Clock, BookOpen, ListTree, Globe2 } from 'lucide-react'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
 import type { EditorHandle } from '@/components/editor/editor-types'
+import type { Chapter } from '@/lib/types'
+import { ChapterMetaStrip } from '@/components/editor/chapter-meta-strip'
 
 const DEFAULT_CHAT_PANEL_WIDTH = 340
 const MIN_CHAT_PANEL_WIDTH = 300
@@ -98,6 +100,8 @@ export default function ProjectPage() {
   }, [saveActiveTab])
 
   const sortedChapters = chapters.filter(c => !c.deletedAt)
+  const currentChapter = activeChapterId ? sortedChapters.find(c => c.id === activeChapterId) : undefined
+  const currentChapterNumber = activeChapterId ? sortedChapters.findIndex(c => c.id === activeChapterId) + 1 : 0
   const currentOutlineIndex = sortedChapters.findIndex(c => c.id === activeOutlineId)
   const handleOutlinePrevious = useCallback(() => {
     if (currentOutlineIndex > 0) {
@@ -187,6 +191,11 @@ export default function ProjectPage() {
   const hasPrevious = currentOutlineIndex > 0
   const hasNext = currentOutlineIndex < sortedChapters.length - 1 && currentOutlineIndex !== -1
 
+  const isEditorMain =
+    Boolean(activeChapterId) &&
+    !(activeTab === 'outline' && activeOutlineId) &&
+    !(activeTab === 'world' && activeWorldEntryId)
+
   const mainContent =
     activeTab === 'outline' && activeOutlineId ? (
       <OutlineEditForm
@@ -209,7 +218,17 @@ export default function ProjectPage() {
         allEntries={entries || []}
       />
     ) : activeChapterId ? (
-      <EditorWithStatus projectId={params.id} chapterId={activeChapterId} editorRef={editorRef} editorContentRef={editorContentRef} onDiscuss={handleDiscuss} onOpenGenerationDrawer={() => setGenerationDrawerOpen(true)} generation={generation} />
+      <EditorWithStatus
+        projectId={params.id}
+        chapterId={activeChapterId}
+        chapter={currentChapter}
+        chapterNumber={currentChapterNumber}
+        editorRef={editorRef}
+        editorContentRef={editorContentRef}
+        onDiscuss={handleDiscuss}
+        onOpenGenerationDrawer={() => setGenerationDrawerOpen(true)}
+        generation={generation}
+      />
     ) : (
       <Placeholder activeTab={activeTab} />
     )
@@ -276,7 +295,15 @@ export default function ProjectPage() {
                 {sortedChapters.find(c => c.id === activeChapterId)?.title || ''}
               </div>
             )}
-            <PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>
+            {isEditorMain ? (
+              <div className="flex-1 overflow-hidden surface-0 px-6 py-6">
+                <div className="paper h-full flex flex-col">
+                  <PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>
+                </div>
+              </div>
+            ) : (
+              <PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>
+            )}
           </div>
         ) : (
           <Group orientation="horizontal" className="flex-1 flex overflow-hidden">
@@ -354,9 +381,11 @@ export default function ProjectPage() {
   )
 }
 
-function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, onDiscuss, onOpenGenerationDrawer, generation }: {
+function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editorRef, editorContentRef, onDiscuss, onOpenGenerationDrawer, generation }: {
   projectId: string;
   chapterId: string;
+  chapter: Chapter | undefined;
+  chapterNumber: number;
   editorRef: RefObject<EditorHandle | null>
   editorContentRef: RefObject<HTMLDivElement | null>
   onDiscuss: (text: string) => void
@@ -375,6 +404,13 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
   return (
     <div className="flex-1 flex flex-col overflow-hidden relative">
       <FloatingToolbar onDiscuss={onDiscuss} editorRef={editorContentRef} />
+      {chapter && chapterNumber > 0 && (
+        <ChapterMetaStrip
+          chapterNumber={chapterNumber}
+          wordCount={chapter.wordCount}
+          status={chapter.status}
+        />
+      )}
       <Editor
         ref={editorRef}
         content={content}

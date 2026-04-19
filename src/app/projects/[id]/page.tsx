@@ -19,6 +19,7 @@ import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
 import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
+import { OnboardingTourDialog } from '@/components/workspace/onboarding-tour-dialog'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
@@ -61,6 +62,7 @@ export default function ProjectPage() {
   const { projects, updateProject } = useProjects()
   const { config, loading: aiConfigLoading } = useAIConfig(params.id)
   const [onboardingOpen, setOnboardingOpen] = useState(false)
+  const [tourOpen, setTourOpen] = useState(false)
   const currentProject = projects.find((p) => p.id === params.id)
 
   // 强制引导：只有在 aiConfig 加载完、确认没 key 时才弹
@@ -261,7 +263,16 @@ export default function ProjectPage() {
           open={onboardingOpen}
           onClose={() => {}}
           isOnboarding={true}
-          onSaveComplete={() => setOnboardingOpen(false)}
+          onSaveComplete={() => {
+            setOnboardingOpen(false)
+            setTourOpen(true)
+          }}
+        />
+
+        <OnboardingTourDialog
+          projectId={params.id}
+          open={tourOpen}
+          onComplete={() => setTourOpen(false)}
         />
 
         <WorkspaceTopbar

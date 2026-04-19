@@ -7,10 +7,10 @@ import {
 
 describe('experiment-flags', () => {
   describe('DEFAULT_EXPERIMENT_FLAGS', () => {
-    it('all three flags default to false', () => {
+    it('extendedCacheTtl on by default (T10 post-v0.3); citations + thinking opt-in', () => {
       expect(DEFAULT_EXPERIMENT_FLAGS).toEqual({
         citations: false,
-        extendedCacheTtl: false,
+        extendedCacheTtl: true,
         thinking: false,
       })
     })
@@ -71,7 +71,7 @@ describe('experiment-flags', () => {
           provider: 'anthropic',
           experimentFlags: { thinking: true },
         })
-      ).toEqual({ citations: false, extendedCacheTtl: false, thinking: true })
+      ).toEqual({ citations: false, extendedCacheTtl: true, thinking: true })
     })
 
     it('defaults provider to undefined → capabilities all false', () => {

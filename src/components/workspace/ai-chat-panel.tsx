@@ -387,6 +387,8 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
               <MessageBubble
                 key={msg.id}
                 message={msg}
+                projectId={projectId}
+                conversationId={activeConversationId}
                 onInsertDraft={handleInsertDraft}
               />
             ))}

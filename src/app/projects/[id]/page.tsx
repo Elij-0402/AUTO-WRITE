@@ -14,6 +14,7 @@ import { DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
 import { useLayout } from '@/lib/hooks/use-layout'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { useIdleMode } from '@/lib/hooks/use-idle-mode'
+import { SidebarNavProvider, type SidebarTab } from '@/lib/hooks/use-sidebar-nav'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
 import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
@@ -242,6 +243,12 @@ export default function ProjectPage() {
   return (
     <ThemeProvider>
       <TooltipProvider delayDuration={300}>
+        <SidebarNavProvider
+          activeTab={activeTab as SidebarTab}
+          selectedEntryId={activeWorldEntryId}
+          setActiveTab={saveActiveTab as (t: SidebarTab) => void}
+          setSelectedEntryId={setActiveWorldEntryId}
+        >
         <AIConfigDialog
           projectId={params.id}
           open={aiConfigOpen}
@@ -376,6 +383,7 @@ export default function ProjectPage() {
           </Group>
         )}
         </div>
+        </SidebarNavProvider>
       </TooltipProvider>
     </ThemeProvider>
   )

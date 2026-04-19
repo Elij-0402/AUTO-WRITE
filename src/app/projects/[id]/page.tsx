@@ -13,6 +13,7 @@ import { ThemeProvider } from '@/components/editor/theme-provider'
 import { DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
 import { useLayout } from '@/lib/hooks/use-layout'
 import { useChapters } from '@/lib/hooks/use-chapters'
+import { useIdleMode } from '@/lib/hooks/use-idle-mode'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
 import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
@@ -54,6 +55,7 @@ export default function ProjectPage() {
 
   const { activeTab, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(params.id)
   const { chapters } = useChapters(params.id)
+  const idle = useIdleMode()
   const { entries, entriesByType, addEntry } = useWorldEntries(params.id)
   const { projects, updateProject } = useProjects()
   const { config, loading: aiConfigLoading } = useAIConfig(params.id)
@@ -261,6 +263,7 @@ export default function ProjectPage() {
           onToggleFocusMode={() => setFocusMode(!focusMode)}
           onOpenAIConfig={() => setAiConfigOpen(true)}
           onOpenProjectSettings={() => setProjectSettingsOpen(true)}
+          idle={idle}
         />
 
         <Dialog open={projectSettingsOpen} onOpenChange={setProjectSettingsOpen}>

@@ -20,6 +20,8 @@ interface WorkspaceTopbarProps {
   onToggleFocusMode: () => void
   onOpenAIConfig: () => void
   onOpenProjectSettings: () => void
+  /** True after the user has been idle for the configured timeout (T6). */
+  idle?: boolean
 }
 
 export function WorkspaceTopbar({
@@ -28,6 +30,7 @@ export function WorkspaceTopbar({
   onToggleFocusMode,
   onOpenAIConfig,
   onOpenProjectSettings,
+  idle = false,
 }: WorkspaceTopbarProps) {
   const project = useLiveQuery(
     () => metaDb.projectIndex.get(projectId),
@@ -37,7 +40,13 @@ export function WorkspaceTopbar({
   const todayWordCount = useTodayWordCount(projectId)
 
   return (
-    <div className="surface-elevated h-12 shrink-0 flex items-center gap-2 px-4 sticky top-0 z-40">
+    <div
+      className={
+        'surface-elevated h-12 shrink-0 flex items-center gap-2 px-4 sticky top-0 z-40 ' +
+        'transition-opacity duration-[var(--t-slow)] ease-[cubic-bezier(0.2,0,0,1)] ' +
+        (idle ? 'opacity-60' : 'opacity-100')
+      }
+    >
       <Tooltip>
         <TooltipTrigger asChild>
           <Button asChild variant="ghost" size="icon-sm">
@@ -120,12 +129,12 @@ export function WorkspaceTopbar({
             variant={focusMode ? 'secondary' : 'ghost'}
             size="icon-sm"
             onClick={onToggleFocusMode}
-            aria-label={focusMode ? '退出聚焦模式' : '进入聚焦模式'}
+            aria-label={focusMode ? '退出深夜模式' : '深夜模式'}
           >
             {focusMode ? <Minimize2 /> : <Maximize2 />}
           </Button>
         </TooltipTrigger>
-        <TooltipContent>{focusMode ? '退出聚焦模式' : '进入聚焦模式'}</TooltipContent>
+        <TooltipContent>{focusMode ? '退出深夜模式' : '深夜模式'}</TooltipContent>
       </Tooltip>
 
       <ThemeToggle />

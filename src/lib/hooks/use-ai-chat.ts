@@ -1,8 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { createProjectDB } from '../db/project-db'
-import type { AIUsageEvent as AIUsageRecord, ABTestMetric } from '../db/project-db'
-import { recordUsage } from '../db/ai-usage-queries'
-import { recordABTestMetric } from '../db/ab-metrics-queries'
 import type { Citation } from '../ai/citations'
 import { resolveExperimentFlags } from '../ai/experiment-flags'
 import { useAIConfig } from './use-ai-config'
@@ -17,6 +14,7 @@ import { parseAISuggestions, type Suggestion } from '../ai/suggestion-parser'
 import { streamChat, supportsToolUse, type ProviderStreamMessage } from '../ai/client'
 import { buildSegmentedSystemPrompt } from '../ai/prompts'
 import { summarizeMessages } from '../ai/summarize'
+import { recordChatTurn, recordSummarizeUsage } from './use-chat-telemetry'
 import type {
   SuggestEntryInput,
   SuggestRelationInput,
@@ -318,25 +316,18 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
                 summarizedUpTo: outsideWindow,
               })
             }
-            if (summary.inputTokens > 0 || summary.outputTokens > 0) {
-              const usage: AIUsageRecord = {
-                id: crypto.randomUUID(),
-                projectId,
-                conversationId,
-                kind: 'summarize',
-                provider: config.provider,
-                model: config.model ?? '',
-                inputTokens: summary.inputTokens,
-                outputTokens: summary.outputTokens,
-                cacheReadTokens: summary.cacheReadTokens,
-                cacheWriteTokens: summary.cacheWriteTokens,
-                latencyMs: summary.latencyMs,
-                createdAt: Date.now(),
-              }
-              await recordUsage(db, usage).catch(e =>
-                console.warn('[useAIChat] summarize recordUsage failed:', e)
-              )
-            }
+            await recordSummarizeUsage({
+              db,
+              projectId,
+              conversationId,
+              provider: config.provider,
+              model: config.model ?? '',
+              inputTokens: summary.inputTokens,
+              outputTokens: summary.outputTokens,
+              cacheReadTokens: summary.cacheReadTokens,
+              cacheWriteTokens: summary.cacheWriteTokens,
+              latencyMs: summary.latencyMs,
+            })
           } catch (e) {
             console.warn('[useAIChat] summarize failed:', e)
           }
@@ -354,52 +345,18 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
       abortControllerRef.current = null
       // Persist usage regardless of success/abort — even a cancelled stream
       // incurred input tokens, and the prefix output tokens still cost money.
-      if (inputTokens > 0 || outputTokens > 0) {
-        const usage: AIUsageRecord = {
-          id: crypto.randomUUID(),
-          projectId,
-          conversationId,
-          kind: 'chat',
-          provider: config.provider,
-          model: config.model ?? '',
-          inputTokens,
-          outputTokens,
-          cacheReadTokens,
-          cacheWriteTokens,
-          latencyMs: Date.now() - startedAt,
-          createdAt: Date.now(),
-        }
-        try {
-          await recordUsage(db, usage)
-        } catch (e) {
-          console.warn('[useAIChat] recordUsage failed:', e)
-        }
-
-        // Phase B A/B metric (AC-4). citationCount/emptyCitationRate filled in Phase C.
-        const experimentGroup = resolveExperimentFlags({
-          provider: config.provider,
-          experimentFlags: config.experimentFlags,
-        })
-        const metric: ABTestMetric = {
-          id: crypto.randomUUID(),
-          projectId,
-          conversationId,
-          messageId: assistantMsgId,
-          experimentGroup,
-          latencyMs: usage.latencyMs,
-          inputTokens,
-          outputTokens,
-          cacheReadTokens,
-          cacheWriteTokens,
-          citationCount: pendingCitations.length,
-          createdAt: Date.now(),
-        }
-        try {
-          await recordABTestMetric(db, metric)
-        } catch (e) {
-          console.warn('[useAIChat] recordABTestMetric failed:', e)
-        }
-      }
+      await recordChatTurn({
+        db,
+        projectId,
+        conversationId,
+        assistantMessageId: assistantMsgId,
+        provider: config.provider,
+        model: config.model ?? '',
+        config: { provider: config.provider, experimentFlags: config.experimentFlags },
+        counters: { inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens },
+        latencyMs: Date.now() - startedAt,
+        citationCount: pendingCitations.length,
+      })
     }
     return { success: true }
   }, [config, projectId, conversationId, entries, entriesByType, options?.selectedText])

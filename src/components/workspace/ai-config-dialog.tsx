@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAIConfig, AIConfig, AIProvider } from '@/lib/hooks/use-ai-config'
 import type { ExperimentFlags } from '@/lib/ai/experiment-flags'
 import { providerCapabilities } from '@/lib/ai/experiment-flags'
-import type { UiExperimentFlags } from '@/lib/ai/ui-flags'
 import { DEFAULT_UI_FLAGS } from '@/lib/ai/ui-flags'
 import {
   Dialog,
@@ -22,6 +21,10 @@ interface AIConfigDialogProps {
   projectId: string
   open: boolean
   onClose: () => void
+  /** 新用户引导模式：精简内容 + 不可关闭 */
+  isOnboarding?: boolean
+  /** 引导模式下保存完成后调用关闭弹窗 */
+  onSaveComplete?: () => void
 }
 
 interface ProviderPreset {
@@ -51,7 +54,7 @@ const PROVIDER_PRESETS: Record<AIProvider, ProviderPreset> = {
   },
 }
 
-export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps) {
+export function AIConfigDialog({ projectId, open, onClose, isOnboarding = false, onSaveComplete }: AIConfigDialogProps) {
   const { config, saveConfig } = useAIConfig(projectId)
   const [formData, setFormData] = useState<Partial<AIConfig>>({})
   const [testing, setTesting] = useState(false)
@@ -59,9 +62,11 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
   const [modelList, setModelList] = useState<string[]>([])
   const [showModels, setShowModels] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string>('')
+  const saveCompletedRef = useRef(false)
 
   useEffect(() => {
     if (open) {
+      saveCompletedRef.current = false
       setFormData({
         provider: config.provider,
         apiKey: config.apiKey,
@@ -169,18 +174,46 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
   }
 
   const handleSave = async () => {
+    saveCompletedRef.current = true
     await saveConfig({ ...formData, provider })
-    onClose()
+    if (isOnboarding && onSaveComplete) {
+      onSaveComplete()
+    } else {
+      onClose()
+    }
+  }
+
+  const handleEscapeKeyDown = (e: KeyboardEvent) => {
+    if (isOnboarding && !saveCompletedRef.current) {
+      e.preventDefault()
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleInteractOutside = (e: any) => {
+    if (isOnboarding && !saveCompletedRef.current) {
+      e.preventDefault()
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[520px]">
+    <Dialog open={open} onOpenChange={openState => { if (!openState && !isOnboarding) onClose() }}>
+      <DialogContent
+        className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto"
+        onEscapeKeyDown={handleEscapeKeyDown}
+        onInteractOutside={handleInteractOutside}
+      >
         <DialogHeader>
-          <DialogTitle>AI 设置</DialogTitle>
+          <DialogTitle>{isOnboarding ? '欢迎使用 InkForge' : 'AI 设置'}</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
+          {isOnboarding && (
+            <p className="text-[13px] text-muted-foreground">
+              开始之前，需要配置你的 AI 接口。你的 API Key 只保存在本地浏览器中。
+            </p>
+          )}
+
           <div className="space-y-2">
             <Label>Provider</Label>
             <div className="grid grid-cols-2 gap-2">
@@ -258,6 +291,7 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
             </div>
           )}
 
+          {/* 模型选择 / 探测 — 引导模式和完整模式都显示，确保一次配完 */}
           {showModels && modelList.length > 0 ? (
             <div className="space-y-2">
               <Label>模型列表</Label>
@@ -293,16 +327,14 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
             </div>
           )}
 
-          <ExperimentFlagsSection
-            provider={provider}
-            flags={formData.experimentFlags ?? { citations: false, extendedCacheTtl: false, thinking: false }}
-            onChange={next => setFormData(prev => ({ ...prev, experimentFlags: next }))}
-          />
-
-          <UiFlagsSection
-            flags={formData.uiFlags ?? DEFAULT_UI_FLAGS}
-            onChange={next => setFormData(prev => ({ ...prev, uiFlags: next }))}
-          />
+          {/* 实验性 AI 特性仅在完整设置里显示，引导模式不打扰新用户 */}
+          {!isOnboarding && (
+            <ExperimentFlagsSection
+              provider={provider}
+              flags={formData.experimentFlags ?? { citations: false, extendedCacheTtl: false, thinking: false }}
+              onChange={next => setFormData(prev => ({ ...prev, experimentFlags: next }))}
+            />
+          )}
         </div>
 
         <DialogFooter>
@@ -313,7 +345,9 @@ export function AIConfigDialog({ projectId, open, onClose }: AIConfigDialogProps
           >
             {testing ? '测试中…' : provider === 'anthropic' ? '验证凭证' : '自动探测模型'}
           </Button>
-          <Button onClick={handleSave}>保存</Button>
+          <Button onClick={handleSave} className={isOnboarding ? 'flex-1' : ''}>
+            保存
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -375,62 +409,6 @@ function ExperimentFlagsSection({ provider, flags, onChange }: ExperimentFlagsSe
                     <span className="text-[10px] text-muted-foreground">（仅 Anthropic）</span>
                   )}
                 </div>
-                <div className="text-[11px] text-muted-foreground mt-0.5 leading-[1.55]">
-                  {meta.hint}
-                </div>
-              </div>
-            </label>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-interface UiFlagsSectionProps {
-  flags: UiExperimentFlags
-  onChange: (next: UiExperimentFlags) => void
-}
-
-const UI_FLAG_LABELS: Record<keyof UiExperimentFlags, { label: string; hint: string }> = {
-  showGenerationPipeline: {
-    label: 'AI 章节生成',
-    hint: '在工作台和大纲里显示 "生成章节" 入口。v1 默认隐藏,需作者手动勾选。',
-  },
-  showStyleProfile: {
-    label: '文风分析面板',
-    hint: '在创作者分析页显示 "文风" 标签页。实验性功能,可能不稳定。',
-  },
-  showTimelineView: {
-    label: '时间线视图',
-    hint: '在创作者分析页显示 "时间线" 标签页。实验性功能,可能不稳定。',
-  },
-}
-
-function UiFlagsSection({ flags, onChange }: UiFlagsSectionProps) {
-  return (
-    <div className="space-y-2">
-      <Label>实验性界面模块</Label>
-      <div className="text-[11px] text-muted-foreground leading-[1.55]">
-        v1 默认只显示一致性核心工作流。以下模块代码保留但入口隐藏,按需开启。
-      </div>
-      <div className="rounded-[var(--radius-card)] surface-2 film-edge p-2 space-y-1">
-        {(Object.keys(UI_FLAG_LABELS) as (keyof UiExperimentFlags)[]).map(key => {
-          const meta = UI_FLAG_LABELS[key]
-          const checked = flags[key]
-          return (
-            <label
-              key={key}
-              className="flex items-start gap-2 px-2 py-1.5 rounded-[var(--radius-control)] cursor-pointer hover:bg-[hsl(var(--surface-3))]"
-            >
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={e => onChange({ ...flags, [key]: e.target.checked })}
-                className="mt-0.5 w-3.5 h-3.5 accent-[hsl(var(--accent-amber))]"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-[13px] text-foreground">{meta.label}</div>
                 <div className="text-[11px] text-muted-foreground mt-0.5 leading-[1.55]">
                   {meta.hint}
                 </div>

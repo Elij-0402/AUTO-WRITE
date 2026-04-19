@@ -15,10 +15,11 @@ const ThemeContext = createContext<ThemeContextValue | null>(null)
 const STORAGE_KEY = 'inkforge-theme'
 
 /**
- * Get system theme preference
+ * Get system theme preference.
+ * SSR fallback is 'dark' because 三更书房 defaults to dark (see DESIGN.md).
  */
 function getSystemTheme(): 'light' | 'dark' {
-  if (typeof window === 'undefined') return 'light'
+  if (typeof window === 'undefined') return 'dark'
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
@@ -40,17 +41,20 @@ function applyThemeClass(resolved: 'light' | 'dark') {
  * - Persists preference in localStorage under 'inkforge-theme'
  * - Applies 'dark' class to html element for Tailwind dark: variants
  * - Theme switching is instant (no animation)
+ * - **Default is 'dark'** (per DESIGN.md 三更书房 — memorable-thing: 深夜注力)
+ *   Must match the init script in app/layout.tsx — otherwise hydration
+ *   will flip the class after first paint.
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Lazy-init from localStorage (SSR-safe: falls back to defaults when window
   // is unavailable). Avoids setState-in-effect cascading renders.
   const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return 'system'
-    return (localStorage.getItem(STORAGE_KEY) as Theme | null) || 'system'
+    if (typeof window === 'undefined') return 'dark'
+    return (localStorage.getItem(STORAGE_KEY) as Theme | null) || 'dark'
   })
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window === 'undefined') return 'light'
-    const stored = (localStorage.getItem(STORAGE_KEY) as Theme | null) || 'system'
+    if (typeof window === 'undefined') return 'dark'
+    const stored = (localStorage.getItem(STORAGE_KEY) as Theme | null) || 'dark'
     return stored === 'system' ? getSystemTheme() : stored
   })
 

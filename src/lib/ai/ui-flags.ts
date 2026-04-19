@@ -1,12 +1,13 @@
 /**
  * UI experimental flags — per deep-interview spec AC-6 (surface pruning).
  *
- * These gate UI entry points to features that exist in the codebase but are
- * not part of v1 spine (generation pipeline, style profile, timeline view).
- * Code is preserved; only the default surface is reduced so fresh-install
- * users see a focused experience.
+ * These gate UI entry points to features that exist in the codebase:
+ * generation pipeline, style profile, timeline view. After v1 validation
+ * these are **enabled by default** — users expect to see all completed
+ * features; hiding them behind a "实验性" toggle hurt discovery.
  *
- * Distinct from ExperimentFlags (which gates Anthropic 2026 primitives).
+ * Flags stay for advanced users who want to hide surfaces, but defaults
+ * now favor exposure. Distinct from ExperimentFlags (Anthropic 2026 primitives).
  */
 
 export interface UiExperimentFlags {
@@ -19,11 +20,16 @@ export interface UiExperimentFlags {
 }
 
 export const DEFAULT_UI_FLAGS: UiExperimentFlags = {
-  showGenerationPipeline: false,
-  showStyleProfile: false,
-  showTimelineView: false,
+  showGenerationPipeline: true,
+  showStyleProfile: true,
+  showTimelineView: true,
 }
 
-export function resolveUiFlags(flags: Partial<UiExperimentFlags> | undefined): UiExperimentFlags {
-  return { ...DEFAULT_UI_FLAGS, ...(flags ?? {}) }
+export function resolveUiFlags(_flags?: Partial<UiExperimentFlags>): UiExperimentFlags {
+  // Post-v1 decision: these features (generation / style profile / timeline)
+  // are fully implemented — they're no longer "experimental". Defaults are
+  // all-on and we intentionally ignore any stored false from beta users so
+  // every install surfaces the completed feature set. The flag shape is
+  // retained for future selective hiding without a schema change.
+  return { ...DEFAULT_UI_FLAGS }
 }

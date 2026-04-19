@@ -21,6 +21,21 @@ export interface AIToolCallEvent {
   input: AIToolInput
 }
 
+/**
+ * Partial tool call — emitted when stream is aborted mid-tool-use block.
+ * Carries whatever JSON was accumulated so far. Callers can attempt
+ * best-effort parse or queue for retry.
+ */
+export interface AIToolCallPartialEvent {
+  type: 'tool_call_partial'
+  id: string
+  name: string
+  /** Best-effort parse of accumulated partial JSON — may be empty or incomplete. */
+  input: AIToolInput
+  /** Raw partial JSON string, for callers that want to attempt their own parse. */
+  partialJson: string
+}
+
 export interface AIUsageEvent {
   type: 'usage'
   inputTokens?: number
@@ -53,6 +68,7 @@ export interface AICitationEvent {
 export type AIEvent =
   | AITextDeltaEvent
   | AIToolCallEvent
+  | AIToolCallPartialEvent
   | AIUsageEvent
   | AIDoneEvent
   | AIErrorEvent

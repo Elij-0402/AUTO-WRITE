@@ -22,7 +22,7 @@ import type {
   SuggestRelationInput,
   ReportContradictionInput,
 } from '../ai/tools/schemas'
-import type { AIEvent } from '../ai/events'
+import type { AIEvent, AIToolInput } from '../ai/events'
 import type { WorldEntryType } from '../types'
 
 export interface ChatMessage {
@@ -41,6 +41,14 @@ export interface Contradiction {
   entryName: string
   entryType: WorldEntryType
   description: string
+}
+
+/** A tool call that was interrupted mid-stream by an abort. */
+export interface InterruptedToolCall {
+  id: string
+  name: string
+  partialJson: string
+  input: AIToolInput
 }
 
 export interface UseAIChatOptions {
@@ -67,6 +75,7 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [contradictions, setContradictions] = useState<Contradiction[]>([])
   const [isCheckingConsistency] = useState(false)
+  const [interruptedToolCalls, setInterruptedToolCalls] = useState<InterruptedToolCall[]>([])
   const abortControllerRef = useRef<AbortController | null>(null)
   const entriesByTypeRef = useRef(entriesByType)
   const exemptionsRef = useRef(exemptions)
@@ -105,6 +114,9 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     if (config.provider === 'openai-compatible' && !config.baseUrl) {
       return { success: false, needsConfig: true, message: '还没填写接口地址，去设置一下？' }
     }
+
+    // Clear interrupted tool calls from any prior aborted stream.
+    setInterruptedToolCalls([])
 
     // Hybrid RAG retrieval replaces the pure keyword matcher (Stage 2).
     const db = createProjectDB(projectId)
@@ -220,6 +232,17 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
           )
         } else if (event.type === 'tool_call') {
           handleToolCall(event, pendingSuggestions, pendingContradictions, exemptionsRef.current)
+        } else if (event.type === 'tool_call_partial') {
+          // Stream was aborted mid-tool. Store partial result so UI can surface it.
+          setInterruptedToolCalls(prev => [
+            ...prev,
+            {
+              id: event.id,
+              name: event.name,
+              partialJson: event.partialJson,
+              input: event.input,
+            },
+          ])
         } else if (event.type === 'citation') {
           pendingCitations.push(event.citation)
         } else if (event.type === 'usage') {
@@ -401,6 +424,10 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     setSuggestions([])
   }, [])
 
+  const clearInterruptedToolCalls = useCallback(() => {
+    setInterruptedToolCalls([])
+  }, [])
+
   return {
     messages,
     loading,
@@ -416,6 +443,8 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     addExemption,
     clearContradiction: (index: number) =>
       setContradictions(prev => prev.filter((_, i) => i !== index)),
+    interruptedToolCalls,
+    clearInterruptedToolCalls,
   }
 }
 

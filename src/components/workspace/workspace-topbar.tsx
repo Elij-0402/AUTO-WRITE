@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, BarChart3, Maximize2, Minimize2, Moon, Settings, Settings2, Sun } from 'lucide-react'
+import { ArrowLeft, BarChart3, Bot, Maximize2, Minimize2, Moon, Settings, Sun } from 'lucide-react'
 import { metaDb } from '@/lib/db/meta-db'
 import { useTotalWordCount, useTodayWordCount } from '@/lib/hooks/use-word-count'
 import { useTheme } from '@/components/editor/theme-provider'
@@ -108,7 +108,7 @@ export function WorkspaceTopbar({
             onClick={onOpenAIConfig}
             aria-label="AI 设置"
           >
-            <Settings2 />
+            <Bot />
           </Button>
         </TooltipTrigger>
         <TooltipContent>AI 设置</TooltipContent>

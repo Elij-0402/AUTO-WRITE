@@ -1,9 +1,9 @@
-/* Tiptap editor — InkForge Cinematic Writer's Console */
+/* Tiptap editor — InkForge 三更书房 manuscript surface (per DESIGN.md) */
 
 .tiptap {
   font-family: var(--font-sans);
-  font-size: 18px;
-  line-height: 2;
+  font-size: var(--text-md);
+  line-height: var(--leading-prose);
   color: hsl(var(--foreground));
   background: transparent;
   letter-spacing: 0.01em;
@@ -159,11 +159,11 @@
   caret-color: hsl(var(--accent-amber));
 }
 
-/* Paper-mode overrides when wrapped in .light */
+/* Paper-mode overrides when wrapped in .light — use token vars, not hardcoded HSL */
 .light .tiptap {
-  color: hsl(25 22% 14%);
+  color: hsl(var(--foreground));
 }
 .light .tiptap code {
-  background: hsl(38 18% 92%);
-  color: hsl(20 70% 40%);
+  background: hsl(var(--surface-2));
+  color: hsl(var(--accent-cinnabar));
 }

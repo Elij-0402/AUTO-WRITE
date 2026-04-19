@@ -60,8 +60,19 @@ export default function ProjectPage() {
   const { chapters } = useChapters(params.id)
   const { entries, entriesByType, addEntry } = useWorldEntries(params.id)
   const { projects, updateProject } = useProjects()
+  const { config, loading: aiConfigLoading } = useAIConfig(params.id)
+  const [onboardingOpen, setOnboardingOpen] = useState(false)
   const currentProject = projects.find((p) => p.id === params.id)
   const generation = useChapterGeneration(params.id, activeChapterId ?? '')
+
+  // 强制引导：只有在 aiConfig 加载完、确认没 key 时才弹
+  // （否则 Dexie 还在读的时候会误触发）
+  useEffect(() => {
+    if (aiConfigLoading) return
+    if (!config.apiKey) {
+      setOnboardingOpen(true)
+    }
+  }, [aiConfigLoading, config.apiKey])
 
   const handleSelectOutline = useCallback((chapterId: string) => {
     setActiveOutlineId(chapterId)
@@ -240,6 +251,15 @@ export default function ProjectPage() {
           projectId={params.id}
           open={aiConfigOpen}
           onClose={() => setAiConfigOpen(false)}
+          isOnboarding={false}
+        />
+
+        <AIConfigDialog
+          projectId={params.id}
+          open={onboardingOpen}
+          onClose={() => {}}
+          isOnboarding={true}
+          onSaveComplete={() => setOnboardingOpen(false)}
         />
 
         <WorkspaceTopbar

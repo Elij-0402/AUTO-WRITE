@@ -64,3 +64,4 @@ node_modules/
 # graphify knowledge-graph output (generated)
 /graphify-out/
 .gstack/
+.worktrees/

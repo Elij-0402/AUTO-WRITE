@@ -126,3 +126,14 @@ export function experimentGroupKey(metric: Pick<ABTestMetric, 'experimentGroup'>
   const g = metric.experimentGroup
   return `citations=${g.citations}|cacheTtl=${g.extendedCacheTtl}|thinking=${g.thinking}`
 }
+
+export async function recordAuthorRating(
+  db: InkForgeProjectDB,
+  messageId: string,
+  rating: number
+): Promise<void> {
+  await db.abTestMetrics
+    .where('messageId')
+    .equals(messageId)
+    .modify({ authorRating: rating })
+}

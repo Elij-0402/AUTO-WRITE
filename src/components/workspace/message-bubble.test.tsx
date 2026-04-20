@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, type ReactNode, type JSX } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MessageBubble } from './message-bubble'
 import { SidebarNavProvider, type SidebarTab } from '@/lib/hooks/use-sidebar-nav'
@@ -6,10 +6,10 @@ import { SidebarNavProvider, type SidebarTab } from '@/lib/hooks/use-sidebar-nav
 function makeWrapper(initial: {
   activeTab: SidebarTab
   selectedEntryId: string | null
-}): (props: { children: ReactNode }) => JSX.Element {
+}) {
   const setActiveTab = vi.fn()
   const setSelectedEntryId = vi.fn()
-  const Wrapper = ({ children }: { children: ReactNode }) => (
+  const Wrapper = ({ children }: { children: unknown }) => (
     <SidebarNavProvider
       activeTab={initial.activeTab}
       selectedEntryId={initial.selectedEntryId}
@@ -27,6 +27,8 @@ describe('MessageBubble', () => {
   it('renders 5 star buttons for assistant message with citations', () => {
     const assistantMsgWithCitations = {
       id: 'msg1',
+      projectId: 'p1',
+      conversationId: 'c1',
       role: 'assistant' as const,
       content: 'Test response',
       timestamp: Date.now(),

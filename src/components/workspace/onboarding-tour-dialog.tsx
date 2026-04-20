@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowRight, Check, User, Feather, SkipForward } from 'lucide-react'
+import { ArrowRight, Check, Feather, SkipForward } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -19,12 +19,35 @@ interface OnboardingTourDialogProps {
 }
 
 type TourStep = 2 | 3 | 4
+type Genre = '武侠' | '仙侠' | '都市' | '悬疑' | '科幻' | '其他'
 
-const CHARACTER_TEMPLATES: Array<{ name: string; hint: string }> = [
-  { name: '主角', hint: '故事的推动者。先想清楚他/她要什么。' },
-  { name: '反派', hint: '制造阻力。不一定坏，但一定挡路。' },
-  { name: '师父', hint: '或朋友、导师、情人。给主角第二视角。' },
-]
+const GENRE_TEMPLATES: Record<Genre, Array<{ name: string }>> = {
+  武侠: [
+    { name: '主角（江湖侠客）' },
+    { name: '反派（魔教高手）' },
+    { name: '师父（武林前辈）' },
+  ],
+  仙侠: [
+    { name: '主角（修士）' },
+    { name: '反派（魔道修士）' },
+    { name: '师父（老仙人）' },
+  ],
+  都市: [
+    { name: '主角（普通人）' },
+    { name: '反派（商业对手）' },
+  ],
+  悬疑: [
+    { name: '主角（侦探/记者）' },
+    { name: '反派（真凶）' },
+  ],
+  科幻: [
+    { name: '主角（船长/研究员）' },
+    { name: '反派（外星势力）' },
+  ],
+  其他: [],
+}
+
+const GENRES: Genre[] = ['武侠', '仙侠', '都市', '悬疑', '科幻', '其他']
 
 /**
  * T11 onboarding tour — steps 2 through 4. Step 1 (API key) is handled
@@ -45,6 +68,7 @@ const CHARACTER_TEMPLATES: Array<{ name: string; hint: string }> = [
 export function OnboardingTourDialog({ projectId, open, onComplete }: OnboardingTourDialogProps) {
   const [step, setStep] = useState<TourStep>(2)
   const [createdTemplates, setCreatedTemplates] = useState<Set<string>>(new Set())
+  const [selectedGenre, setSelectedGenre] = useState<Genre | null>(null)
   const { addEntry } = useWorldEntries(projectId)
   const nav = useSidebarNav()
 
@@ -84,43 +108,71 @@ export function OnboardingTourDialog({ projectId, open, onComplete }: Onboarding
 
         {step === 2 && (
           <div className="space-y-4">
-            <p className="text-[13px] leading-[1.8] text-muted-foreground">
-              三个主要角色就够让 AI 开始"认识你的故事"了。点击模板快速建立，或
-              跳过后自己写。
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {CHARACTER_TEMPLATES.map(t => {
-                const created = createdTemplates.has(t.name)
-                return (
+            {!selectedGenre ? (
+              <>
+                <p className="text-[13px] text-muted-foreground">
+                  选择您的创作题材，我们帮您建立初始角色
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {GENRES.map(genre => (
+                    <button
+                      key={genre}
+                      onClick={() => setSelectedGenre(genre)}
+                      className="rounded-lg border border-[hsl(var(--line))] py-3 text-[13px] font-medium hover:border-[hsl(var(--accent))]/60 hover:bg-[hsl(var(--accent))]/5 transition-colors"
+                    >
+                      {genre}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-muted-foreground/60">
+                  选"其他"或直接下一步可跳过角色模板
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-[13px] text-muted-foreground">
+                  点击添加 <span className="text-foreground/80">{selectedGenre}</span> 初始角色
                   <button
-                    key={t.name}
-                    onClick={() => handleCreateTemplate(t.name)}
-                    disabled={created}
-                    className={
-                      'text-left rounded-md border px-3 py-2.5 transition-colors ' +
-                      (created
-                        ? 'border-[hsl(var(--accent))]/40 bg-[hsl(var(--accent))]/10 cursor-default'
-                        : 'border-[hsl(var(--line))] hover:border-[hsl(var(--accent))]/60 cursor-pointer')
-                    }
+                    onClick={() => { setSelectedGenre(null); setCreatedTemplates(new Set()) }}
+                    className="ml-2 text-[11px] text-muted-foreground/60 underline"
                   >
-                    <div className="flex items-center gap-1.5 text-[13px] font-medium">
-                      {created ? (
-                        <Check className="h-3 w-3 text-[hsl(var(--accent))]" />
-                      ) : (
-                        <User className="h-3 w-3" />
-                      )}
-                      <span>{t.name}</span>
-                    </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground leading-[1.6]">
-                      {t.hint}
-                    </p>
+                    重新选择
                   </button>
-                )
-              })}
-            </div>
-            <p className="text-[11px] text-muted-foreground/70">
-              创建后可在左侧世界观 tab 补充细节。
-            </p>
+                </p>
+                <div className="space-y-2">
+                  {GENRE_TEMPLATES[selectedGenre].map(template => {
+                    const created = createdTemplates.has(template.name)
+                    return (
+                      <button
+                        key={template.name}
+                        onClick={async () => {
+                          if (created) return
+                          await handleCreateTemplate(template.name)
+                        }}
+                        disabled={created}
+                        className={
+                          'w-full flex items-center justify-between rounded-lg border px-4 py-2.5 text-[13px] transition-colors ' +
+                          (created
+                            ? 'border-[hsl(var(--accent))]/40 bg-[hsl(var(--accent))]/5 text-[hsl(var(--accent))]/70'
+                            : 'border-[hsl(var(--line))] hover:border-[hsl(var(--accent))]/50')
+                        }
+                      >
+                        <span>{template.name}</span>
+                        {created && <Check className="h-3.5 w-3.5" />}
+                      </button>
+                    )
+                  })}
+                  {GENRE_TEMPLATES[selectedGenre].length === 0 && (
+                    <p className="text-[13px] text-muted-foreground/60 py-2">
+                      无预设模板，可直接进入下一步
+                    </p>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground/60">
+                  创建后可在左侧世界观 tab 补充细节
+                </p>
+              </>
+            )}
           </div>
         )}
 

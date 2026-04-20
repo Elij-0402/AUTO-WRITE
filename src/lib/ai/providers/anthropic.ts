@@ -60,53 +60,80 @@ export async function* streamAnthropic(
   // Track in-flight tool_use blocks by index so we can accumulate partial JSON.
   const toolBlocks = new Map<number, { id: string; name: string; jsonBuffer: string }>()
 
-  for await (const event of stream) {
-    if (event.type === 'content_block_start') {
-      const block = event.content_block
-      if (block.type === 'tool_use') {
-        toolBlocks.set(event.index, { id: block.id, name: block.name, jsonBuffer: '' })
-      }
-    } else if (event.type === 'content_block_delta') {
-      const delta = event.delta as { type: string; text?: string; partial_json?: string; citation?: AnthropicCitation }
-      if (delta.type === 'text_delta' && typeof delta.text === 'string') {
-        yield { type: 'text_delta', delta: delta.text }
-      } else if (delta.type === 'input_json_delta' && typeof delta.partial_json === 'string') {
-        const block = toolBlocks.get(event.index)
-        if (block) block.jsonBuffer += delta.partial_json
-      } else if (delta.type === 'citations_delta' && delta.citation) {
-        const normalized = normalizeCitation(delta.citation)
-        if (normalized) {
-          yield { type: 'citation', citation: enrichCitation(normalized, blockMap), blockIndex: event.index }
-        }
-      }
-    } else if (event.type === 'content_block_stop') {
-      const block = toolBlocks.get(event.index)
-      if (block) {
-        const input = safeParseJSON(block.jsonBuffer)
-        yield { type: 'tool_call', id: block.id, name: block.name, input }
-        toolBlocks.delete(event.index)
-      }
-    } else if (event.type === 'message_delta') {
-      if (event.usage) {
-        yield {
-          type: 'usage',
-          outputTokens: event.usage.output_tokens,
-        }
-      }
-    } else if (event.type === 'message_stop') {
-      yield { type: 'done' }
+  /** Flush all pending tool blocks as partial events. Used on abort. */
+  const flushPendingToolBlocks = (): AIEvent[] => {
+    const events: AIEvent[] = []
+    for (const block of toolBlocks.values()) {
+      events.push({
+        type: 'tool_call_partial',
+        id: block.id,
+        name: block.name,
+        input: safeParseJSON(block.jsonBuffer),
+        partialJson: block.jsonBuffer,
+      })
     }
+    toolBlocks.clear()
+    return events
   }
 
-  const final = await stream.finalMessage()
-  if (final.usage) {
-    yield {
-      type: 'usage',
-      inputTokens: final.usage.input_tokens,
-      outputTokens: final.usage.output_tokens,
-      cacheReadTokens: final.usage.cache_read_input_tokens ?? undefined,
-      cacheWriteTokens: final.usage.cache_creation_input_tokens ?? undefined,
+  try {
+    for await (const event of stream) {
+      if (event.type === 'content_block_start') {
+        const block = event.content_block
+        if (block.type === 'tool_use') {
+          toolBlocks.set(event.index, { id: block.id, name: block.name, jsonBuffer: '' })
+        }
+      } else if (event.type === 'content_block_delta') {
+        const delta = event.delta as { type: string; text?: string; partial_json?: string; citation?: AnthropicCitation }
+        if (delta.type === 'text_delta' && typeof delta.text === 'string') {
+          yield { type: 'text_delta', delta: delta.text }
+        } else if (delta.type === 'input_json_delta' && typeof delta.partial_json === 'string') {
+          const block = toolBlocks.get(event.index)
+          if (block) block.jsonBuffer += delta.partial_json
+        } else if (delta.type === 'citations_delta' && delta.citation) {
+          const normalized = normalizeCitation(delta.citation)
+          if (normalized) {
+            yield { type: 'citation', citation: enrichCitation(normalized, blockMap), blockIndex: event.index }
+          }
+        }
+      } else if (event.type === 'content_block_stop') {
+        const block = toolBlocks.get(event.index)
+        if (block) {
+          const input = safeParseJSON(block.jsonBuffer)
+          yield { type: 'tool_call', id: block.id, name: block.name, input }
+          toolBlocks.delete(event.index)
+        }
+      } else if (event.type === 'message_delta') {
+        if (event.usage) {
+          yield {
+            type: 'usage',
+            outputTokens: event.usage.output_tokens,
+          }
+        }
+      } else if (event.type === 'message_stop') {
+        yield { type: 'done' }
+      }
     }
+
+    const final = await stream.finalMessage()
+    if (final.usage) {
+      yield {
+        type: 'usage',
+        inputTokens: final.usage.input_tokens,
+        outputTokens: final.usage.output_tokens,
+        cacheReadTokens: final.usage.cache_read_input_tokens ?? undefined,
+        cacheWriteTokens: final.usage.cache_creation_input_tokens ?? undefined,
+      }
+    }
+  } catch (err) {
+    // On abort, flush any pending tool blocks as partial events so the caller
+    // can attempt best-effort handling (e.g., queue for retry).
+    if (err instanceof Error && err.name === 'AbortError') {
+      for (const event of flushPendingToolBlocks()) {
+        yield event
+      }
+    }
+    throw err
   }
 }
 
@@ -194,7 +221,7 @@ function toAnthropicMessage(m: {
   return { role: m.role, content: m.content }
 }
 
-function safeParseJSON(raw: string): AIToolInput {
+export function safeParseJSON(raw: string): AIToolInput {
   if (!raw) return {}
   try {
     const parsed = JSON.parse(raw)

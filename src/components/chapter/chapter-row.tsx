@@ -5,6 +5,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, MoreHorizontal, Pencil, Copy, Trash2, CheckCircle2 } from 'lucide-react'
 import type { Chapter } from '@/lib/types'
+import { playChapterCompleteTick } from '@/lib/audio/tick'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -168,12 +169,15 @@ export function ChapterRow({
             复制章节
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() =>
-              onStatusToggle(
-                chapter.id,
-                chapter.status === 'draft' ? 'completed' : 'draft'
-              )
-            }
+            onClick={() => {
+              const nextStatus = chapter.status === 'draft' ? 'completed' : 'draft'
+              onStatusToggle(chapter.id, nextStatus)
+              if (nextStatus === 'completed') {
+                // T6: fire the once-only atmosphere tick on draft → completed transitions.
+                // Audio module respects the global localStorage kill switch.
+                playChapterCompleteTick()
+              }
+            }}
           >
             <CheckCircle2 />
             {chapter.status === 'draft' ? '标记为完成' : '标记为草稿'}

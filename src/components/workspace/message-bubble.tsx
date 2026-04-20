@@ -8,11 +8,21 @@ import { Feather, Check, Copy } from 'lucide-react'
 
 interface MessageBubbleProps {
   message: ChatMessage
+  /** Needed for T2: CitationChip writes click telemetry + looks up WorldEntry for popover. */
+  projectId: string
+  /** The conversation the message belongs to (carried into aiUsage rows). */
+  conversationId?: string | null
   onInsertDraft?: (draftId: string, content: string) => void
   onCitationClick?: (entryId: string | undefined) => void
 }
 
-export function MessageBubble({ message, onInsertDraft, onCitationClick }: MessageBubbleProps) {
+export function MessageBubble({
+  message,
+  projectId,
+  conversationId,
+  onInsertDraft,
+  onCitationClick,
+}: MessageBubbleProps) {
   const isUser = message.role === 'user'
   const [copied, setCopied] = useState(false)
   const time = new Date(message.timestamp).toLocaleTimeString('zh-CN', {
@@ -87,6 +97,8 @@ export function MessageBubble({ message, onInsertDraft, onCitationClick }: Messa
                 key={`${citation.startBlockIndex}-${idx}`}
                 citation={citation}
                 index={idx}
+                projectId={projectId}
+                conversationId={conversationId ?? message.conversationId}
                 onClick={onCitationClick}
               />
             ))}
@@ -98,6 +110,8 @@ export function MessageBubble({ message, onInsertDraft, onCitationClick }: Messa
             <DraftCard
               draftId={message.draftId}
               content={message.content}
+              projectId={projectId}
+              messageId={message.id}
               onInsert={() => onInsertDraft?.(message.draftId!, message.content)}
             />
           </div>

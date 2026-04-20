@@ -1,8 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { createProjectDB } from '../db/project-db'
-import type { AIUsageEvent as AIUsageRecord, ABTestMetric } from '../db/project-db'
-import { recordUsage } from '../db/ai-usage-queries'
-import { recordABTestMetric } from '../db/ab-metrics-queries'
 import type { Citation } from '../ai/citations'
 import { resolveExperimentFlags } from '../ai/experiment-flags'
 import { useAIConfig } from './use-ai-config'
@@ -17,12 +14,13 @@ import { parseAISuggestions, type Suggestion } from '../ai/suggestion-parser'
 import { streamChat, supportsToolUse, type ProviderStreamMessage } from '../ai/client'
 import { buildSegmentedSystemPrompt } from '../ai/prompts'
 import { summarizeMessages } from '../ai/summarize'
+import { recordChatTurn, recordSummarizeUsage } from './use-chat-telemetry'
 import type {
   SuggestEntryInput,
   SuggestRelationInput,
   ReportContradictionInput,
 } from '../ai/tools/schemas'
-import type { AIEvent } from '../ai/events'
+import type { AIEvent, AIToolInput } from '../ai/events'
 import type { WorldEntryType } from '../types'
 
 export interface ChatMessage {
@@ -37,10 +35,23 @@ export interface ChatMessage {
   citations?: Citation[]
 }
 
-export interface Contradiction {
+/**
+ * Partial contradiction returned by handleToolCall — AI-provided fields only.
+ * The caller fills in id, projectId, conversationId, messageId, exempted,
+ * createdAt before persisting to db.contradictions.
+ */
+export interface PartialContradiction {
   entryName: string
   entryType: WorldEntryType
   description: string
+}
+
+/** A tool call that was interrupted mid-stream by an abort. */
+export interface InterruptedToolCall {
+  id: string
+  name: string
+  partialJson: string
+  input: AIToolInput
 }
 
 export interface UseAIChatOptions {
@@ -65,8 +76,9 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
   const [streamingContent, setStreamingContent] = useState('')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [contradictions, setContradictions] = useState<Contradiction[]>([])
+  const [contradictions, setContradictions] = useState<PartialContradiction[]>([])
   const [isCheckingConsistency] = useState(false)
+  const [interruptedToolCalls, setInterruptedToolCalls] = useState<InterruptedToolCall[]>([])
   const abortControllerRef = useRef<AbortController | null>(null)
   const entriesByTypeRef = useRef(entriesByType)
   const exemptionsRef = useRef(exemptions)
@@ -105,6 +117,9 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     if (config.provider === 'openai-compatible' && !config.baseUrl) {
       return { success: false, needsConfig: true, message: '还没填写接口地址，去设置一下？' }
     }
+
+    // Clear interrupted tool calls from any prior aborted stream.
+    setInterruptedToolCalls([])
 
     // Hybrid RAG retrieval replaces the pure keyword matcher (Stage 2).
     const db = createProjectDB(projectId)
@@ -188,7 +203,7 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     abortControllerRef.current = new AbortController()
     let fullContent = ''
     const pendingSuggestions: Suggestion[] = []
-    const pendingContradictions: Contradiction[] = []
+    const pendingContradictions: PartialContradiction[] = []
     const pendingCitations: Citation[] = []
     const startedAt = Date.now()
     let inputTokens = 0
@@ -218,8 +233,20 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
           setMessages(prev =>
             prev.map(m => (m.id === assistantMsgId ? { ...m, content: fullContent } : m))
           )
-        } else if (event.type === 'tool_call') {
-          handleToolCall(event, pendingSuggestions, pendingContradictions, exemptionsRef.current)
+} else if (event.type === 'tool_call') {
+          const pc = handleToolCall(event, pendingSuggestions, exemptionsRef.current)
+          if (pc) pendingContradictions.push(pc)
+        } else if (event.type === 'tool_call_partial') {
+          // Stream was aborted mid-tool. Store partial result so UI can surface it.
+          setInterruptedToolCalls(prev => [
+            ...prev,
+            {
+              id: event.id,
+              name: event.name,
+              partialJson: event.partialJson,
+              input: event.input,
+            },
+          ])
         } else if (event.type === 'citation') {
           pendingCitations.push(event.citation)
         } else if (event.type === 'usage') {
@@ -270,9 +297,38 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
         setSuggestions(pendingSuggestions)
       }
 
-      setContradictions(pendingContradictions)
+setContradictions(pendingContradictions)
 
-      // Async compaction: if messages beyond window have grown by ≥ 6 since
+      // Persist contradictions to DB with dedup (CEO-4C: 7d window by entryName+description).
+      // Fire-and-forget; never block the chat UI.
+      if (pendingContradictions.length > 0) {
+        void (async () => {
+          const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
+          const now = Date.now()
+          for (const pc of pendingContradictions) {
+            // Check for a recent same-description contradiction for this entry (within 7d).
+            const cutoff = now - SEVEN_DAYS
+            const recent = await db.contradictions
+              .where('[projectId+entryName]')
+              .equals([projectId, pc.entryName])
+              .and(row => row.createdAt >= cutoff && !row.exempted)
+              .toArray()
+            const isDupe = recent.some(r => r.description === pc.description)
+            if (isDupe) continue
+await db.contradictions.add({
+              id: crypto.randomUUID(),
+              projectId,
+              conversationId,
+              messageId: assistantMsgId,
+              entryName: pc.entryName,
+              entryType: pc.entryType,
+              description: pc.description,
+              exempted: false,
+              createdAt: now,
+            })
+          }
+        })()
+      }
       // the last summary, rebuild the rollingSummary. Fire-and-forget; never
       // block the chat UI, never throw up to the caller.
       const totalAfter = newCount
@@ -295,25 +351,18 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
                 summarizedUpTo: outsideWindow,
               })
             }
-            if (summary.inputTokens > 0 || summary.outputTokens > 0) {
-              const usage: AIUsageRecord = {
-                id: crypto.randomUUID(),
-                projectId,
-                conversationId,
-                kind: 'summarize',
-                provider: config.provider,
-                model: config.model ?? '',
-                inputTokens: summary.inputTokens,
-                outputTokens: summary.outputTokens,
-                cacheReadTokens: summary.cacheReadTokens,
-                cacheWriteTokens: summary.cacheWriteTokens,
-                latencyMs: summary.latencyMs,
-                createdAt: Date.now(),
-              }
-              await recordUsage(db, usage).catch(e =>
-                console.warn('[useAIChat] summarize recordUsage failed:', e)
-              )
-            }
+            await recordSummarizeUsage({
+              db,
+              projectId,
+              conversationId,
+              provider: config.provider,
+              model: config.model ?? '',
+              inputTokens: summary.inputTokens,
+              outputTokens: summary.outputTokens,
+              cacheReadTokens: summary.cacheReadTokens,
+              cacheWriteTokens: summary.cacheWriteTokens,
+              latencyMs: summary.latencyMs,
+            })
           } catch (e) {
             console.warn('[useAIChat] summarize failed:', e)
           }
@@ -331,52 +380,18 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
       abortControllerRef.current = null
       // Persist usage regardless of success/abort — even a cancelled stream
       // incurred input tokens, and the prefix output tokens still cost money.
-      if (inputTokens > 0 || outputTokens > 0) {
-        const usage: AIUsageRecord = {
-          id: crypto.randomUUID(),
-          projectId,
-          conversationId,
-          kind: 'chat',
-          provider: config.provider,
-          model: config.model ?? '',
-          inputTokens,
-          outputTokens,
-          cacheReadTokens,
-          cacheWriteTokens,
-          latencyMs: Date.now() - startedAt,
-          createdAt: Date.now(),
-        }
-        try {
-          await recordUsage(db, usage)
-        } catch (e) {
-          console.warn('[useAIChat] recordUsage failed:', e)
-        }
-
-        // Phase B A/B metric (AC-4). citationCount/emptyCitationRate filled in Phase C.
-        const experimentGroup = resolveExperimentFlags({
-          provider: config.provider,
-          experimentFlags: config.experimentFlags,
-        })
-        const metric: ABTestMetric = {
-          id: crypto.randomUUID(),
-          projectId,
-          conversationId,
-          messageId: assistantMsgId,
-          experimentGroup,
-          latencyMs: usage.latencyMs,
-          inputTokens,
-          outputTokens,
-          cacheReadTokens,
-          cacheWriteTokens,
-          citationCount: pendingCitations.length,
-          createdAt: Date.now(),
-        }
-        try {
-          await recordABTestMetric(db, metric)
-        } catch (e) {
-          console.warn('[useAIChat] recordABTestMetric failed:', e)
-        }
-      }
+      await recordChatTurn({
+        db,
+        projectId,
+        conversationId,
+        assistantMessageId: assistantMsgId,
+        provider: config.provider,
+        model: config.model ?? '',
+        config: { provider: config.provider, experimentFlags: config.experimentFlags },
+        counters: { inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens },
+        latencyMs: Date.now() - startedAt,
+        citationCount: pendingCitations.length,
+      })
     }
     return { success: true }
   }, [config, projectId, conversationId, entries, entriesByType, options?.selectedText])
@@ -401,6 +416,10 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     setSuggestions([])
   }, [])
 
+  const clearInterruptedToolCalls = useCallback(() => {
+    setInterruptedToolCalls([])
+  }, [])
+
   return {
     messages,
     loading,
@@ -416,6 +435,8 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     addExemption,
     clearContradiction: (index: number) =>
       setContradictions(prev => prev.filter((_, i) => i !== index)),
+    interruptedToolCalls,
+    clearInterruptedToolCalls,
   }
 }
 
@@ -426,12 +447,11 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
 function handleToolCall(
   event: Extract<AIEvent, { type: 'tool_call' }>,
   suggestions: Suggestion[],
-  contradictions: Contradiction[],
   exemptions: Array<{ exemptionKey: string }> | undefined
-): void {
+): PartialContradiction | null {
   if (event.name === 'suggest_entry') {
     const input = event.input as Partial<SuggestEntryInput>
-    if (!input.entryType || !input.name) return
+    if (!input.entryType || !input.name) return null
     suggestions.push({
       type: 'newEntry',
       entryType: input.entryType,
@@ -440,12 +460,12 @@ function handleToolCall(
       extractedFields: input.fields ?? {},
       confidence: input.confidence ?? 'medium',
     })
-    return
+    return null
   }
 
   if (event.name === 'suggest_relation') {
     const input = event.input as Partial<SuggestRelationInput>
-    if (!input.entry1Name || !input.entry2Name || !input.relationshipType) return
+    if (!input.entry1Name || !input.entry2Name || !input.relationshipType) return null
     suggestions.push({
       type: 'relationship',
       entry1Name: input.entry1Name,
@@ -458,19 +478,21 @@ function handleToolCall(
         `${input.entry1Name}与${input.entry2Name}存在${input.relationshipType}关系`,
       confidence: input.confidence ?? 'medium',
     })
-    return
+    return null
   }
 
   if (event.name === 'report_contradiction') {
     const input = event.input as Partial<ReportContradictionInput>
-    if (!input.entryName || !input.entryType || !input.description) return
-    if (input.severity === 'low') return
+    if (!input.entryName || !input.entryType || !input.description) return null
+    if (input.severity === 'low') return null
     const key = `${input.entryName}:${input.entryType}`
-    if (exemptions?.some(e => e.exemptionKey === key)) return
-    contradictions.push({
+    if (exemptions?.some(e => e.exemptionKey === key)) return null
+    return {
       entryName: input.entryName,
       entryType: input.entryType,
       description: input.description,
-    })
+    }
   }
+
+  return null
 }

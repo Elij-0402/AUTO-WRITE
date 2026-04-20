@@ -21,7 +21,7 @@ export interface ExperimentFlags {
 
 export const DEFAULT_EXPERIMENT_FLAGS: ExperimentFlags = {
   citations: false,
-  extendedCacheTtl: false,
+  extendedCacheTtl: true,
   thinking: false,
 }
 

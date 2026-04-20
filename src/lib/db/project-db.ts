@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { Chapter, ProjectMeta, WorldEntry, Relation } from '../types'
+import type { Chapter, ProjectMeta, WorldEntry, Relation, WorldEntryType } from '../types'
 import type { Embedding } from '../rag/types'
 import type { ExperimentFlags } from '../ai/experiment-flags'
 import type { UiExperimentFlags } from '../ai/ui-flags'
@@ -92,6 +92,38 @@ export interface ConsistencyExemption {
 }
 
 /**
+ * Historical contradiction entry stored per-project in v13 for the T3
+ * Contradiction Dashboard. One row per AI-detected contradiction against a
+ * WorldEntry, persisted so the analysis page can show per-entry history
+ * instead of only in-the-moment cards.
+ *
+ * Dedup rule (CEO-4C): a new contradiction with the same
+ * (entryName + description + exempted=false) as a row within the last 7
+ * days is skipped. Re-flag only if the old row is older than 7d.
+ *
+ * Sync: contradictions ARE synced to Supabase (unlike aiConfig which is
+ * local-only). Row-level-security on Supabase must scope by user_id.
+ */
+export interface Contradiction {
+  id: string
+  projectId: string
+  /** Conversation where this contradiction was surfaced. null = non-chat flow. */
+  conversationId: string | null
+  /** Message id that produced the contradiction for traceability. */
+  messageId: string | null
+  /** Target WorldEntry name (denormalized so the dashboard renders w/o a join). */
+  entryName: string
+  entryType: WorldEntryType
+  /** AI-written description of the contradiction. */
+  description: string
+  /** True when the user marked it intentional via ConsistencyWarningCard or the dashboard. */
+  exempted: boolean
+  createdAt: number
+  /** Optional chapter reference so "去第 X 章" button has a target. */
+  chapterId?: string
+}
+
+/**
  * Per-chapter content snapshot for time-travel / undo-across-sessions.
  * Captured periodically by the autosave layer (see use-autosave) and on
  * demand when the user pins an explicit checkpoint.
@@ -142,7 +174,13 @@ export interface AIUsageEvent {
   projectId: string
   /** null for calls not tied to a conversation (e.g. style-profile analyses). */
   conversationId: string | null
-  kind: 'chat' | 'summarize' | 'analyze' | 'generate'
+  /**
+   * v13 adds 'citation_click' — zero-cost observation event fired when the
+   * user clicks a citation chip (T2). No provider/model/token fields are
+   * populated for these rows; only id, projectId, conversationId, kind,
+   * createdAt matter.
+   */
+  kind: 'chat' | 'summarize' | 'analyze' | 'generate' | 'citation_click'
   provider: AIProvider
   model: string
   inputTokens: number
@@ -152,6 +190,38 @@ export interface AIUsageEvent {
   cacheWriteTokens: number
   latencyMs: number
   createdAt: number
+  /**
+   * v13 (T1: draft adoption telemetry). Only populated on 'chat' rows whose
+   * assistant response included a draft. draftOffered=true and one of
+   * draftAccepted / draftRejectedReason will follow.
+   */
+  draftOffered?: boolean
+  /** True when user clicked "插入到正文" on the DraftCard. */
+  draftAccepted?: boolean
+  /**
+   * Percentage (0–1) of the inserted draft that was subsequently edited.
+   * Computed ~30 minutes after insert via revisions diff. null means the
+   * window expired without a revision (tab closed, chapter not touched).
+   */
+  draftEditedPct?: number | null
+  /**
+   * Reason enum when user clicked "不采纳". One of the four T1-spec values
+   * plus an optional free-form note capped at 500 chars and plain-text only.
+   */
+  draftRejectedReason?:
+    | 'conflict'
+    | 'style'
+    | 'plot'
+    | 'other'
+  /** Optional free-form supplement to draftRejectedReason. Max 500 chars. */
+  draftRejectedNote?: string
+  /**
+   * v13 (T1): scheduled deadline for the retroactive editedPct scan. Stored
+   * in ms-since-epoch. A background pass on page load scans rows where
+   * draftAccepted=true AND draftEditedPct==null AND editedPctDeadline<now()
+   * and fills in the value from revisions diff.
+   */
+  editedPctDeadline?: number
 }
 
 /**
@@ -220,6 +290,7 @@ export class InkForgeProjectDB extends Dexie {
   conversations!: Table<Conversation, string>
   aiUsage!: Table<AIUsageEvent, string>
   abTestMetrics!: Table<ABTestMetric, string>
+  contradictions!: Table<Contradiction, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -407,6 +478,38 @@ export class InkForgeProjectDB extends Dexie {
       conversations: 'id, projectId, updatedAt',
       aiUsage: 'id, projectId, conversationId, createdAt, model',
       abTestMetrics: 'id, projectId, conversationId, createdAt, [projectId+createdAt]',
+    })
+    // v13: v0.3 Sharpen-the-Spine schema.
+    // - T3: new `contradictions` table (historical contradiction records for
+    //   the Contradiction Dashboard). Compound index [projectId+entryName]
+    //   powers the per-entry aggregate query required by the dashboard.
+    // - T1: additive fields on aiUsage (draftOffered / draftAccepted /
+    //   draftEditedPct / draftRejectedReason / draftRejectedNote /
+    //   editedPctDeadline) and a new 'citation_click' kind. No index change.
+    // - T4: additive inferredVoice field on WorldEntry — no index change.
+    // - T7: additive lastIndexedAt observability field on Embedding — no
+    //   index change.
+    //
+    // Additive-only per Dexie best practice. Older code reading a v13 DB
+    // will simply ignore the new table + columns.
+    this.version(13).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+      aiConfig: 'id',
+      messages: 'id, projectId, conversationId, role, timestamp',
+      consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+      revisions: 'id, projectId, chapterId, createdAt',
+      embeddings: 'id, sourceType, sourceId, embedderId, updatedAt, [sourceType+sourceId]',
+      analyses: 'id, kind, invalidationKey, createdAt',
+      conversations: 'id, projectId, updatedAt',
+      aiUsage: 'id, projectId, conversationId, createdAt, model',
+      abTestMetrics: 'id, projectId, conversationId, createdAt, [projectId+createdAt]',
+      contradictions:
+        'id, projectId, messageId, entryName, exempted, createdAt, ' +
+        '[projectId+entryName], [projectId+createdAt]',
     })
   }
 }

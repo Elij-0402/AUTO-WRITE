@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useAIChat, ChatMessage, type Contradiction } from '@/lib/hooks/use-ai-chat'
+import { useAIChat, ChatMessage } from '@/lib/hooks/use-ai-chat'
+import { ConsistencyWarningCard, type Contradiction } from './consistency-warning-card'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { useConversations } from '@/lib/hooks/use-conversations'
 import { createProjectDB } from '@/lib/db/project-db'
@@ -10,7 +11,6 @@ import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
 import { MessageBubble } from './message-bubble'
 import { RelationshipSuggestionCard, NewEntrySuggestionCard } from './suggestion-card'
-import { ConsistencyWarningCard } from './consistency-warning-card'
 import { NewEntryDialog, type NewEntryPrefillData } from './new-entry-dialog'
 import { DuplicateEntryDialog } from './duplicate-entry-dialog'
 import { ConversationDrawer } from './conversation-drawer'
@@ -267,9 +267,21 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     clearContradiction(index)
   }
 
-  const handleIntentionalContradiction = async (contradiction: Contradiction, index: number) => {
+const handleIntentionalContradiction = async (contradiction: Contradiction, _index: number) => {
     await addExemption(contradiction.entryName, contradiction.entryType)
-    clearContradiction(index)
+    // Also mark the most recent non-exempted row as exempted so the dashboard
+    // reflects the decision immediately (CEO-4C: multiple rows per entry possible).
+    const db = createProjectDB(projectId)
+    const rows = await db.contradictions
+      .where('[projectId+entryName]')
+      .equals([projectId, contradiction.entryName])
+      .and(r => !r.exempted)
+      .sortBy('createdAt')
+    const latest = rows[rows.length - 1]
+    if (latest) {
+      await db.contradictions.update(latest.id, { exempted: true })
+    }
+    clearContradiction(_index)
     showToast('已记录为有意为之')
   }
 
@@ -387,6 +399,8 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
               <MessageBubble
                 key={msg.id}
                 message={msg}
+                projectId={projectId}
+                conversationId={activeConversationId}
                 onInsertDraft={handleInsertDraft}
               />
             ))}

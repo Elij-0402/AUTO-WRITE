@@ -1,29 +1,33 @@
 /**
- * UI experimental flags — per deep-interview spec AC-6 (surface pruning).
+ * UI experimental flags — post-v0.3 surface state.
  *
- * These gate UI entry points to features that exist in the codebase but are
- * not part of v1 spine (generation pipeline, style profile, timeline view).
- * Code is preserved; only the default surface is reduced so fresh-install
- * users see a focused experience.
+ * These gate UI entry points for:
+ * - timeline view tab in /projects/[id]/analysis
  *
- * Distinct from ExperimentFlags (which gates Anthropic 2026 primitives).
+ * Defaults are all-on; legacy stored `false` values are ignored so every
+ * install surfaces the completed feature set. The flag shape is retained
+ * for future selective hiding without a schema change.
+ *
+ * Distinct from ExperimentFlags (Anthropic 2026 primitives).
+ *
+ * Removed in v0.3:
+ * - T9: showGenerationPipeline — GenerationDrawer + GenerationButton + the
+ *   chapter-generation pipeline were deleted. AI-assisted drafts now live
+ *   inside the AI chat panel only.
+ * - T4: showStyleProfile — the project-wide style-profile analysis tab was
+ *   retired. Style-fingerprint information moved to a per-WorldEntry
+ *   `inferredVoice` field on the edit form (character + location only).
  */
 
 export interface UiExperimentFlags {
-  /** Show the generation button in workspace and the generation panel in outline editor. */
-  showGenerationPipeline: boolean
-  /** Show the "文风" (style) tab in /projects/[id]/analysis. */
-  showStyleProfile: boolean
   /** Show the "时间线" (timeline) tab in /projects/[id]/analysis. */
   showTimelineView: boolean
 }
 
 export const DEFAULT_UI_FLAGS: UiExperimentFlags = {
-  showGenerationPipeline: false,
-  showStyleProfile: false,
-  showTimelineView: false,
+  showTimelineView: true,
 }
 
-export function resolveUiFlags(flags: Partial<UiExperimentFlags> | undefined): UiExperimentFlags {
-  return { ...DEFAULT_UI_FLAGS, ...(flags ?? {}) }
+export function resolveUiFlags(_flags?: Partial<UiExperimentFlags>): UiExperimentFlags {
+  return { ...DEFAULT_UI_FLAGS }
 }

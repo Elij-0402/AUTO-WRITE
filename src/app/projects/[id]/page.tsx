@@ -13,16 +13,17 @@ import { ThemeProvider } from '@/components/editor/theme-provider'
 import { DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
 import { useLayout } from '@/lib/hooks/use-layout'
 import { useChapters } from '@/lib/hooks/use-chapters'
+import { useIdleMode } from '@/lib/hooks/use-idle-mode'
+import { SidebarNavProvider, type SidebarTab } from '@/lib/hooks/use-sidebar-nav'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
 import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
+import { OnboardingTourDialog } from '@/components/workspace/onboarding-tour-dialog'
+import { DevStatsDrawer } from '@/components/workspace/dev-stats-drawer'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
-import { GenerationDrawer } from '@/components/workspace/generation-drawer'
-import { GenerationButton } from '@/components/workspace/generation-button'
-import { useChapterGeneration } from '@/lib/hooks/use-chapter-generation'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import {
@@ -51,17 +52,29 @@ export default function ProjectPage() {
   const [activeWorldEntryId, setActiveWorldEntryId] = useState<string | null>(null)
   const [aiConfigOpen, setAiConfigOpen] = useState(false)
   const [projectSettingsOpen, setProjectSettingsOpen] = useState(false)
+  const [devStatsOpen, setDevStatsOpen] = useState(false)
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
-  const [generationDrawerOpen, setGenerationDrawerOpen] = useState(false)
 
   const { activeTab, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(params.id)
   const { chapters } = useChapters(params.id)
+  const idle = useIdleMode()
   const { entries, entriesByType, addEntry } = useWorldEntries(params.id)
   const { projects, updateProject } = useProjects()
+  const { config, loading: aiConfigLoading } = useAIConfig(params.id)
+  const [onboardingOpen, setOnboardingOpen] = useState(false)
+  const [tourOpen, setTourOpen] = useState(false)
   const currentProject = projects.find((p) => p.id === params.id)
-  const generation = useChapterGeneration(params.id, activeChapterId ?? '')
+
+  // 强制引导：只有在 aiConfig 加载完、确认没 key 时才弹
+  // （否则 Dexie 还在读的时候会误触发）
+  useEffect(() => {
+    if (aiConfigLoading) return
+    if (!config.apiKey) {
+      setOnboardingOpen(true)
+    }
+  }, [aiConfigLoading, config.apiKey])
 
   const handleSelectOutline = useCallback((chapterId: string) => {
     setActiveOutlineId(chapterId)
@@ -148,6 +161,21 @@ export default function ProjectPage() {
         }
       }
 
+      if ((e.ctrlKey || e.metaKey) && e.altKey && !e.shiftKey) {
+        const target = e.target as HTMLElement | null
+        const isEditable =
+          target?.tagName === 'INPUT' ||
+          target?.tagName === 'TEXTAREA' ||
+          target?.isContentEditable
+        if (isEditable) return
+
+        if (e.key === 's' || e.key === 'S') {
+          e.preventDefault()
+          setDevStatsOpen((prev) => !prev)
+          return
+        }
+      }
+
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
         const target = e.target as HTMLElement | null
         const isEditable =
@@ -226,8 +254,6 @@ export default function ProjectPage() {
         editorRef={editorRef}
         editorContentRef={editorContentRef}
         onDiscuss={handleDiscuss}
-        onOpenGenerationDrawer={() => setGenerationDrawerOpen(true)}
-        generation={generation}
       />
     ) : (
       <Placeholder activeTab={activeTab} />
@@ -236,10 +262,34 @@ export default function ProjectPage() {
   return (
     <ThemeProvider>
       <TooltipProvider delayDuration={300}>
+        <SidebarNavProvider
+          activeTab={activeTab as SidebarTab}
+          selectedEntryId={activeWorldEntryId}
+          setActiveTab={saveActiveTab as (t: SidebarTab) => void}
+          setSelectedEntryId={setActiveWorldEntryId}
+        >
         <AIConfigDialog
           projectId={params.id}
           open={aiConfigOpen}
           onClose={() => setAiConfigOpen(false)}
+          isOnboarding={false}
+        />
+
+        <AIConfigDialog
+          projectId={params.id}
+          open={onboardingOpen}
+          onClose={() => {}}
+          isOnboarding={true}
+          onSaveComplete={() => {
+            setOnboardingOpen(false)
+            setTourOpen(true)
+          }}
+        />
+
+        <OnboardingTourDialog
+          projectId={params.id}
+          open={tourOpen}
+          onComplete={() => setTourOpen(false)}
         />
 
         <WorkspaceTopbar
@@ -248,6 +298,14 @@ export default function ProjectPage() {
           onToggleFocusMode={() => setFocusMode(!focusMode)}
           onOpenAIConfig={() => setAiConfigOpen(true)}
           onOpenProjectSettings={() => setProjectSettingsOpen(true)}
+          onOpenDevStats={() => setDevStatsOpen(true)}
+          idle={idle}
+        />
+
+        <DevStatsDrawer
+          projectId={params.id}
+          open={devStatsOpen}
+          onOpenChange={setDevStatsOpen}
         />
 
         <Dialog open={projectSettingsOpen} onOpenChange={setProjectSettingsOpen}>
@@ -268,22 +326,6 @@ export default function ProjectPage() {
             )}
           </DialogContent>
         </Dialog>
-
-        <GenerationDrawer
-          open={generationDrawerOpen}
-          onClose={() => setGenerationDrawerOpen(false)}
-          onAccept={async () => {
-            if (editorRef.current) {
-              editorRef.current.insertText(generation.streamingContent)
-            }
-            setGenerationDrawerOpen(false)
-            generation.resetGeneration()
-          }}
-          onRegenerate={() => generation.startGeneration()}
-          streamingContent={generation.streamingContent}
-          status={generation.status}
-          error={generation.error}
-        />
 
         <div
           className={`flex-1 flex overflow-hidden transition-[opacity] duration-[var(--dur-slow)] ease-[cubic-bezier(0.16,1,0.3,1)]`}
@@ -376,12 +418,13 @@ export default function ProjectPage() {
           </Group>
         )}
         </div>
+        </SidebarNavProvider>
       </TooltipProvider>
     </ThemeProvider>
   )
 }
 
-function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editorRef, editorContentRef, onDiscuss, onOpenGenerationDrawer, generation }: {
+function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editorRef, editorContentRef, onDiscuss }: {
   projectId: string;
   chapterId: string;
   chapter: Chapter | undefined;
@@ -389,12 +432,9 @@ function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editor
   editorRef: RefObject<EditorHandle | null>
   editorContentRef: RefObject<HTMLDivElement | null>
   onDiscuss: (text: string) => void
-  onOpenGenerationDrawer: () => void
-  generation: ReturnType<typeof useChapterGeneration>
 }) {
   const { content, isSaving, updateContent } = useChapterEditor(projectId, chapterId)
   const [historyOpen, setHistoryOpen] = useState(false)
-  const { uiFlags } = useAIConfig(projectId)
 
   const handleRestore = useCallback((snapshot: object) => {
     editorRef.current?.setContent(snapshot)
@@ -419,12 +459,6 @@ function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editor
       />
       <div className="surface-elevated flex items-center justify-between px-3 py-1.5 film-edge">
         <div className="flex items-center gap-2">
-          {uiFlags.showGenerationPipeline && (
-            <GenerationButton
-              onOpenDrawer={onOpenGenerationDrawer}
-              generation={generation}
-            />
-          )}
           <Button
             variant="ghost"
             size="sm"

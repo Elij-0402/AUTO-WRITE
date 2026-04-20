@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, BarChart3, Maximize2, Minimize2, Moon, Settings, Settings2, Sun } from 'lucide-react'
+import { Activity, ArrowLeft, BarChart3, Bot, Maximize2, Minimize2, Moon, Settings, Sun } from 'lucide-react'
 import { metaDb } from '@/lib/db/meta-db'
 import { useTotalWordCount, useTodayWordCount } from '@/lib/hooks/use-word-count'
 import { useTheme } from '@/components/editor/theme-provider'
@@ -20,6 +20,9 @@ interface WorkspaceTopbarProps {
   onToggleFocusMode: () => void
   onOpenAIConfig: () => void
   onOpenProjectSettings: () => void
+  onOpenDevStats?: () => void
+  /** True after the user has been idle for the configured timeout (T6). */
+  idle?: boolean
 }
 
 export function WorkspaceTopbar({
@@ -28,6 +31,8 @@ export function WorkspaceTopbar({
   onToggleFocusMode,
   onOpenAIConfig,
   onOpenProjectSettings,
+  onOpenDevStats,
+  idle = false,
 }: WorkspaceTopbarProps) {
   const project = useLiveQuery(
     () => metaDb.projectIndex.get(projectId),
@@ -37,7 +42,13 @@ export function WorkspaceTopbar({
   const todayWordCount = useTodayWordCount(projectId)
 
   return (
-    <div className="surface-elevated h-12 shrink-0 flex items-center gap-2 px-4 sticky top-0 z-40">
+    <div
+      className={
+        'surface-elevated h-12 shrink-0 flex items-center gap-2 px-4 sticky top-0 z-40 ' +
+        'transition-opacity duration-[var(--t-slow)] ease-[cubic-bezier(0.2,0,0,1)] ' +
+        (idle ? 'opacity-60' : 'opacity-100')
+      }
+    >
       <Tooltip>
         <TooltipTrigger asChild>
           <Button asChild variant="ghost" size="icon-sm">
@@ -86,6 +97,22 @@ export function WorkspaceTopbar({
         <TooltipContent>创作者分析</TooltipContent>
       </Tooltip>
 
+      {onOpenDevStats && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={onOpenDevStats}
+              aria-label="开发者统计"
+            >
+              <Activity />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>开发者统计 · Ctrl+Alt+S</TooltipContent>
+        </Tooltip>
+      )}
+
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
@@ -108,7 +135,7 @@ export function WorkspaceTopbar({
             onClick={onOpenAIConfig}
             aria-label="AI 设置"
           >
-            <Settings2 />
+            <Bot />
           </Button>
         </TooltipTrigger>
         <TooltipContent>AI 设置</TooltipContent>
@@ -120,12 +147,12 @@ export function WorkspaceTopbar({
             variant={focusMode ? 'secondary' : 'ghost'}
             size="icon-sm"
             onClick={onToggleFocusMode}
-            aria-label={focusMode ? '退出聚焦模式' : '进入聚焦模式'}
+            aria-label={focusMode ? '退出深夜模式' : '深夜模式'}
           >
             {focusMode ? <Minimize2 /> : <Maximize2 />}
           </Button>
         </TooltipTrigger>
-        <TooltipContent>{focusMode ? '退出聚焦模式' : '进入聚焦模式'}</TooltipContent>
+        <TooltipContent>{focusMode ? '退出深夜模式' : '深夜模式'}</TooltipContent>
       </Tooltip>
 
       <ThemeToggle />

@@ -45,7 +45,7 @@ Data is split across two Dexie databases for project isolation:
 1. **`inkforge-meta`** (`src/lib/db/meta-db.ts`) — shared singleton, stores `projectIndex` (project listings for the dashboard)
 2. **`inkforge-project-{id}`** (`src/lib/db/project-db.ts`) — one per project, stores `chapters`, `worldEntries`, `relations`, `layoutSettings`, `aiConfig`, `messages`
 
-Create per-project DB instances via `createProjectDB(projectId)`. The project DB is currently at schema version 11 (adds `revisions`, `embeddings`, `analyses`, `conversations`, `aiUsage` tables on top of the original core tables).
+Create per-project DB instances via `createProjectDB(projectId)`. The project DB is currently at schema version 12 (adds `revisions`, `embeddings`, `analyses`, `conversations`, `aiUsage`, `abTestMetrics` tables on top of the original core tables).
 
 ### Domain Types
 
@@ -119,6 +119,19 @@ Tests live alongside source files as `*.test.ts` / `*.test.tsx`. The test setup 
 - Provides `fake-indexeddb/auto` for Dexie.js tests
 - Mocks `@/lib/supabase/client` globally
 - Uses jsdom environment with `@testing-library/jest-dom` matchers
+
+## Design System
+
+**Always read `DESIGN.md` before making any visual or UI decision.** It is the single source of truth for aesthetic direction, typography, color, spacing, motion, layout, and component language.
+
+- Direction: **三更书房 (Study at Third Watch) — Monastic Dark + Literary CJK**
+- Memorable thing: **深夜注力、极极安静**
+- Primary surface: coal black `#0E0F11`
+- Only accent: 朱砂 cinnabar `#C8553D`
+- Display: LXGW WenKai (楷) · Body: LXGW Neo XiHei · Numeric: Instrument Serif
+- Default theme: **dark** (light mode = 米纸 rice-paper, opt-in)
+
+Do not deviate from DESIGN.md without explicit user approval. In any QA or code-review mode, flag code that doesn't match DESIGN.md — especially: shadows, large border-radius (>8px), decorative animations (pulse/shimmer/glow), generic system fonts, or any color other than the defined palette.
 # CLAUDE.md
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
@@ -184,3 +197,23 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+## Skill routing
+
+When the user's request matches an available skill, ALWAYS invoke it using the Skill
+tool as your FIRST action. Do NOT answer directly, do NOT use other tools first.
+The skill has specialized workflows that produce better results than ad-hoc answers.
+
+Key routing rules:
+- Product ideas, "is this worth building", brainstorming → invoke office-hours
+- Bugs, errors, "why is this broken", 500 errors → invoke investigate
+- Ship, deploy, push, create PR → invoke ship
+- QA, test the site, find bugs → invoke qa
+- Code review, check my diff → invoke review
+- Update docs after shipping → invoke document-release
+- Weekly retro → invoke retro
+- Design system, brand → invoke design-consultation
+- Visual audit, design polish → invoke design-review
+- Architecture review → invoke plan-eng-review
+- Save progress, checkpoint, resume → invoke checkpoint
+- Code quality, health check → invoke health

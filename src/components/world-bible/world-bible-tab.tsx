@@ -5,6 +5,7 @@ import { User, MapPin, BookOpen, Clock, Plus, ChevronDown, ChevronRight, MoreHor
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
+import { useContradictions } from '@/lib/hooks/use-contradictions'
 import { DeleteEntryDialog } from './delete-entry-dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -92,12 +93,13 @@ const TYPE_ORDER: WorldEntryType[] = ['character', 'location', 'rule', 'timeline
 interface WorldEntryRowProps {
   entry: WorldEntry
   isActive: boolean
+  contradictionCount?: number
   onSelect: () => void
   onEdit: () => void
   onDelete: () => void
 }
 
-function WorldEntryRow({ entry, isActive, onSelect, onEdit, onDelete }: WorldEntryRowProps) {
+function WorldEntryRow({ entry, isActive, contradictionCount = 0, onSelect, onEdit, onDelete }: WorldEntryRowProps) {
   const tagPreview = entry.tags.slice(0, 2).join(' · ')
   const colorClass = getTypeColorClass(entry.type)
   const railClass = getTypeRailClass(entry.type)
@@ -152,6 +154,16 @@ function WorldEntryRow({ entry, isActive, onSelect, onEdit, onDelete }: WorldEnt
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* DSN-7F: badge when ≥3 open contradictions for this entry in last 7d */}
+      {contradictionCount >= 3 && (
+        <span
+          title={`${contradictionCount} 个未解决的矛盾`}
+          className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[hsl(var(--warning))] px-1 text-[10px] font-medium text-black"
+        >
+          {contradictionCount}
+        </span>
+      )}
     </div>
   )
 }
@@ -186,8 +198,14 @@ export function WorldBibleTab({
   onDeleteEntry,
   onCreateEntry,
 }: WorldBibleTabProps) {
-  const { entries, entriesByType, loading, addEntry, softDeleteEntry } = useWorldEntries(projectId)
+const { entries, entriesByType, loading, addEntry, softDeleteEntry } = useWorldEntries(projectId)
   const { getRelationCount } = useRelations(projectId)
+  const { entriesWithBadge } = useContradictions(projectId)
+  const contradictionCountByName = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const { entryName, count } of entriesWithBadge) m.set(entryName, count)
+    return m
+  }, [entriesWithBadge])
 
   const [searchQuery, setSearchQuery] = useState('')
   const [collapsedSections, setCollapsedSections] = useState<Record<WorldEntryType, boolean>>({
@@ -274,6 +292,7 @@ export function WorldBibleTab({
                 key={entry.id}
                 entry={entry}
                 isActive={activeEntryId === entry.id}
+                contradictionCount={contradictionCountByName.get(entry.name) ?? 0}
                 onSelect={() => onSelectEntry(entry.id)}
                 onEdit={() => onEditEntry(entry.id)}
                 onDelete={() => handleDeleteClick(entry)}
@@ -360,6 +379,7 @@ export function WorldBibleTab({
                         key={entry.id}
                         entry={entry}
                         isActive={activeEntryId === entry.id}
+                        contradictionCount={contradictionCountByName.get(entry.name) ?? 0}
                         onSelect={() => onSelectEntry(entry.id)}
                         onEdit={() => onEditEntry(entry.id)}
                         onDelete={() => handleDeleteClick(entry)}

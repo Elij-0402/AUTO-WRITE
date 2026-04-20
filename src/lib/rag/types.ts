@@ -20,6 +20,13 @@ export interface Embedding {
   /** Opaque identifier of the embedder that produced this vector. */
   embedderId: string
   updatedAt: Date
+  /**
+   * v13 (T7): timestamp of the last indexing pass that touched this row.
+   * Observability-only — incremental skip is still decided by content-signature
+   * matching in indexer.ts, not by timestamp comparison. Surfaced in the
+   * T8 dev-stats panel as "index freshness" per entry.
+   */
+  lastIndexedAt?: Date
 }
 
 /** Loose DB type — we access embeddings only via .table('embeddings'). */

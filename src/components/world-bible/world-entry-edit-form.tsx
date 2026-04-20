@@ -116,6 +116,13 @@ export function WorldEntryEditForm({
   const [localTimePoint, setLocalTimePoint] = useState('')
   const [localEventDescription, setLocalEventDescription] = useState('')
   const [localTags, setLocalTags] = useState<string[]>([])
+  /**
+   * T4: per-entry inferred voice/style. Only rendered for character + location
+   * types (discriminated via `entry.type` in the form body below). `aiDraft`
+   * is reserved for future AI generation; `localInferredVoice` writes to
+   * `inferredVoice.userEdit` so the dual-column record keeps diff history.
+   */
+  const [localInferredVoice, setLocalInferredVoice] = useState('')
 
   // Sync form state when switching to a different entry.
   // Using the "set state during render" pattern per React docs
@@ -136,11 +143,23 @@ export function WorldEntryEditForm({
     setLocalTimePoint(entry.timePoint || '')
     setLocalEventDescription(entry.eventDescription || '')
     setLocalTags(entry.tags || [])
+    setLocalInferredVoice(entry.inferredVoice?.userEdit ?? '')
   }
 
   const { isSaving } = useAutoSave(
     async () => {
       if (!entryId || !entry) return
+      const voiceSupported = entry.type === 'character' || entry.type === 'location'
+      const trimmedVoice = localInferredVoice.trim()
+      // Preserve AI draft if one already exists; only touch userEdit here.
+      const nextInferredVoice =
+        voiceSupported && (trimmedVoice || entry.inferredVoice?.aiDraft)
+          ? {
+              aiDraft: entry.inferredVoice?.aiDraft ?? '',
+              userEdit: trimmedVoice || undefined,
+              generatedAt: entry.inferredVoice?.generatedAt ?? new Date(),
+            }
+          : undefined
       await updateEntryFields(entryId, {
         alias: localAlias,
         appearance: localAppearance,
@@ -153,9 +172,10 @@ export function WorldEntryEditForm({
         timePoint: localTimePoint,
         eventDescription: localEventDescription,
         tags: localTags,
+        inferredVoice: nextInferredVoice,
       })
     },
-    [localAlias, localAppearance, localPersonality, localBackground, localDescription, localFeatures, localContent, localScope, localTimePoint, localEventDescription, localTags, entryId],
+    [localAlias, localAppearance, localPersonality, localBackground, localDescription, localFeatures, localContent, localScope, localTimePoint, localEventDescription, localTags, localInferredVoice, entryId],
     500
   )
 
@@ -406,6 +426,33 @@ export function WorldEntryEditForm({
             allTags={allTags}
           />
         </div>
+
+        {(entry.type === 'character' || entry.type === 'location') && (
+          <div className="space-y-2">
+            <Label>AI 推断的口吻 / 风格特征</Label>
+            {entry.inferredVoice?.aiDraft && (
+              <div className="rounded-md surface-2 px-3 py-2 text-[12px] leading-[1.7] text-muted-foreground whitespace-pre-wrap">
+                <div className="text-[10px] uppercase tracking-[0.18em] mb-1 text-muted-foreground/80">
+                  AI 草稿 · {formatDateCN(entry.inferredVoice.generatedAt)}
+                </div>
+                {entry.inferredVoice.aiDraft}
+              </div>
+            )}
+            <AutoGrowTextarea
+              value={localInferredVoice}
+              onChange={setLocalInferredVoice}
+              placeholder={
+                entry.type === 'character'
+                  ? '这个角色说话有什么特点？语气、句式、口头禅...'
+                  : '这个地点给人的感觉是什么？叙述这里时用什么笔调...'
+              }
+              className="resize-none"
+            />
+            <p className="text-[11px] text-muted-foreground/70">
+              用于未来的一致性检查：AI 生成文本时会对比这里记录的风格。
+            </p>
+          </div>
+        )}
 
         <div>
           <RelationshipSection

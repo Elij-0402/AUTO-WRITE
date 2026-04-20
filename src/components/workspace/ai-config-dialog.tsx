@@ -360,7 +360,7 @@ interface ExperimentFlagsSectionProps {
   onChange: (next: ExperimentFlags) => void
 }
 
-const FLAG_LABELS: Record<keyof ExperimentFlags, { label: string; hint: string }> = {
+const FLAG_LABELS: Partial<Record<keyof ExperimentFlags, { label: string; hint: string }>> = {
   citations: {
     label: 'Citations API 溯源',
     hint: '强制 AI 将世界观引用标注到具体条目,防止幻觉。Phase C 启用。',
@@ -368,10 +368,6 @@ const FLAG_LABELS: Record<keyof ExperimentFlags, { label: string; hint: string }
   extendedCacheTtl: {
     label: '1 小时 prompt cache',
     hint: '长写作会话中世界观重用免 token,默认 5 分钟 TTL 延至 1 小时。Phase D 启用。',
-  },
-  thinking: {
-    label: '一致性深度推理 (v1.1 预览)',
-    hint: '遇到一致性检查时启用 extended thinking。仅记录实验偏好,实际行为 v1.1 上线。',
   },
 }
 

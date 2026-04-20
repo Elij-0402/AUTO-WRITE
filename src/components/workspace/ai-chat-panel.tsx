@@ -10,6 +10,7 @@ import { useDismissedSuggestions } from '@/lib/hooks/use-dismissed-suggestions'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
 import { MessageBubble } from './message-bubble'
+import { CitationsAnalyticsPanel } from './citations-analytics-panel'
 import { RelationshipSuggestionCard, NewEntrySuggestionCard } from './suggestion-card'
 import { NewEntryDialog, type NewEntryPrefillData } from './new-entry-dialog'
 import { DuplicateEntryDialog } from './duplicate-entry-dialog'
@@ -454,6 +455,13 @@ const handleIntentionalContradiction = async (contradiction: Contradiction, _ind
               </div>
             )}
           </div>
+        )}
+
+        {messages.length > 0 && (
+          <CitationsAnalyticsPanel
+            projectId={projectId}
+            conversationId={activeConversationId}
+          />
         )}
 
         {/* Scroll-to-latest pill */}

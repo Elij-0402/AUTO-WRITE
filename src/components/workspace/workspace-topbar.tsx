@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Activity, ArrowLeft, BarChart3, Bot, Maximize2, Minimize2, Moon, Settings, Sun } from 'lucide-react'
+import { ArrowLeft, BarChart3, Bot, Maximize2, Minimize2, Moon, Settings, Sun } from 'lucide-react'
 import { metaDb } from '@/lib/db/meta-db'
 import { useTotalWordCount, useTodayWordCount } from '@/lib/hooks/use-word-count'
 import { useTheme } from '@/components/editor/theme-provider'
@@ -20,7 +20,6 @@ interface WorkspaceTopbarProps {
   onToggleFocusMode: () => void
   onOpenAIConfig: () => void
   onOpenProjectSettings: () => void
-  onOpenDevStats?: () => void
   /** True after the user has been idle for the configured timeout (T6). */
   idle?: boolean
 }
@@ -31,7 +30,6 @@ export function WorkspaceTopbar({
   onToggleFocusMode,
   onOpenAIConfig,
   onOpenProjectSettings,
-  onOpenDevStats,
   idle = false,
 }: WorkspaceTopbarProps) {
   const project = useLiveQuery(
@@ -96,22 +94,6 @@ export function WorkspaceTopbar({
         </TooltipTrigger>
         <TooltipContent>创作者分析</TooltipContent>
       </Tooltip>
-
-      {onOpenDevStats && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={onOpenDevStats}
-              aria-label="开发者统计"
-            >
-              <Activity />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>开发者统计 · Ctrl+Alt+S</TooltipContent>
-        </Tooltip>
-      )}
 
       <Tooltip>
         <TooltipTrigger asChild>

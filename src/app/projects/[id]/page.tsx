@@ -20,7 +20,6 @@ import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-fo
 import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import { OnboardingTourDialog } from '@/components/workspace/onboarding-tour-dialog'
-import { DevStatsDrawer } from '@/components/workspace/dev-stats-drawer'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
@@ -52,7 +51,6 @@ export default function ProjectPage() {
   const [activeWorldEntryId, setActiveWorldEntryId] = useState<string | null>(null)
   const [aiConfigOpen, setAiConfigOpen] = useState(false)
   const [projectSettingsOpen, setProjectSettingsOpen] = useState(false)
-  const [devStatsOpen, setDevStatsOpen] = useState(false)
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
@@ -158,21 +156,6 @@ export default function ProjectPage() {
         }
         if (activeWorldEntryId) {
           setActiveWorldEntryId(null)
-        }
-      }
-
-      if ((e.ctrlKey || e.metaKey) && e.altKey && !e.shiftKey) {
-        const target = e.target as HTMLElement | null
-        const isEditable =
-          target?.tagName === 'INPUT' ||
-          target?.tagName === 'TEXTAREA' ||
-          target?.isContentEditable
-        if (isEditable) return
-
-        if (e.key === 's' || e.key === 'S') {
-          e.preventDefault()
-          setDevStatsOpen((prev) => !prev)
-          return
         }
       }
 
@@ -298,14 +281,7 @@ export default function ProjectPage() {
           onToggleFocusMode={() => setFocusMode(!focusMode)}
           onOpenAIConfig={() => setAiConfigOpen(true)}
           onOpenProjectSettings={() => setProjectSettingsOpen(true)}
-          onOpenDevStats={() => setDevStatsOpen(true)}
           idle={idle}
-        />
-
-        <DevStatsDrawer
-          projectId={params.id}
-          open={devStatsOpen}
-          onOpenChange={setDevStatsOpen}
         />
 
         <Dialog open={projectSettingsOpen} onOpenChange={setProjectSettingsOpen}>

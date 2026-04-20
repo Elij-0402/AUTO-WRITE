@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { Plus, PenLine } from 'lucide-react'
 import { useProjects } from '@/lib/hooks/use-projects'
@@ -17,6 +18,12 @@ import { ProjectCard } from './project-card'
 import { EmptyDashboard } from './empty-dashboard'
 import { CreateProjectModal } from './create-project-modal'
 
+// Dynamic import to avoid bundling Node.js-only deps (archiver/epub-gen) in browser
+const ProjectSettingsDialog = dynamic(
+  () => import('./project-settings-dialog').then(m => ({ default: m.ProjectSettingsDialog })),
+  { ssr: false }
+)
+
 function getGreeting(): string {
   const hour = new Date().getHours()
   if (hour >= 6 && hour < 12) return '早安，今天想写点什么'
@@ -27,7 +34,8 @@ function getGreeting(): string {
 
 export function ProjectDashboard() {
   const router = useRouter()
-  const { projects, createProject, softDeleteProject } = useProjects()
+  const { projects, createProject, softDeleteProject, updateProject } = useProjects()
+  const [settingsProjectId, setSettingsProjectId] = useState<string | null>(null)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
@@ -123,6 +131,7 @@ export function ProjectDashboard() {
                   project={project}
                   onEdit={() => router.push(`/projects/${project.id}`)}
                   onDelete={() => handleDeleteClick(project.id)}
+                  onOpenSettings={() => setSettingsProjectId(project.id)}
                 />
               </div>
             ))}
@@ -172,6 +181,21 @@ export function ProjectDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {settingsProjectId && (() => {
+        const p = projects.find(x => x.id === settingsProjectId)
+        if (!p) return null
+        return (
+          <ProjectSettingsDialog
+            project={p}
+            open={true}
+            onOpenChange={(o) => !o && setSettingsProjectId(null)}
+            onSaveProject={async (data) => {
+              await updateProject(p.id, data)
+              setSettingsProjectId(null)
+            }}
+          />
+        )
+      })()}
     </div>
   )
 }

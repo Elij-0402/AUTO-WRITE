@@ -2,8 +2,11 @@
  * Dexie v13 migration test (CEO-6B, REGRESSION rule).
  *
  * Ensures v12 data — including the abTestMetrics table that predates v13 —
- * survives the upgrade to v13 intact, and that the new contradictions table
- * exists empty post-upgrade.
+ * survives the upgrade through v13 intact, and that the new contradictions
+ * table exists empty post-upgrade.
+ *
+ * Note: v15 drops abTestMetrics, so the pre-upgrade seed for that table is
+ * no longer read back after the full upgrade chain completes.
  *
  * fake-indexeddb is loaded globally via src/test/setup.ts.
  */
@@ -47,10 +50,9 @@ describe('project-db v13 migration', () => {
     indexedDB.deleteDatabase(`inkforge-project-${PROJECT_ID}`)
   })
 
-  it('upgrades v12 → v13 without data loss', async () => {
+  it('upgrades v12 → current without losing aiUsage / worldEntries data', async () => {
     const v12 = await openV12()
 
-    // Seed data in several tables
     await v12.table('aiUsage').add({
       id: 'usage-1',
       projectId: PROJECT_ID,
@@ -63,20 +65,6 @@ describe('project-db v13 migration', () => {
       cacheReadTokens: 0,
       cacheWriteTokens: 0,
       latencyMs: 1200,
-      createdAt: Date.now(),
-    })
-    await v12.table('abTestMetrics').add({
-      id: 'metric-1',
-      projectId: PROJECT_ID,
-      conversationId: null,
-      messageId: 'msg-1',
-      experimentGroup: { citations: true, extendedCacheTtl: false, thinking: false },
-      latencyMs: 1200,
-      inputTokens: 100,
-      outputTokens: 50,
-      cacheReadTokens: 0,
-      cacheWriteTokens: 0,
-      citationCount: 2,
       createdAt: Date.now(),
     })
     await v12.table('worldEntries').add({
@@ -92,27 +80,20 @@ describe('project-db v13 migration', () => {
 
     v12.close()
 
-    // Reopen through the production factory — Dexie auto-upgrades to v13.
-    const v13 = createProjectDB(PROJECT_ID)
-    await v13.open()
+    // Reopen through the production factory — Dexie auto-upgrades to current.
+    const db = createProjectDB(PROJECT_ID)
+    await db.open()
 
-    // Pre-existing rows intact.
-    const usage = await v13.aiUsage.toArray()
+    const usage = await db.aiUsage.toArray()
     expect(usage).toHaveLength(1)
     expect(usage[0].id).toBe('usage-1')
 
-    const metrics = await v13.abTestMetrics.toArray()
-    expect(metrics).toHaveLength(1)
-    expect(metrics[0].id).toBe('metric-1')
-
-    const entries = await v13.worldEntries.toArray()
+    const entries = await db.worldEntries.toArray()
     expect(entries).toHaveLength(1)
     expect(entries[0].name).toBe('小明')
-    // New optional v13 column defaults to undefined on unmigrated rows.
     expect(entries[0].inferredVoice).toBeUndefined()
 
-    // New contradictions table is accessible and empty.
-    const contradictions = await v13.contradictions.toArray()
+    const contradictions = await db.contradictions.toArray()
     expect(contradictions).toHaveLength(0)
   })
 
@@ -190,28 +171,5 @@ describe('project-db v13 migration', () => {
     expect(row.draftEditedPct).toBeUndefined()
     expect(row.draftRejectedReason).toBeUndefined()
     expect(row.editedPctDeadline).toBeUndefined()
-  })
-
-  it('supports aiUsage.kind = "citation_click" without optional token fields', async () => {
-    const db = createProjectDB(PROJECT_ID)
-    await db.open()
-
-    await db.aiUsage.add({
-      id: 'click-1',
-      projectId: PROJECT_ID,
-      conversationId: 'conv-1',
-      kind: 'citation_click',
-      provider: 'anthropic',
-      model: '',
-      inputTokens: 0,
-      outputTokens: 0,
-      cacheReadTokens: 0,
-      cacheWriteTokens: 0,
-      latencyMs: 0,
-      createdAt: Date.now(),
-    })
-
-    const [row] = await db.aiUsage.toArray()
-    expect(row.kind).toBe('citation_click')
   })
 })

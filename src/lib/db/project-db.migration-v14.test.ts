@@ -7,10 +7,10 @@ describe('project-db v14 migration', () => {
     __resetProjectDBCache()
   })
 
-  it('opens at version 14 successfully', async () => {
+  it('opens at version 15 successfully', async () => {
     const db = createProjectDB('test-migration-v14')
     await db.open()
-    expect(db.verno).toBe(14)
+    expect(db.verno).toBe(15)
     db.close()
   })
 
@@ -19,6 +19,14 @@ describe('project-db v14 migration', () => {
     await db.open()
     const tableNames = db.tables.map(t => t.name)
     expect(tableNames).not.toContain('embeddings')
+    db.close()
+  })
+
+  it('does not have an abTestMetrics table (dropped in v15)', async () => {
+    const db = createProjectDB('test-no-abmetrics')
+    await db.open()
+    const tableNames = db.tables.map(t => t.name)
+    expect(tableNames).not.toContain('abTestMetrics')
     db.close()
   })
 })

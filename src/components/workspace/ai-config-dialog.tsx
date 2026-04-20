@@ -1,10 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useId } from 'react'
 import { useAIConfig, AIConfig, AIProvider } from '@/lib/hooks/use-ai-config'
-import type { ExperimentFlags } from '@/lib/ai/experiment-flags'
-import { providerCapabilities } from '@/lib/ai/experiment-flags'
-import { DEFAULT_UI_FLAGS } from '@/lib/ai/ui-flags'
 import {
   Dialog,
   DialogContent,
@@ -15,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Sparkles, XCircle, ChevronDown } from 'lucide-react'
+import { CheckCircle2, XCircle, ExternalLink, ChevronDown } from 'lucide-react'
 
 interface AIConfigDialogProps {
   projectId: string
@@ -27,202 +24,174 @@ interface AIConfigDialogProps {
   onSaveComplete?: () => void
 }
 
-interface ProviderPreset {
+// 5 个 preset。前端仅作 UI 快捷选择，存储层 map 到 'anthropic' | 'openai-compatible'
+type PresetKey = 'anthropic' | 'deepseek' | 'siliconflow' | 'openrouter' | 'custom'
+
+const PRESETS: Record<PresetKey, {
   label: string
-  description: string
-  defaultBaseUrl: string
+  storeAs: AIProvider
+  baseUrl: string
   defaultModel: string
-  supportsToolUse: boolean
-}
-
-const PROVIDER_PRESETS: Record<AIProvider, ProviderPreset> = {
+  popularModels: string[]
+  consoleUrl: string | null
+}> = {
   anthropic: {
-    label: 'Anthropic Claude',
-    description:
-      '原生 Claude API。支持 prompt caching（世界观重复注入自动省 token）与结构化 tool use（更准的建议/矛盾检测）。',
-    defaultBaseUrl: 'https://api.anthropic.com',
+    label: 'Claude',
+    storeAs: 'anthropic',
+    baseUrl: 'https://api.anthropic.com',
     defaultModel: 'claude-sonnet-4-20250514',
-    supportsToolUse: true,
+    popularModels: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-haiku-4-5-20251001'],
+    consoleUrl: 'https://console.anthropic.com/settings/keys',
   },
-  'openai-compatible': {
-    label: 'OpenAI 兼容协议',
-    description:
-      '任何 OpenAI /chat/completions 兼容端点（OpenAI、DeepSeek、SiliconFlow、本地 LiteLLM 等）。建议使用回退到正则解析，精度较低。',
-    defaultBaseUrl: 'https://api.openai.com',
-    defaultModel: 'gpt-4',
-    supportsToolUse: false,
+  deepseek: {
+    label: 'DeepSeek',
+    storeAs: 'openai-compatible',
+    baseUrl: 'https://api.deepseek.com',
+    defaultModel: 'deepseek-chat',
+    popularModels: ['deepseek-chat', 'deepseek-reasoner'],
+    consoleUrl: 'https://platform.deepseek.com/api_keys',
+  },
+  siliconflow: {
+    label: '硅基流动',
+    storeAs: 'openai-compatible',
+    baseUrl: 'https://api.siliconflow.cn',
+    defaultModel: 'deepseek-ai/DeepSeek-V3',
+    popularModels: ['deepseek-ai/DeepSeek-V3', 'deepseek-ai/DeepSeek-R1', 'Qwen/Qwen2.5-72B-Instruct'],
+    consoleUrl: 'https://cloud.siliconflow.cn/account/ak',
+  },
+  openrouter: {
+    label: 'OpenRouter',
+    storeAs: 'openai-compatible',
+    baseUrl: 'https://openrouter.ai/api',
+    defaultModel: 'anthropic/claude-sonnet-4',
+    popularModels: ['anthropic/claude-sonnet-4', 'openai/gpt-4o', 'google/gemini-pro-1.5'],
+    consoleUrl: 'https://openrouter.ai/keys',
+  },
+  custom: {
+    label: '自定义',
+    storeAs: 'openai-compatible',
+    baseUrl: '',
+    defaultModel: 'gpt-4o',
+    popularModels: ['gpt-4o', 'gpt-4o-mini'],
+    consoleUrl: null,
   },
 }
 
-// 常用 Provider 的模型预设
-const POPULAR_MODELS: Record<string, string[]> = {
-  anthropic: [
-    'claude-sonnet-4-20250514',
-    'claude-opus-4-20250514',
-    'claude-sonnet-3-5',
-  ],
-  deepseek: [
-    'deepseek-chat',
-    'deepseek-reasoner',
-  ],
-  openai: [
-    'gpt-4o',
-    'gpt-4o-mini',
-    'gpt-4-turbo',
-    'gpt-4',
-  ],
-  siliconflow: [
-    'deepseek-ai/DeepSeek-V3',
-    'deepseek-ai/DeepSeek-R1',
-    'Qwen/Qwen2.5-72B-Instruct',
-  ],
-}
-
-// 根据 Base URL 识别 Provider 类型
-function detectProviderType(baseUrl: string): keyof typeof POPULAR_MODELS | null {
-  const url = baseUrl.toLowerCase()
+function detectPreset(config: AIConfig): PresetKey {
+  if (config.provider === 'anthropic') return 'anthropic'
+  const url = (config.baseUrl || '').toLowerCase()
   if (url.includes('deepseek')) return 'deepseek'
   if (url.includes('siliconflow') || url.includes('silicon')) return 'siliconflow'
-  if (url.includes('openai.com') && !url.includes('deepseek') && !url.includes('silicon')) return 'openai'
-  return null
+  if (url.includes('openrouter')) return 'openrouter'
+  return 'custom'
+}
+
+function errorHint(raw: string): string {
+  if (/401|unauthorized/i.test(raw)) return '401 · API Key 可能填写错误或已过期'
+  if (/404|not.?found/i.test(raw)) return '404 · 模型名可能拼错或服务不可用'
+  if (/429|rate/i.test(raw)) return '429 · 触发速率限制，稍后再试'
+  if (/network|fetch|ECONN/i.test(raw)) return '网络错误 · 检查代理或接口地址'
+  return raw.slice(0, 120)
 }
 
 export function AIConfigDialog({ projectId, open, onClose, isOnboarding = false, onSaveComplete }: AIConfigDialogProps) {
   const { config, saveConfig } = useAIConfig(projectId)
-  const [formData, setFormData] = useState<Partial<AIConfig>>({})
+  const [presetKey, setPresetKey] = useState<PresetKey>('anthropic')
+  const [apiKey, setApiKey] = useState('')
+  const [model, setModel] = useState('')
+  const [customBaseUrl, setCustomBaseUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null)
-  const [errorMsg, setErrorMsg] = useState<string>('')
-  const [isCustomModel, setIsCustomModel] = useState(false)
+  const [testErrorMsg, setTestErrorMsg] = useState('')
   const saveCompletedRef = useRef(false)
+  const modelInputId = useId()
+  const modelListId = useId()
 
   useEffect(() => {
     if (open) {
       saveCompletedRef.current = false
-      setFormData({
-        provider: config.provider,
-        apiKey: config.apiKey,
-        baseUrl: config.baseUrl,
-        model: config.model,
-        availableModels: config.availableModels ?? [],
-        experimentFlags: config.experimentFlags ?? { citations: false, extendedCacheTtl: false, thinking: false },
-        uiFlags: config.uiFlags ?? DEFAULT_UI_FLAGS,
-      })
+      const detected = detectPreset(config)
+      setPresetKey(detected)
+      setApiKey(config.apiKey ?? '')
+      setModel(config.model ?? PRESETS[detected].defaultModel)
+      setCustomBaseUrl(detected === 'custom' ? (config.baseUrl ?? '') : '')
       setTestResult(null)
-      setErrorMsg('')
-      setIsCustomModel(false)
+      setTestErrorMsg('')
     }
   }, [open, config])
 
-  const provider: AIProvider = formData.provider ?? 'anthropic'
-  const preset = PROVIDER_PRESETS[provider]
+  const preset = PRESETS[presetKey]
 
-  // 获取当前可用的模型列表
-  const availableModels = useMemo(() => {
-    if (provider === 'anthropic') {
-      return POPULAR_MODELS.anthropic
-    }
-    // OpenAI 兼容模式：根据 Base URL 识别 Provider 或使用已探测的列表
-    const detectedType = detectProviderType(formData.baseUrl || preset.defaultBaseUrl)
-    if (detectedType && POPULAR_MODELS[detectedType]) {
-      return POPULAR_MODELS[detectedType]
-    }
-    // 回退到已缓存的探测列表
-    return formData.availableModels ?? []
-  }, [provider, formData.baseUrl, preset.defaultBaseUrl, formData.availableModels])
-
-  const handleProviderChange = (next: AIProvider) => {
-    const nextPreset = PROVIDER_PRESETS[next]
-    setFormData(prev => ({
-      ...prev,
-      provider: next,
-      baseUrl: prev.baseUrl || nextPreset.defaultBaseUrl,
-      model: nextPreset.defaultModel,
-      availableModels: [],
-    }))
-    setIsCustomModel(false)
+  function handlePresetChange(next: PresetKey) {
+    setPresetKey(next)
+    setModel(PRESETS[next].defaultModel)
+    if (next !== 'custom') setCustomBaseUrl('')
     setTestResult(null)
+    setTestErrorMsg('')
   }
 
-  // 验证并探测模型
-  const verifyAndDetect = async (): Promise<boolean> => {
+  async function handleTest() {
     setTestResult(null)
-    setErrorMsg('')
+    setTestErrorMsg('')
+    if (!apiKey) {
+      setTestErrorMsg('请先填写 API Key')
+      setTestResult('error')
+      return
+    }
+    const baseUrl = presetKey === 'custom' ? customBaseUrl : preset.baseUrl
+    if (!baseUrl) {
+      setTestErrorMsg('请填写接口地址')
+      setTestResult('error')
+      return
+    }
 
     try {
-      if (!formData.apiKey) {
-        setErrorMsg('请先填写 API Key')
-        return false
-      }
-
-      if (provider === 'anthropic') {
-        // Anthropic: 直接验证 key 是否可用
-        const probeBase = (formData.baseUrl || preset.defaultBaseUrl).replace(/\/+$/, '')
+      const probeBase = baseUrl.replace(/\/+$/, '')
+      if (preset.storeAs === 'anthropic') {
         const res = await fetch(`${probeBase}/v1/messages`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': formData.apiKey,
+            'x-api-key': apiKey,
             'anthropic-version': '2023-06-01',
             'anthropic-dangerous-direct-browser-access': 'true',
           },
-          body: JSON.stringify({
-            model: formData.model || preset.defaultModel,
-            max_tokens: 1,
-            messages: [{ role: 'user', content: 'ping' }],
-          }),
+          body: JSON.stringify({ model: model || preset.defaultModel, max_tokens: 1, messages: [{ role: 'user', content: 'ping' }] }),
         })
         if (!res.ok) {
           const body = await res.text().catch(() => '')
           throw new Error(body.slice(0, 200) || `HTTP ${res.status}`)
         }
         setTestResult('success')
-        return true
-      }
-
-      // OpenAI 兼容模式：尝试探测模型列表
-      if (formData.baseUrl) {
-        const base = formData.baseUrl.replace(/\/+$/, '')
-        const normalized = base.endsWith('/v1') ? base : `${base}/v1`
-        try {
-          const response = await fetch(`${normalized}/models`, {
-            headers: { Authorization: `Bearer ${formData.apiKey}` },
-          })
-          if (response.ok) {
-            const data = await response.json()
-            const models = (data?.data ?? []).map((m: { id: string }) => m.id)
-            if (models.length > 0) {
-              // 如果当前选择的模型不在列表中，使用第一个可用模型
-              const currentModel = formData.model || ''
-              const validModel = models.includes(currentModel) ? currentModel : models[0]
-              setFormData(prev => ({ ...prev, model: validModel, availableModels: models }))
-            }
-          }
-        } catch {
-          // 探测失败不影响保存，用户可能使用的是非标准端点
+      } else {
+        const normalized = probeBase.endsWith('/v1') ? probeBase : `${probeBase}/v1`
+        const response = await fetch(`${normalized}/models`, {
+          headers: { Authorization: `Bearer ${apiKey}` },
+        })
+        if (!response.ok) {
+          const body = await response.text().catch(() => '')
+          throw new Error(body.slice(0, 200) || `HTTP ${response.status}`)
         }
+        setTestResult('success')
       }
-
-      setTestResult('success')
-      return true
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : '连接失败'
-      setErrorMsg(msg)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '连接失败'
+      setTestErrorMsg(errorHint(msg))
       setTestResult('error')
-      return false
     }
   }
 
-  const handleSave = async () => {
+  async function handleSave() {
     setSaving(true)
-    const verified = await verifyAndDetect()
-    if (!verified) {
-      setSaving(false)
-      return
-    }
-
+    const baseUrl = presetKey === 'custom' ? customBaseUrl : preset.baseUrl
+    await saveConfig({
+      provider: preset.storeAs,
+      apiKey,
+      baseUrl,
+      model: model || preset.defaultModel,
+      availableModels: preset.popularModels,
+    })
     saveCompletedRef.current = true
-    await saveConfig({ ...formData, provider })
     setSaving(false)
     if (isOnboarding && onSaveComplete) {
       onSaveComplete()
@@ -231,236 +200,143 @@ export function AIConfigDialog({ projectId, open, onClose, isOnboarding = false,
     }
   }
 
-  const handleEscapeKeyDown = (e: KeyboardEvent) => {
-    if (isOnboarding && !saveCompletedRef.current) {
-      e.preventDefault()
-    }
+  function handleEscapeKeyDown(e: KeyboardEvent) {
+    if (isOnboarding && !saveCompletedRef.current) e.preventDefault()
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleInteractOutside = (e: any) => {
-    if (isOnboarding && !saveCompletedRef.current) {
-      e.preventDefault()
-    }
+  function handleInteractOutside(e: any) {
+    if (isOnboarding && !saveCompletedRef.current) e.preventDefault()
   }
 
   return (
     <Dialog open={open} onOpenChange={openState => { if (!openState && !isOnboarding) onClose() }}>
       <DialogContent
-        className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto"
+        className="sm:max-w-[460px]"
         onEscapeKeyDown={handleEscapeKeyDown}
         onInteractOutside={handleInteractOutside}
       >
         <DialogHeader>
-          <DialogTitle>{isOnboarding ? '欢迎使用 InkForge' : 'AI 设置'}</DialogTitle>
+          <DialogTitle>{isOnboarding ? '配置 AI' : 'AI 设置'}</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
-          {isOnboarding && (
-            <p className="text-[13px] text-muted-foreground">
-              开始之前，需要配置你的 AI 接口。你的 API Key 只保存在本地浏览器中。
-            </p>
-          )}
-
+          {/* 服务商 chips */}
           <div className="space-y-2">
-            <Label>Provider</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {(Object.keys(PROVIDER_PRESETS) as AIProvider[]).map(key => {
-                const p = PROVIDER_PRESETS[key]
-                const active = provider === key
+            <Label>服务商</Label>
+            <div className="flex gap-1 p-1 rounded-[var(--radius-control)] bg-[hsl(var(--surface-2))]">
+              {(Object.keys(PRESETS) as PresetKey[]).map(key => {
+                const p = PRESETS[key]
+                const active = presetKey === key
                 return (
                   <button
                     key={key}
                     type="button"
-                    onClick={() => handleProviderChange(key)}
-                    className={`relative text-left rounded-[var(--radius-card)] px-3 py-2.5 transition-[box-shadow,background-color] duration-[var(--dur-fast)] ${
-                      active
-                        ? 'surface-2 film-edge-active'
-                        : 'surface-2 film-edge hover:film-edge-active'
-                    }`}
+                    onClick={() => handlePresetChange(key)}
+                    title={p.label}
+                    className={
+                      'flex-1 min-w-0 rounded-[var(--radius-control)] px-2 py-1.5 text-[12px] truncate transition-colors ' +
+                      (active
+                        ? 'bg-[hsl(var(--surface-0))] text-foreground shadow-sm relative before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-[hsl(var(--accent))] before:rounded-full'
+                        : 'text-muted-foreground hover:text-foreground')
+                    }
                   >
-                    <div className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
-                      {p.supportsToolUse && <Sparkles className="h-3 w-3 text-[hsl(var(--accent-amber))]" />}
-                      {p.label}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground mt-1 leading-[1.55]">
-                      {p.description}
-                    </div>
+                    {p.label}
                   </button>
                 )
               })}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="apiKey">API 密钥</Label>
+          {/* API Key */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="apiKey">API Key</Label>
+              {preset.consoleUrl && (
+                <a
+                  href={preset.consoleUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-0.5"
+                >
+                  获取 Key <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </div>
             <Input
               id="apiKey"
               type="password"
-              value={formData.apiKey || ''}
-              onChange={e => setFormData({ ...formData, apiKey: e.target.value })}
-              placeholder={provider === 'anthropic' ? 'sk-ant-...' : 'sk-...'}
+              value={apiKey}
+              onChange={e => setApiKey(e.target.value)}
+              placeholder={preset.storeAs === 'anthropic' ? 'sk-ant-...' : 'sk-...'}
             />
+            <p className="text-[11px] text-muted-foreground">API Key 只保存在本地浏览器，不会上传</p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="baseUrl">
-              接口地址
-              <span className="text-[11px] text-muted-foreground ml-1">
-                （留空使用默认 {preset.defaultBaseUrl}）
-              </span>
-            </Label>
-            <Input
-              id="baseUrl"
-              type="text"
-              value={formData.baseUrl || ''}
-              onChange={e => setFormData({ ...formData, baseUrl: e.target.value })}
-              placeholder={preset.defaultBaseUrl}
-            />
-          </div>
-
-          {testResult === 'error' && (
-            <div className="flex items-center gap-2 text-[12px] text-[hsl(var(--accent-coral))]">
-              <XCircle className="h-4 w-4" />
-              <span>{errorMsg || '连接失败，请检查配置'}</span>
+          {/* 接口地址（仅 custom） */}
+          {presetKey === 'custom' && (
+            <div className="space-y-1.5">
+              <Label htmlFor="baseUrl">接口地址</Label>
+              <Input
+                id="baseUrl"
+                type="text"
+                value={customBaseUrl}
+                onChange={e => setCustomBaseUrl(e.target.value)}
+                placeholder="https://api.example.com/v1"
+              />
             </div>
           )}
 
-          {/* 模型选择 — 智能下拉框或自定义输入 */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="model">模型</Label>
-              {availableModels.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setIsCustomModel(!isCustomModel)}
-                  className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {isCustomModel ? '选择常用模型' : '输入其他模型'}
-                </button>
-              )}
-            </div>
-            
-            {isCustomModel || availableModels.length === 0 ? (
-              // 自定义输入模式
-              <Input
-                id="model"
+          {/* 模型 — datalist combobox */}
+          <div className="space-y-1.5">
+            <Label htmlFor={modelInputId}>模型</Label>
+            <div className="relative">
+              <input
+                id={modelInputId}
                 type="text"
-                value={formData.model || ''}
-                onChange={e => setFormData({ ...formData, model: e.target.value })}
+                list={modelListId}
+                value={model}
+                onChange={e => setModel(e.target.value)}
                 placeholder={preset.defaultModel}
-                className="font-mono"
+                className="w-full h-9 px-3 rounded-[var(--radius-control)] bg-[hsl(var(--surface-2))] border border-[hsl(var(--border))] text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(var(--accent))] transition-colors"
               />
-            ) : (
-              // 下拉选择模式
-              <div className="relative">
-                <select
-                  id="model"
-                  value={formData.model || ''}
-                  onChange={e => setFormData({ ...formData, model: e.target.value })}
-                  className="w-full h-9 px-3 rounded-[var(--radius-control)] bg-[hsl(var(--surface-2))] border border-[hsl(var(--border))] text-[13px] appearance-none cursor-pointer hover:border-[hsl(var(--foreground)/0.3)] transition-colors"
-                >
-                  {availableModels.map(model => (
-                    <option key={model} value={model}>
-                      {model}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              </div>
-            )}
-            
-            {provider === 'anthropic' && (
-              <p className="text-[11px] text-muted-foreground">
-                推荐 claude-sonnet-4-20250514，性价比最佳
-              </p>
-            )}
+              <datalist id={modelListId}>
+                {preset.popularModels.map(m => <option key={m} value={m} />)}
+              </datalist>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            </div>
           </div>
 
-          {/* 实验性 AI 特性仅在完整设置里显示，引导模式不打扰新用户 */}
-          {!isOnboarding && (
-            <ExperimentFlagsSection
-              provider={provider}
-              flags={formData.experimentFlags ?? { citations: false, extendedCacheTtl: false, thinking: false }}
-              onChange={next => setFormData(prev => ({ ...prev, experimentFlags: next }))}
-            />
+          {/* 连接状态 */}
+          {testResult === 'success' && (
+            <div className="flex items-center gap-2 text-[12px] text-[hsl(var(--success))]">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>连接正常</span>
+            </div>
+          )}
+          {testResult === 'error' && (
+            <div className="flex items-center gap-2 text-[12px] text-[hsl(var(--accent-coral))]">
+              <XCircle className="h-4 w-4 shrink-0" />
+              <span>{testErrorMsg || '连接失败，请检查配置'}</span>
+            </div>
           )}
         </div>
 
-        <DialogFooter>
-          <Button 
-            onClick={handleSave} 
+        <DialogFooter className="gap-2">
+          {!isOnboarding && (
+            <Button variant="ghost" onClick={handleTest} disabled={saving}>
+              测试连接
+            </Button>
+          )}
+          <Button
+            onClick={handleSave}
             className={isOnboarding ? 'flex-1' : ''}
-            disabled={saving || !formData.apiKey}
+            disabled={saving || !apiKey}
           >
-            {saving ? '验证并保存中…' : '保存'}
+            {saving ? '保存中…' : '保存'}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
-
-interface ExperimentFlagsSectionProps {
-  provider: AIProvider
-  flags: ExperimentFlags
-  onChange: (next: ExperimentFlags) => void
-}
-
-const FLAG_LABELS: Partial<Record<keyof ExperimentFlags, { label: string; hint: string }>> = {
-  citations: {
-    label: 'Citations API 溯源',
-    hint: '强制 AI 将世界观引用标注到具体条目,防止幻觉。Phase C 启用。',
-  },
-  extendedCacheTtl: {
-    label: '1 小时 prompt cache',
-    hint: '长写作会话中世界观重用免 token,默认 5 分钟 TTL 延至 1 小时。Phase D 启用。',
-  },
-}
-
-function ExperimentFlagsSection({ provider, flags, onChange }: ExperimentFlagsSectionProps) {
-  const caps = providerCapabilities(provider)
-  return (
-    <div className="space-y-2">
-      <Label>实验性 AI 特性</Label>
-      <div className="text-[11px] text-muted-foreground leading-[1.55]">
-        Anthropic 2026 原语处于 A/B 测试阶段。记录到分析面板用于对比。
-      </div>
-      <div className="rounded-[var(--radius-card)] surface-2 film-edge p-2 space-y-1">
-        {(Object.keys(FLAG_LABELS) as (keyof ExperimentFlags)[]).map(key => {
-          const meta = FLAG_LABELS[key]
-          if (!meta) return null
-          const canEnable = caps[key]
-          const checked = canEnable && flags[key]
-          return (
-            <label
-              key={key}
-              className={`flex items-start gap-2 px-2 py-1.5 rounded-[var(--radius-control)] ${
-                canEnable ? 'cursor-pointer hover:bg-[hsl(var(--surface-3))]' : 'opacity-50'
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={checked}
-                disabled={!canEnable}
-                onChange={e => onChange({ ...flags, [key]: e.target.checked })}
-                className="mt-0.5 w-3.5 h-3.5 accent-[hsl(var(--accent-amber))]"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-[13px] text-foreground flex items-center gap-1.5">
-                  {meta.label}
-                  {!canEnable && (
-                    <span className="text-[10px] text-muted-foreground">（仅 Anthropic）</span>
-                  )}
-                </div>
-                <div className="text-[11px] text-muted-foreground mt-0.5 leading-[1.55]">
-                  {meta.hint}
-                </div>
-              </div>
-            </label>
-          )
-        })}
-      </div>
-    </div>
   )
 }

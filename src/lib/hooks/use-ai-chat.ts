@@ -1,7 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { createProjectDB } from '../db/project-db'
-import type { Citation } from '../ai/citations'
-import { resolveExperimentFlags } from '../ai/experiment-flags'
 import { useAIConfig } from './use-ai-config'
 import { useWorldEntries } from './use-world-entries'
 import { useConsistencyExemptions } from './use-consistency-exemptions'
@@ -32,7 +30,6 @@ export interface ChatMessage {
   timestamp: number
   hasDraft?: boolean
   draftId?: string
-  citations?: Citation[]
 }
 
 /**
@@ -80,7 +77,6 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
   const [isCheckingConsistency] = useState(false)
   const [interruptedToolCalls, setInterruptedToolCalls] = useState<InterruptedToolCall[]>([])
   const [cacheHint, setCacheHint] = useState<{ tokens: number } | null>(null)
-  const cacheHintShownRef = useRef(false)
   const abortControllerRef = useRef<AbortController | null>(null)
   const entriesByTypeRef = useRef(entriesByType)
   const exemptionsRef = useRef(exemptions)
@@ -135,16 +131,10 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
       | { rollingSummary?: string; summarizedUpTo?: number; messageCount: number }
       | undefined
 
-    const resolvedFlags = resolveExperimentFlags({
-      provider: config.provider,
-      experimentFlags: config.experimentFlags,
-    })
     const segmentedSystem = buildSegmentedSystemPrompt({
       worldEntries: trimmedEntries,
       selectedText: options?.selectedText,
       rollingSummary: conversation?.rollingSummary,
-      useCitations: resolvedFlags.citations,
-      useExtendedCacheTtl: resolvedFlags.extendedCacheTtl,
     })
 
     const userMsg: ChatMessage = {
@@ -197,7 +187,6 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     let fullContent = ''
     const pendingSuggestions: Suggestion[] = []
     const pendingContradictions: PartialContradiction[] = []
-    const pendingCitations: Citation[] = []
     const startedAt = Date.now()
     let inputTokens = 0
     let outputTokens = 0
@@ -240,8 +229,6 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
               input: event.input,
             },
           ])
-        } else if (event.type === 'citation') {
-          pendingCitations.push(event.citation)
         } else if (event.type === 'usage') {
           // Last usage event wins — providers emit a partial usage mid-stream
           // and a final one at message_stop with complete counts.
@@ -264,10 +251,8 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
         timestamp: Date.now(),
         hasDraft,
         draftId: hasDraft ? crypto.randomUUID() : undefined,
-        citations: pendingCitations.length > 0 ? pendingCitations : undefined,
       }
       await db.table('messages').update(assistantMsgId, finalMsg)
-      // Also reflect citations in the React state so the bubble re-renders.
       setMessages(prev => prev.map(m => (m.id === assistantMsgId ? finalMsg : m)))
       // Update conversation metadata.
       const nowTs = Date.now()
@@ -380,14 +365,11 @@ await db.contradictions.add({
         assistantMessageId: assistantMsgId,
         provider: config.provider,
         model: config.model ?? '',
-        config: { provider: config.provider, experimentFlags: config.experimentFlags },
         counters: { inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens },
         latencyMs: Date.now() - startedAt,
-        citationCount: pendingCitations.length,
       })
-      // Surface cache TTL savings hint once per session.
-      if (cacheReadTokens > 0 && !cacheHintShownRef.current) {
-        cacheHintShownRef.current = true
+      // Surface cache TTL savings hint. UI layer decides whether to show.
+      if (cacheReadTokens > 0) {
         setCacheHint({ tokens: cacheReadTokens })
       }
     }

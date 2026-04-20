@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, BarChart3, Bot, Maximize2, Minimize2, Moon, Settings, Sun } from 'lucide-react'
+import { ArrowLeft, BarChart3, Bot, Maximize2, Minimize2, Moon, Sun } from 'lucide-react'
 import { metaDb } from '@/lib/db/meta-db'
 import { useTotalWordCount, useTodayWordCount } from '@/lib/hooks/use-word-count'
 import { useTheme } from '@/components/editor/theme-provider'
@@ -19,7 +19,6 @@ interface WorkspaceTopbarProps {
   focusMode: boolean
   onToggleFocusMode: () => void
   onOpenAIConfig: () => void
-  onOpenProjectSettings: () => void
   /** True after the user has been idle for the configured timeout (T6). */
   idle?: boolean
 }
@@ -29,7 +28,6 @@ export function WorkspaceTopbar({
   focusMode,
   onToggleFocusMode,
   onOpenAIConfig,
-  onOpenProjectSettings,
   idle = false,
 }: WorkspaceTopbarProps) {
   const project = useLiveQuery(
@@ -100,20 +98,6 @@ export function WorkspaceTopbar({
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={onOpenProjectSettings}
-            aria-label="项目设置"
-          >
-            <Settings />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>项目设置</TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon-sm"
             onClick={onOpenAIConfig}
             aria-label="AI 设置"
           >
@@ -129,12 +113,12 @@ export function WorkspaceTopbar({
             variant={focusMode ? 'secondary' : 'ghost'}
             size="icon-sm"
             onClick={onToggleFocusMode}
-            aria-label={focusMode ? '退出深夜模式' : '深夜模式'}
+            aria-label={focusMode ? '退出专注写作' : '专注写作'}
           >
             {focusMode ? <Minimize2 /> : <Maximize2 />}
           </Button>
         </TooltipTrigger>
-        <TooltipContent>{focusMode ? '退出深夜模式' : '深夜模式'}</TooltipContent>
+        <TooltipContent>{focusMode ? '退出专注写作' : '专注写作'}</TooltipContent>
       </Tooltip>
 
       <ThemeToggle />

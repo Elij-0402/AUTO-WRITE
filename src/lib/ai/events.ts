@@ -5,8 +5,6 @@
  * into this event shape so callers only depend on one contract.
  */
 
-import type { Citation } from './citations'
-
 export type AIToolInput = Record<string, unknown>
 
 export interface AITextDeltaEvent {
@@ -54,17 +52,6 @@ export interface AIErrorEvent {
   message: string
 }
 
-/**
- * Citation event — emitted by the Anthropic provider when experimentFlags.citations
- * is on and the model cites a WorldEntry. Pairs with the current text block index.
- */
-export interface AICitationEvent {
-  type: 'citation'
-  citation: Citation
-  /** Content block index the citation attaches to in the assistant response. */
-  blockIndex: number
-}
-
 export type AIEvent =
   | AITextDeltaEvent
   | AIToolCallEvent
@@ -72,4 +59,3 @@ export type AIEvent =
   | AIUsageEvent
   | AIDoneEvent
   | AIErrorEvent
-  | AICitationEvent

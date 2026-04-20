@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreHorizontal, Pencil, Settings, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Settings, Trash2, SlidersHorizontal } from 'lucide-react'
 import { useProjects } from '@/lib/hooks/use-projects'
 import {
   DropdownMenu,
@@ -51,9 +51,10 @@ interface ProjectCardProps {
   project: ProjectMeta
   onEdit: () => void
   onDelete: () => void
+  onOpenSettings: () => void
 }
 
-export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
+export function ProjectCard({ project, onEdit, onDelete, onOpenSettings }: ProjectCardProps) {
   const router = useRouter()
   const { updateProject } = useProjects()
   const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -145,6 +146,10 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
             <DropdownMenuItem onClick={() => setIsEditingTitle(true)}>
               <Settings className="h-3.5 w-3.5" />
               重命名
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onOpenSettings}>
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              项目设置
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem

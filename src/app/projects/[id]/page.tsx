@@ -25,14 +25,6 @@ import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { ProjectSettingsForm } from '@/components/project/project-settings-form'
-import { useProjects } from '@/lib/hooks/use-projects'
 import { Clock, BookOpen, ListTree, Globe2 } from 'lucide-react'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
 import type { EditorHandle } from '@/components/editor/editor-types'
@@ -50,7 +42,6 @@ export default function ProjectPage() {
   const [activeOutlineId, setActiveOutlineId] = useState<string | null>(null)
   const [activeWorldEntryId, setActiveWorldEntryId] = useState<string | null>(null)
   const [aiConfigOpen, setAiConfigOpen] = useState(false)
-  const [projectSettingsOpen, setProjectSettingsOpen] = useState(false)
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
@@ -59,11 +50,9 @@ export default function ProjectPage() {
   const { chapters } = useChapters(params.id)
   const idle = useIdleMode()
   const { entries, entriesByType, addEntry } = useWorldEntries(params.id)
-  const { projects, updateProject } = useProjects()
   const { config, loading: aiConfigLoading } = useAIConfig(params.id)
   const [onboardingOpen, setOnboardingOpen] = useState(false)
   const [tourOpen, setTourOpen] = useState(false)
-  const currentProject = projects.find((p) => p.id === params.id)
 
   // 强制引导：只有在 aiConfig 加载完、确认没 key 时才弹
   // （否则 Dexie 还在读的时候会误触发）
@@ -280,28 +269,8 @@ export default function ProjectPage() {
           focusMode={focusMode}
           onToggleFocusMode={() => setFocusMode(!focusMode)}
           onOpenAIConfig={() => setAiConfigOpen(true)}
-          onOpenProjectSettings={() => setProjectSettingsOpen(true)}
           idle={idle}
         />
-
-        <Dialog open={projectSettingsOpen} onOpenChange={setProjectSettingsOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="font-display text-xl tracking-wide">
-                项目设置
-              </DialogTitle>
-            </DialogHeader>
-            {currentProject && (
-              <ProjectSettingsForm
-                project={currentProject}
-                onSave={async (data) => {
-                  await updateProject(currentProject.id, data)
-                  setProjectSettingsOpen(false)
-                }}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
 
         <div
           className={`flex-1 flex overflow-hidden transition-[opacity] duration-[var(--dur-slow)] ease-[cubic-bezier(0.16,1,0.3,1)]`}

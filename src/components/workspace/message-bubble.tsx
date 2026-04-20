@@ -3,68 +3,18 @@
 import { useState } from 'react'
 import { ChatMessage } from '@/lib/hooks/use-ai-chat'
 import { DraftCard } from './draft-card'
-import { CitationChip } from './citation-chip'
-import { recordAuthorRating } from '@/lib/db/ab-metrics-queries'
-import { createProjectDB } from '@/lib/db/project-db'
 import { Feather, Check, Copy } from 'lucide-react'
-
-function StarRating({ messageId, projectId }: { messageId: string; projectId: string }) {
-  const [rating, setRating] = useState<number | null>(null)
-  const [hovered, setHovered] = useState<number | null>(null)
-
-  const handleRate = (r: number) => {
-    setRating(r)
-    const db = createProjectDB(projectId)
-    recordAuthorRating(db, messageId, r).catch(console.warn)
-  }
-
-  return (
-    <div className="flex items-center gap-0.5 pt-1.5" aria-label="评分">
-      {[1, 2, 3, 4, 5].map(star => (
-        <button
-          key={star}
-          role="button"
-          aria-label={`${star}星`}
-          onMouseEnter={() => rating === null && setHovered(star)}
-          onMouseLeave={() => rating === null && setHovered(null)}
-          onClick={() => rating === null && handleRate(star)}
-          className={`text-[14px] ${
-            rating !== null
-              ? star <= rating ? 'text-amber-400' : 'text-muted-foreground/40'
-              : star <= (hovered ?? 0)
-                ? 'text-amber-300'
-                : 'text-muted-foreground/40'
-          } ${rating === null ? 'cursor-pointer' : 'cursor-default'}`}
-        >
-          {star <= (rating ?? hovered ?? 0) ? '★' : '☆'}
-        </button>
-      ))}
-      {rating !== null && (
-        <span className="text-[11px] text-muted-foreground ml-1">已收集</span>
-      )}
-    </div>
-  )
-}
 
 interface MessageBubbleProps {
   message: ChatMessage
-  /** Needed for T2: CitationChip writes click telemetry + looks up WorldEntry for popover. */
   projectId: string
-  /** The conversation the message belongs to (carried into aiUsage rows). */
-  conversationId?: string | null
   onInsertDraft?: (draftId: string, content: string) => void
-  onCitationClick?: (entryId: string | undefined) => void
-  /** Guard: only render CitationChip when citations experiment flag is enabled */
-  useCitations?: boolean
 }
 
 export function MessageBubble({
   message,
   projectId,
-  conversationId,
   onInsertDraft,
-  onCitationClick,
-  useCitations = false,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user'
   const [copied, setCopied] = useState(false)
@@ -131,26 +81,6 @@ export function MessageBubble({
         <div className="text-[14px] text-foreground whitespace-pre-wrap break-words overflow-hidden leading-[1.8]">
           {message.content}
         </div>
-
-        {useCitations && message.citations && message.citations.length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-1">
-            <span className="text-[11px] text-muted-foreground self-center mr-1">溯源:</span>
-            {message.citations.map((citation, idx) => (
-              <CitationChip
-                key={`${citation.startBlockIndex}-${idx}`}
-                citation={citation}
-                index={idx}
-                projectId={projectId}
-                conversationId={conversationId ?? message.conversationId}
-                onClick={onCitationClick}
-              />
-            ))}
-          </div>
-        )}
-
-        {useCitations && message.citations && message.citations.length > 0 && (
-          <StarRating messageId={message.id} projectId={projectId} />
-        )}
 
         {message.hasDraft && message.draftId && (
           <div className="pt-2">

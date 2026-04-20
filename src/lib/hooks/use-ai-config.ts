@@ -3,13 +3,10 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { metaDb } from '../db/meta-db'
 import { createProjectDB } from '../db/project-db'
 import type { AIProvider } from '../db/project-db'
-import type { ExperimentFlags } from '../ai/experiment-flags'
-import { resolveExperimentFlags } from '../ai/experiment-flags'
 import type { UiExperimentFlags } from '../ai/ui-flags'
 import { resolveUiFlags } from '../ai/ui-flags'
 
 export type { AIProvider } from '../db/project-db'
-export type { ExperimentFlags } from '../ai/experiment-flags'
 export type { UiExperimentFlags } from '../ai/ui-flags'
 
 export interface AIConfig {
@@ -19,7 +16,6 @@ export interface AIConfig {
   baseUrl: string
   model?: string
   availableModels?: string[]
-  experimentFlags?: ExperimentFlags
   uiFlags?: UiExperimentFlags
 }
 
@@ -121,11 +117,6 @@ export function useAIConfig(projectId?: string) {
   )
   const loading = liveConfig === undefined
 
-  const experimentFlags = useMemo(
-    () => resolveExperimentFlags({ provider: config.provider, experimentFlags: config.experimentFlags }),
-    [config.provider, config.experimentFlags]
-  )
-
   const uiFlags = useMemo(
     () => resolveUiFlags(config.uiFlags),
     [config.uiFlags]
@@ -141,5 +132,5 @@ export function useAIConfig(projectId?: string) {
     await metaDb.aiConfig.delete('config')
   }, [])
 
-  return { config, loading, saveConfig, clearConfig, experimentFlags, uiFlags }
+  return { config, loading, saveConfig, clearConfig, uiFlags }
 }

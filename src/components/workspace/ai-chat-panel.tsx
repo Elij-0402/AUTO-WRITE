@@ -10,16 +10,20 @@ import { useDismissedSuggestions } from '@/lib/hooks/use-dismissed-suggestions'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
 import { MessageBubble } from './message-bubble'
-import { CitationsAnalyticsPanel } from './citations-analytics-panel'
 import { RelationshipSuggestionCard, NewEntrySuggestionCard } from './suggestion-card'
 import { NewEntryDialog, type NewEntryPrefillData } from './new-entry-dialog'
-import { DuplicateEntryDialog } from './duplicate-entry-dialog'
 import { ConversationDrawer } from './conversation-drawer'
 import { Send, Loader2, Lightbulb, AlertTriangle, Feather, X, ArrowDown, Quote, Square, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 import type { Suggestion, RelationshipSuggestion, NewEntrySuggestion } from '@/lib/ai/suggestion-parser'
+
+type PrefillEntry = {
+  type: WorldEntryType
+  data: NewEntryPrefillData
+  sourceSuggestion: NewEntrySuggestion
+}
 
 interface AIChatPanelProps {
   projectId: string
@@ -79,10 +83,10 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     cacheHint,
   } = useAIChat(projectId, activeConversationId, { selectedText: selectedText || undefined })
 
-  const { entriesByType, addEntry } = useWorldEntries(projectId)
+  const { entriesByType, addEntry, updateEntryFields } = useWorldEntries(projectId)
   const { addRelation } = useRelations(projectId)
   const { dismiss, filterDismissed, reset } = useDismissedSuggestions()
-  const { config: aiConfig, saveConfig: saveAIConfig, experimentFlags } = useAIConfig(projectId)
+  const { config: aiConfig, saveConfig: saveAIConfig } = useAIConfig(projectId)
 
   const handleDeleteConversation = useCallback(async (id: string) => {
     await removeConversation(id)
@@ -96,11 +100,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const [newEntryDialogOpen, setNewEntryDialogOpen] = useState(false)
-  const [prefillEntry, setPrefillEntry] = useState<{ type: WorldEntryType; data: NewEntryPrefillData } | null>(null)
-
-  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
-  const [existingEntry] = useState<WorldEntry | null>(null)
-  const [duplicateEntryName] = useState('')
+  const [prefillEntry, setPrefillEntry] = useState<PrefillEntry | null>(null)
 
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [cacheHintVisible, setCacheHintVisible] = useState(false)
@@ -212,7 +212,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
       name: suggestion.suggestedName,
       ...suggestion.extractedFields
     }
-    setPrefillEntry({ type: suggestion.entryType, data: prefillData })
+    setPrefillEntry({ type: suggestion.entryType, data: prefillData, sourceSuggestion: suggestion })
     setNewEntryDialogOpen(true)
   }
 
@@ -224,9 +224,18 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const handleSaveNewEntry = async (entry: Partial<WorldEntry>) => {
     if (!prefillEntry) return
     try {
-      await addEntry(prefillEntry.type, entry.name)
-      dismiss(prefillEntry as unknown as Suggestion)
-      dismissSuggestion(prefillEntry as unknown as Suggestion)
+      const newId = await addEntry(prefillEntry.type, entry.name)
+      // Persist additional fields the user edited in the dialog. addEntry only
+      // took the name; the rest (description, background, features, …) would
+      // otherwise be silently dropped.
+      const { name, ...rest } = entry
+      void name
+      const editable = rest as Parameters<typeof updateEntryFields>[1]
+      if (Object.keys(editable).length > 0) {
+        await updateEntryFields(newId, editable)
+      }
+      dismiss(prefillEntry.sourceSuggestion)
+      dismissSuggestion(prefillEntry.sourceSuggestion)
       showToast(`已创建${prefillEntry.type === 'character' ? '角色' : prefillEntry.type === 'location' ? '地点' : prefillEntry.type === 'rule' ? '规则' : '时间线'}：「${entry.name}」`)
     } catch (err) {
       console.error('Failed to create entry:', err)
@@ -252,10 +261,6 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
   const handleLinkExisting = (entry: WorldEntry) => {
     showToast(`已选择关联到「${entry.name}」`)
-  }
-
-  const handleCreateNew = () => {
-    setDuplicateDialogOpen(false)
   }
 
   const handleIgnoreContradiction = (index: number) => {
@@ -387,9 +392,7 @@ const handleIntentionalContradiction = async (contradiction: Contradiction, _ind
                 key={msg.id}
                 message={msg}
                 projectId={projectId}
-                conversationId={activeConversationId}
                 onInsertDraft={handleInsertDraft}
-                useCitations={experimentFlags.citations}
               />
             ))}
 
@@ -467,13 +470,6 @@ const handleIntentionalContradiction = async (contradiction: Contradiction, _ind
               </div>
             )}
           </div>
-        )}
-
-        {messages.length > 0 && (
-          <CitationsAnalyticsPanel
-            projectId={projectId}
-            conversationId={activeConversationId}
-          />
         )}
 
         {/* Scroll-to-latest pill */}
@@ -583,18 +579,6 @@ const handleIntentionalContradiction = async (contradiction: Contradiction, _ind
           onSave={handleSaveNewEntry}
           onCheckDuplicate={handleCheckDuplicate}
           onLinkExisting={handleLinkExisting}
-          onCreateNew={handleCreateNew}
-        />
-      )}
-
-      {existingEntry && (
-        <DuplicateEntryDialog
-          open={duplicateDialogOpen}
-          onClose={() => setDuplicateDialogOpen(false)}
-          entryName={duplicateEntryName}
-          existingEntry={existingEntry}
-          onLinkExisting={handleLinkExisting}
-          onCreateNew={handleCreateNew}
         />
       )}
 

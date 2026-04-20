@@ -1,8 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import type { Chapter, ProjectMeta, WorldEntry, Relation, WorldEntryType } from '../types'
-import type { ExperimentFlags } from '../ai/experiment-flags'
 import type { UiExperimentFlags } from '../ai/ui-flags'
-import type { Citation } from '../ai/citations'
 
 /**
  * AI configuration stored per-project in IndexedDB.
@@ -20,12 +18,6 @@ export interface AIConfig {
   baseUrl: string
   model?: string
   availableModels?: string[]
-  /**
-   * Phase B experiment flags for 2026 Anthropic primitives rollout.
-   * Undefined on pre-v12 records — resolved to all-false defaults via
-   * src/lib/ai/experiment-flags.ts::resolveExperimentFlags.
-   */
-  experimentFlags?: ExperimentFlags
   /**
    * Phase F UI surface pruning — gates non-spine features (generation pipeline,
    * style profile, timeline view). Undefined = defaults to all-hidden. Resolved
@@ -50,12 +42,6 @@ export interface ChatMessage {
   timestamp: number
   hasDraft?: boolean
   draftId?: string
-  /**
-   * Phase C Citations — populated when experimentFlags.citations was on at
-   * response time. Each citation points back to a WorldEntry block so the UI
-   * can surface 溯源 chips. Undefined on legacy messages.
-   */
-  citations?: Citation[]
 }
 
 /**
@@ -173,13 +159,7 @@ export interface AIUsageEvent {
   projectId: string
   /** null for calls not tied to a conversation (e.g. style-profile analyses). */
   conversationId: string | null
-  /**
-   * v13 adds 'citation_click' — zero-cost observation event fired when the
-   * user clicks a citation chip (T2). No provider/model/token fields are
-   * populated for these rows; only id, projectId, conversationId, kind,
-   * createdAt matter.
-   */
-  kind: 'chat' | 'summarize' | 'analyze' | 'generate' | 'citation_click'
+  kind: 'chat' | 'summarize' | 'analyze' | 'generate'
   provider: AIProvider
   model: string
   inputTokens: number
@@ -220,37 +200,6 @@ export interface AIUsageEvent {
 }
 
 /**
- * Phase B A/B experiment metric — per deep-interview spec AC-4.
- *
- * One row per AI chat turn that executed under a specific experiment group.
- * Parallel to AIUsageEvent but adds experimentGroup tagging and citation
- * quality metrics. Never synced to Supabase (local experiment data only).
- */
-export interface ABTestMetric {
-  id: string
-  projectId: string
-  conversationId: string | null
-  /** Foreign reference to AIUsageEvent.id or chat message id for traceability. */
-  messageId: string
-  experimentGroup: ExperimentFlags
-  latencyMs: number
-  inputTokens: number
-  outputTokens: number
-  cacheReadTokens: number
-  cacheWriteTokens: number
-  /** Number of citations in the assistant response (0 when citations flag off). */
-  citationCount: number
-  /**
-   * Fraction of messages referencing WorldEntries that produced zero citations.
-   * Undefined when the citations flag is off (nothing to measure).
-   */
-  emptyCitationRate?: number
-  /** Optional 1-5 rating; filled by author via UI. Nullable for A/B without feedback. */
-  authorRating?: number
-  createdAt: number
-}
-
-/**
  * Layout settings stored per-project in IndexedDB per D-24.
  * sidebarWidth: persisted sidebar width in pixels per D-25
  * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world') per D-08, D-14
@@ -283,7 +232,6 @@ export class InkForgeProjectDB extends Dexie {
   analyses!: Table<AnalysisArtifact, string>
   conversations!: Table<Conversation, string>
   aiUsage!: Table<AIUsageEvent, string>
-  abTestMetrics!: Table<ABTestMetric, string>
   contradictions!: Table<Contradiction, string>
 
   constructor(projectId: string) {
@@ -534,6 +482,36 @@ export class InkForgeProjectDB extends Dexie {
           await (tx as any).embeddings?.clear()
         } catch {
           // Table may already be absent on some browser versions — safe to ignore.
+        }
+      })
+    // v15: drop abTestMetrics table (A/B experiment harness removed with the
+    // citations / experimentFlags cleanup). Upgrade clears existing rows
+    // before Dexie removes the object store.
+    this.version(15)
+      .stores({
+        projects: 'id, updatedAt, deletedAt',
+        chapters: 'id, projectId, order, deletedAt',
+        layoutSettings: 'id',
+        worldEntries: 'id, projectId, type, name, deletedAt',
+        relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+        aiConfig: 'id',
+        messages: 'id, projectId, conversationId, role, timestamp',
+        consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+        revisions: 'id, projectId, chapterId, createdAt',
+        analyses: 'id, kind, invalidationKey, createdAt',
+        conversations: 'id, projectId, updatedAt',
+        aiUsage: 'id, projectId, conversationId, createdAt, model',
+        contradictions:
+          'id, projectId, messageId, entryName, exempted, createdAt, ' +
+          '[projectId+entryName], [projectId+createdAt]',
+        abTestMetrics: null,
+      })
+      .upgrade(async tx => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (tx as any).abTestMetrics?.clear()
+        } catch {
+          // Table may already be absent — safe to ignore.
         }
       })
   }

@@ -1,26 +1,15 @@
 /**
- * Chat telemetry — extracted from use-ai-chat.ts per /autoplan ENG-2C.
+ * Chat telemetry — records per-call AI usage (tokens, latency, cache split)
+ * into aiUsage for the BYOK dev-stats trail.
  *
- * Two jobs:
- *  - Record per-call AI usage (tokens, latency, cache split) to aiUsage.
- *  - Record per-turn A/B experiment metric (citationCount + flags) to abTestMetrics.
- *
- * Both writes are best-effort — a telemetry failure never interrupts the
+ * All writes are best-effort — a telemetry failure never interrupts the
  * chat UX. Callers await the returned promise only when they want to observe
  * the outcome; in the hot path, fire-and-forget is fine.
- *
- * Stream + agent logic stays in use-ai-chat.ts. Per /autoplan guidance,
- * the tool_call event loop + citation accumulation + draft detection are
- * tightly coupled to the stream consumer; splitting them further would
- * cost more in readability than the ~80-line extraction gains.
  */
 
 import type { InkForgeProjectDB } from '../db/project-db'
-import type { AIUsageEvent, ABTestMetric, AIProvider } from '../db/project-db'
-import type { ExperimentFlags } from '../ai/experiment-flags'
-import { resolveExperimentFlags } from '../ai/experiment-flags'
+import type { AIUsageEvent, AIProvider } from '../db/project-db'
 import { recordUsage } from '../db/ai-usage-queries'
-import { recordABTestMetric } from '../db/ab-metrics-queries'
 
 export interface ChatTelemetryCounters {
   inputTokens: number
@@ -36,19 +25,14 @@ export interface RecordChatTurnParams {
   assistantMessageId: string
   provider: AIProvider
   model: string
-  config: { provider: AIProvider; experimentFlags?: ExperimentFlags }
   counters: ChatTelemetryCounters
   latencyMs: number
-  citationCount: number
 }
 
 /**
- * Record a chat turn's usage + A/B metric. Both writes wrapped in try/catch
- * so a telemetry failure never propagates up into the streaming path.
- *
- * Does nothing (returns early) if no tokens were consumed — avoids polluting
- * aiUsage with zero-token "errored before first byte" rows that would skew
- * dev-stats aggregates.
+ * Record a chat turn's usage into aiUsage. Does nothing (returns early) if
+ * no tokens were consumed — avoids polluting aiUsage with zero-token
+ * "errored before first byte" rows that would skew dev-stats aggregates.
  *
  * Id stability: the aiUsage row id is derived from the assistant message id
  * (`chat:${messageId}`) so later T1 draft-adoption writes can patch the row
@@ -77,36 +61,6 @@ export async function recordChatTurn(params: RecordChatTurnParams): Promise<void
     await recordUsage(params.db, usage)
   } catch (e) {
     console.warn('[chat-telemetry] recordUsage failed:', e)
-  }
-
-  const resolvedFlags = resolveExperimentFlags({
-    provider: params.config.provider,
-    experimentFlags: params.config.experimentFlags,
-  })
-  const metric: ABTestMetric = {
-    id: crypto.randomUUID(),
-    projectId: params.projectId,
-    conversationId: params.conversationId,
-    messageId: params.assistantMessageId,
-    experimentGroup: resolvedFlags,
-    latencyMs: params.latencyMs,
-    inputTokens,
-    outputTokens,
-    cacheReadTokens,
-    cacheWriteTokens,
-    citationCount: params.citationCount,
-    createdAt: Date.now(),
-  }
-
-  // Compute emptyCitationRate — only set when citations flag is enabled
-  if (resolvedFlags.citations) {
-    metric.emptyCitationRate = params.citationCount === 0 ? 1 : 0
-  }
-
-  try {
-    await recordABTestMetric(params.db, metric)
-  } catch (e) {
-    console.warn('[chat-telemetry] recordABTestMetric failed:', e)
   }
 }
 

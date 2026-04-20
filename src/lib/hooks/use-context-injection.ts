@@ -15,8 +15,8 @@ export interface EntriesByType {
   timeline: WorldEntry[]
 }
 
-/** Token budget per D-01: 4000 tokens max for context */
-export const DEFAULT_TOKEN_BUDGET = 4000
+/** Token budget for context — reduced from 4000 to 2000 in feature audit (RAG removed) */
+export const DEFAULT_TOKEN_BUDGET = 2000
 
 /**
  * Extract keywords from user input for matching against entry names/fields.

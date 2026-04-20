@@ -6,6 +6,8 @@ import { useAIConfig } from './use-ai-config'
 import { useWorldEntries } from './use-world-entries'
 import { useConsistencyExemptions } from './use-consistency-exemptions'
 import {
+  extractKeywords,
+  findRelevantEntries,
   trimToTokenBudget,
 } from './use-context-injection'
 import { parseAISuggestions, type Suggestion } from '../ai/suggestion-parser'
@@ -119,9 +121,12 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     // Clear interrupted tool calls from any prior aborted stream.
     setInterruptedToolCalls([])
 
-    // Pure keyword matching replaces hybrid RAG — implemented in Task 7
+    // Pure keyword matching replaces hybrid RAG — topK=6, 2000-token budget
     const db = createProjectDB(projectId)
-    const trimmedEntries: WorldEntry[] = []
+    const relevantEntries = entriesByType
+      ? findRelevantEntries(extractKeywords(content), entriesByType).slice(0, 6)
+      : []
+    const trimmedEntries = trimToTokenBudget(relevantEntries, 2000)
 
     // Load the conversation for rollingSummary + window boundary.
     const conversation = await db.table('conversations').get(conversationId) as

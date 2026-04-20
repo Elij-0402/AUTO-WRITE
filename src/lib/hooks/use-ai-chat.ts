@@ -69,7 +69,7 @@ function detectDraft(content: string): boolean {
 
 export function useAIChat(projectId: string, conversationId: string | null, options?: UseAIChatOptions) {
   const { config } = useAIConfig(projectId)
-  const { entries, entriesByType } = useWorldEntries(projectId)
+  const { entriesByType } = useWorldEntries(projectId)
   const { exemptions, addExemption } = useConsistencyExemptions(projectId)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)

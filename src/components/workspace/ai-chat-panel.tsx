@@ -75,7 +75,8 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     contradictions,
     isCheckingConsistency,
     addExemption,
-    clearContradiction
+    clearContradiction,
+    cacheHint,
   } = useAIChat(projectId, activeConversationId, { selectedText: selectedText || undefined })
 
   const { entriesByType, addEntry } = useWorldEntries(projectId)
@@ -102,6 +103,8 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const [duplicateEntryName] = useState('')
 
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [cacheHintVisible, setCacheHintVisible] = useState(false)
+  const cacheHintShown = useRef(false)
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     const container = messagesContainerRef.current
@@ -129,6 +132,15 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
       clearSuggestions()
     }
   }, [messages.length, reset, clearSuggestions])
+
+  // Surface cache TTL savings hint once per session.
+  useEffect(() => {
+    if (cacheHint && !cacheHintShown.current) {
+      cacheHintShown.current = true
+      setCacheHintVisible(true)
+      setTimeout(() => setCacheHintVisible(false), 3000)
+    }
+  }, [cacheHint])
 
   const handleSend = async (overrideText?: string) => {
     const text = (overrideText ?? input).trim()
@@ -554,6 +566,13 @@ const handleIntentionalContradiction = async (contradiction: Contradiction, _ind
           </div>
         </div>
       </div>
+
+      {/* Cache TTL savings hint */}
+      {cacheHintVisible && cacheHint && (
+        <div className="absolute bottom-[88px] left-1/2 -translate-x-1/2 z-50 px-3 py-1.5 bg-foreground text-background text-[12px] rounded-[var(--radius-control)] shadow-[var(--shadow-lift-md)] animate-fade-up">
+          已节省约 {cacheHint.tokens.toLocaleString()} tokens（1小时缓存）
+        </div>
+      )}
 
       {prefillEntry && (
         <NewEntryDialog

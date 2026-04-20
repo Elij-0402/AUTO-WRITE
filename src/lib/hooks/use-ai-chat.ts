@@ -79,6 +79,8 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
   const [contradictions, setContradictions] = useState<PartialContradiction[]>([])
   const [isCheckingConsistency] = useState(false)
   const [interruptedToolCalls, setInterruptedToolCalls] = useState<InterruptedToolCall[]>([])
+  const [cacheHint, setCacheHint] = useState<{ tokens: number } | null>(null)
+  const cacheHintShownRef = useRef(false)
   const abortControllerRef = useRef<AbortController | null>(null)
   const entriesByTypeRef = useRef(entriesByType)
   const exemptionsRef = useRef(exemptions)
@@ -383,6 +385,11 @@ await db.contradictions.add({
         latencyMs: Date.now() - startedAt,
         citationCount: pendingCitations.length,
       })
+      // Surface cache TTL savings hint once per session.
+      if (cacheReadTokens > 0 && !cacheHintShownRef.current) {
+        cacheHintShownRef.current = true
+        setCacheHint({ tokens: cacheReadTokens })
+      }
     }
     return { success: true }
   }, [config, projectId, conversationId, entries, entriesByType, options?.selectedText])
@@ -428,6 +435,7 @@ await db.contradictions.add({
       setContradictions(prev => prev.filter((_, i) => i !== index)),
     interruptedToolCalls,
     clearInterruptedToolCalls,
+    cacheHint,
   }
 }
 

@@ -99,12 +99,12 @@ export function HistoryDrawer({
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2">
-                          <span className="text-[13px] font-medium truncate">
-                            {rev.label || defaultLabel(rev)}
-                          </span>
-                          <SourceBadge source={rev.source} />
-                        </div>
+                        <span className="text-[13px] font-medium truncate">
+                          {rev.label || new Date(rev.createdAt).toLocaleString('zh-CN', {
+                            month: 'numeric', day: 'numeric',
+                            hour: '2-digit', minute: '2-digit',
+                          })}
+                        </span>
                       )}
                       <div className="text-mono text-[10px] text-muted-foreground/70 mt-1 tabular-nums">
                         {formatDistanceToNow(rev.createdAt)} · {rev.wordCount.toLocaleString()} 字
@@ -157,17 +157,4 @@ export function HistoryDrawer({
       </SheetContent>
     </Sheet>
   )
-}
-
-function defaultLabel(rev: Revision): string {
-  if (rev.source === 'manual') return '手动快照'
-  if (rev.source === 'ai-draft') return 'AI 草稿'
-  return '自动快照'
-}
-
-function SourceBadge({ source }: { source: Revision['source'] }) {
-  const cls = 'text-[10px] px-1.5 py-0.5 rounded-full border uppercase tracking-wider'
-  if (source === 'manual') return <span className={`${cls} border-[hsl(var(--accent-amber))]/40 text-[hsl(var(--accent-amber))] bg-[hsl(var(--accent-amber))]/10`}>手动</span>
-  if (source === 'ai-draft') return <span className={`${cls} border-[hsl(var(--accent-violet))]/40 text-[hsl(var(--accent-violet))] bg-[hsl(var(--accent-violet))]/10`}>AI</span>
-  return <span className={`${cls} border-[hsl(var(--border-strong))] text-muted-foreground`}>自动</span>
 }

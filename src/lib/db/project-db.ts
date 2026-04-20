@@ -205,14 +205,10 @@ export interface AIUsageEvent {
    */
   draftEditedPct?: number | null
   /**
-   * Reason enum when user clicked "不采纳". One of the four T1-spec values
+   * Reason enum when user clicked "不采纳". One of two T1-spec values
    * plus an optional free-form note capped at 500 chars and plain-text only.
    */
-  draftRejectedReason?:
-    | 'conflict'
-    | 'style'
-    | 'plot'
-    | 'other'
+  draftRejectedReason?: 'conflict' | 'other'
   /** Optional free-form supplement to draftRejectedReason. Max 500 chars. */
   draftRejectedNote?: string
   /**

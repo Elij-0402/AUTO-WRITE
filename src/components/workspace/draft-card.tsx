@@ -11,14 +11,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { createProjectDB } from '@/lib/db/project-db'
-import type { AIUsageEvent } from '@/lib/db/project-db'
 
-type RejectReason = NonNullable<AIUsageEvent['draftRejectedReason']>
+type RejectReason = 'conflict' | 'other'
 
 const REASONS: Array<{ value: RejectReason; label: string }> = [
-  { value: 'conflict', label: '与世界观有冲突' },
-  { value: 'style', label: '文风不对' },
-  { value: 'plot', label: '情节不对' },
+  { value: 'conflict', label: '不符合设定' },
   { value: 'other', label: '其他' },
 ]
 

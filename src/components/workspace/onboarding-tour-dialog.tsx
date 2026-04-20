@@ -125,7 +125,7 @@ export function OnboardingTourDialog({ projectId, open, onComplete }: Onboarding
                   ))}
                 </div>
                 <p className="text-[11px] text-muted-foreground/60">
-                  选"其他"或直接下一步可跳过角色模板
+                  选「其他」或直接下一步可跳过角色模板
                 </p>
               </>
             ) : (
@@ -179,7 +179,7 @@ export function OnboardingTourDialog({ projectId, open, onComplete }: Onboarding
         {step === 3 && (
           <div className="space-y-3">
             <p className="text-[13px] leading-[1.8] text-muted-foreground">
-              世界观里有了角色，AI 就能"读到"他们。右侧 AI 聊天里试一句：
+              世界观里有了角色，AI 就能「读到」他们。右侧 AI 聊天里试一句：
             </p>
             <div className="rounded-md surface-2 border border-[hsl(var(--line))] px-3 py-2.5 text-[13px] leading-[1.8]">
               介绍一下这 3 个角色，他们各有什么性格特点？
@@ -201,7 +201,7 @@ export function OnboardingTourDialog({ projectId, open, onComplete }: Onboarding
             </div>
             <p className="text-[13px] leading-[1.8] text-muted-foreground">
               这颗朱砂点，就是世界观在说话 —— 每条 AI 引用都回指到一个具体条目。
-              点开看上下文，点"跳到条目"回到原文。
+              点开看上下文，点「跳到条目」回到原文。
             </p>
             <p className="text-[11px] text-muted-foreground/70">
               做到这一步，InkForge 的核心承诺你已经摸到了：

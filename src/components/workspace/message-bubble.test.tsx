@@ -32,7 +32,7 @@ describe('MessageBubble', () => {
       role: 'assistant' as const,
       content: 'Test response',
       timestamp: Date.now(),
-      citations: [{ startBlockIndex: 0, endBlockIndex: 1, citationText: 'test', entryId: 'e1' }],
+      citations: [{ documentIndex: 0, startBlockIndex: 0, endBlockIndex: 1, citedText: 'test', entryId: 'e1' }],
     }
 
     const wrapper = makeWrapper({ activeTab: 'chapters', selectedEntryId: null })

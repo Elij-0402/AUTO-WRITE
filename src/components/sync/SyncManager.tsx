@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { flushSyncQueue, retryFailedSync } from '@/lib/sync/sync-engine'
+import { flushSyncQueue } from '@/lib/sync/sync-engine'
 import { useSync } from '@/lib/hooks/useSync'
 import { enqueueChange } from '@/lib/sync/sync-queue'
 
@@ -16,17 +16,16 @@ export function SyncManager() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    // D-34: Listen for network recovery to trigger sync
+    // Network recovery — just flush the queue (no automatic retry of failed items)
     const handleOnline = () => {
-      // Network recovered - retry failed syncs
-      retryFailedSync()
+      flushSyncQueue()
         .then(({ synced }) => {
           if (synced > 0) {
             setLastSynced(Date.now())
           }
         })
         .catch((error) => {
-          console.error('Failed to retry sync on network recovery:', error)
+          console.error('Sync error on network recovery:', error)
           setStatus('error')
         })
     }

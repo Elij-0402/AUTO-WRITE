@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import { getPendingChanges, markSynced, incrementRetry, setLastSyncAt, clearSyncedItems } from './sync-queue'
+import { getPendingChanges, markSynced, markFailed, setLastSyncAt, clearSyncedItems } from './sync-queue'
 import { metaDb } from '@/lib/db/meta-db'
 import { createProjectDB } from '@/lib/db/project-db'
 import { mapCloudToLocal, mapLocalToCloud, type TableName } from './field-mapping'
@@ -20,8 +20,6 @@ const TABLE_MAP: Record<string, string> = {
 }
 
 const SYNC_BATCH_SIZE = 50
-const MAX_RETRIES = 5
-const BASE_RETRY_DELAY = 1000 // 1 second
 
 /**
  * Flush pending changes to Supabase.
@@ -61,20 +59,6 @@ export async function flushSyncQueue(
         continue
       }
 
-      // D-33: Last-Write-Wins conflict resolution
-      // Check for existing cloud record
-      const { data: existing } = await supabase
-        .from(tableName)
-        .select('localUpdatedAt')
-        .eq('id', item.data.id)
-        .single()
-
-      if (existing && existing.localUpdatedAt > item.localUpdatedAt) {
-        // Cloud record is newer - skip (LWW)
-        syncedIds.push(item.id)
-        continue
-      }
-
       // Prepare data for upsert — field-mapping owns the cloud-wire shape.
       const upsertData = mapLocalToCloud(
         item.table as TableName,
@@ -100,7 +84,7 @@ export async function flushSyncQueue(
       await clearSyncedItems()
     }
     if (failedIds.length > 0) {
-      await incrementRetry(failedIds)
+      await markFailed(failedIds)
     }
 
     totalSynced += syncedIds.length
@@ -302,30 +286,4 @@ export async function syncNewProject(projectId: string, userId: string): Promise
     // Trigger immediate flush
     await flushSyncQueue()
   }
-}
-
-/**
- * Retry failed syncs with exponential backoff.
- * Per D-34: automatic retry with exponential backoff.
- * An item is eligible to retry only after BASE_RETRY_DELAY * 2^retryCount ms
- * have passed since its last failed attempt (tracked via lastRetryAt).
- */
-export async function retryFailedSync(): Promise<{ synced: number; failed: number }> {
-  const pending = await getPendingChanges()
-  const now = Date.now()
-  const eligible = pending.filter(p => {
-    if (p.retryCount === 0 || p.retryCount >= MAX_RETRIES) return false
-    const delay = BASE_RETRY_DELAY * Math.pow(2, p.retryCount)
-    const lastRetryAt = p.lastRetryAt ?? 0
-    return now - lastRetryAt >= delay
-  })
-
-  if (eligible.length === 0) {
-    return { synced: 0, failed: 0 }
-  }
-
-  // flushSyncQueue reads the pending queue itself and will pick up the
-  // eligible items (plus any brand-new ones) in this pass. Calling it once
-  // is enough; the previous loop-per-item implementation was redundant.
-  return flushSyncQueue()
 }

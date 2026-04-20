@@ -29,9 +29,8 @@ export interface SyncQueueItem {
   localUpdatedAt: number
   userId: string
   synced: boolean
-  retryCount: number
-  /** ms timestamp of the most recent failed attempt; used to enforce exponential backoff. */
-  lastRetryAt?: number
+  /** True after a sync attempt failed (no automatic retry — user manually retriggers). */
+  failed?: boolean
 }
 
 let dbPromise: Promise<IDBPDatabase<SyncQueueDB>> | null = null
@@ -54,13 +53,12 @@ function getQueueDB(): Promise<IDBPDatabase<SyncQueueDB>> {
  * Add a change to the sync queue.
  * Called after every IndexedDB write.
  */
-export async function enqueueChange(item: Omit<SyncQueueItem, 'id' | 'synced' | 'retryCount'>): Promise<void> {
+export async function enqueueChange(item: Omit<SyncQueueItem, 'id' | 'synced'>): Promise<void> {
   const db = await getQueueDB()
   const queueItem: SyncQueueItem = {
     ...item,
     id: crypto.randomUUID(),
     synced: false,
-    retryCount: 0,
   }
   await db.add('queue', queueItem)
 }
@@ -90,18 +88,16 @@ export async function markSynced(ids: string[]): Promise<void> {
 }
 
 /**
- * Increment retry count on failed sync items.
- * Records lastRetryAt so retryFailedSync can honor exponential backoff.
+ * Mark items as failed after a sync attempt error.
+ * Failures are not retried automatically — user manually retriggers sync.
  */
-export async function incrementRetry(ids: string[]): Promise<void> {
+export async function markFailed(ids: string[]): Promise<void> {
   const db = await getQueueDB()
   const tx = db.transaction('queue', 'readwrite')
-  const now = Date.now()
   for (const id of ids) {
     const item = await tx.store.get(id)
     if (item) {
-      item.retryCount++
-      item.lastRetryAt = now
+      item.failed = true
       await tx.store.put(item)
     }
   }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { enqueueChange, incrementRetry, markSynced, clearSyncedItems, type SyncQueueItem } from './sync-queue'
+import { enqueueChange, markFailed, markSynced, clearSyncedItems, type SyncQueueItem } from './sync-queue'
 
 async function readAll(): Promise<SyncQueueItem[]> {
   const { openDB } = await import('idb')
@@ -10,29 +10,24 @@ async function readAll(): Promise<SyncQueueItem[]> {
 }
 
 describe('sync-queue', () => {
-  it('incrementRetry stamps lastRetryAt on each bump', async () => {
+  it('markFailed sets failed=true on items', async () => {
     await enqueueChange({
       table: 'chapters',
       operation: 'update',
-      data: { id: 'retry-test-x' },
+      data: { id: 'fail-test-x' },
       localUpdatedAt: Date.now(),
       userId: 'u1',
     })
     const items = await readAll()
-    const item = items.find(i => (i.data as { id: string }).id === 'retry-test-x')!
+    const item = items.find(i => (i.data as { id: string }).id === 'fail-test-x')!
     expect(item).toBeDefined()
-    expect(item.lastRetryAt).toBeUndefined()
+    expect(item.failed).toBeUndefined()
 
-    const before = Date.now()
-    await incrementRetry([item.id])
-    const after = Date.now()
+    await markFailed([item.id])
 
     const refreshed = await readAll()
-    const bumped = refreshed.find(i => i.id === item.id)!
-    expect(bumped.retryCount).toBe(1)
-    expect(bumped.lastRetryAt).toBeDefined()
-    expect(bumped.lastRetryAt!).toBeGreaterThanOrEqual(before)
-    expect(bumped.lastRetryAt!).toBeLessThanOrEqual(after)
+    const marked = refreshed.find(i => i.id === item.id)!
+    expect(marked.failed).toBe(true)
   })
 
   it('clearSyncedItems removes synced rows and leaves pending ones', async () => {

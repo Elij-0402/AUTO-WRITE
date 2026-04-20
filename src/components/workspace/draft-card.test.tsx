@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { createProjectDB, __resetProjectDBCache, type AIUsageEvent } from '@/lib/db/project-db'
 import { DraftCard } from './draft-card'
 
@@ -95,8 +96,8 @@ describe('DraftCard T1 adoption telemetry', () => {
     fireEvent.click(screen.getByRole('button', { name: /不采纳/ }))
     await waitFor(() => expect(screen.getByText('为什么不采纳？')).toBeVisible())
 
-    // Pick the 'style' reason
-    fireEvent.click(screen.getByLabelText('文风不对'))
+    // Pick the 'conflict' reason
+    fireEvent.click(screen.getByLabelText('不符合设定'))
 
     // Type a note and cap behavior
     const note = screen.getByPlaceholderText('具体是哪里不对？')
@@ -109,9 +110,26 @@ describe('DraftCard T1 adoption telemetry', () => {
       const row = await db.aiUsage.get(rowId)
       expect(row?.draftOffered).toBe(true)
       expect(row?.draftAccepted).toBe(false)
-      expect(row?.draftRejectedReason).toBe('style')
+      expect(row?.draftRejectedReason).toBe('conflict')
       expect(row?.draftRejectedNote).toBe('语气太冷')
     })
+  })
+
+  it('shows only 2 rejection reason options', async () => {
+    render(
+      <DraftCard
+        draftId="d1"
+        content="some content"
+        projectId={PROJECT_ID}
+        messageId="m-1"
+        onInsert={() => {}}
+      />
+    )
+    await userEvent.click(screen.getByRole('button', { name: '不采纳' }))
+    const radios = screen.getAllByRole('radio')
+    expect(radios).toHaveLength(2)
+    expect(screen.getByLabelText('不符合设定')).toBeInTheDocument()
+    expect(screen.getByLabelText('其他')).toBeInTheDocument()
   })
 
   it('caps free-form note at 500 chars (CEO-3B)', async () => {

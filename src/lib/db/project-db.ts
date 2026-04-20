@@ -1,6 +1,5 @@
 import Dexie, { type Table } from 'dexie'
 import type { Chapter, ProjectMeta, WorldEntry, Relation, WorldEntryType } from '../types'
-import type { Embedding } from '../rag/types'
 import type { ExperimentFlags } from '../ai/experiment-flags'
 import type { UiExperimentFlags } from '../ai/ui-flags'
 import type { Citation } from '../ai/citations'
@@ -281,7 +280,6 @@ export class InkForgeProjectDB extends Dexie {
   messages!: Table<ChatMessage, string>
   consistencyExemptions!: Table<ConsistencyExemption, string>
   revisions!: Table<Revision, string>
-  embeddings!: Table<Embedding, string>
   analyses!: Table<AnalysisArtifact, string>
   conversations!: Table<Conversation, string>
   aiUsage!: Table<AIUsageEvent, string>
@@ -507,6 +505,37 @@ export class InkForgeProjectDB extends Dexie {
         'id, projectId, messageId, entryName, exempted, createdAt, ' +
         '[projectId+entryName], [projectId+createdAt]',
     })
+    // v14: drop embeddings table (RAG vector system removed in feature audit).
+    // null in stores() deletes the table. The upgrade clears any existing
+    // vector data before Dexie removes the object store.
+    this.version(14)
+      .stores({
+        projects: 'id, updatedAt, deletedAt',
+        chapters: 'id, projectId, order, deletedAt',
+        layoutSettings: 'id',
+        worldEntries: 'id, projectId, type, name, deletedAt',
+        relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+        aiConfig: 'id',
+        messages: 'id, projectId, conversationId, role, timestamp',
+        consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+        revisions: 'id, projectId, chapterId, createdAt',
+        analyses: 'id, kind, invalidationKey, createdAt',
+        conversations: 'id, projectId, updatedAt',
+        aiUsage: 'id, projectId, conversationId, createdAt, model',
+        abTestMetrics: 'id, projectId, conversationId, createdAt, [projectId+createdAt]',
+        contradictions:
+          'id, projectId, messageId, entryName, exempted, createdAt, ' +
+          '[projectId+entryName], [projectId+createdAt]',
+        embeddings: null,
+      })
+      .upgrade(async tx => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (tx as any).embeddings?.clear()
+        } catch {
+          // Table may already be absent on some browser versions — safe to ignore.
+        }
+      })
   }
 }
 

@@ -21,7 +21,7 @@ import type {
   ReportContradictionInput,
 } from '../ai/tools/schemas'
 import type { AIEvent, AIToolInput } from '../ai/events'
-import type { WorldEntry, WorldEntryType } from '../types'
+import type { WorldEntryType } from '../types'
 
 export interface ChatMessage {
   id: string
@@ -69,7 +69,7 @@ function detectDraft(content: string): boolean {
 
 export function useAIChat(projectId: string, conversationId: string | null, options?: UseAIChatOptions) {
   const { config } = useAIConfig(projectId)
-  const { entries, entriesByType } = useWorldEntries(projectId)
+  const { entriesByType } = useWorldEntries(projectId)
   const { exemptions, addExemption } = useConsistencyExemptions(projectId)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
@@ -392,7 +392,7 @@ await db.contradictions.add({
       }
     }
     return { success: true }
-  }, [config, projectId, conversationId, entries, entriesByType, options?.selectedText])
+  }, [config, projectId, conversationId, entriesByType, options?.selectedText])
 
   const cancelStream = useCallback(() => {
     abortControllerRef.current?.abort()

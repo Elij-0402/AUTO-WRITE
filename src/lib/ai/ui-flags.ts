@@ -29,5 +29,6 @@ export const DEFAULT_UI_FLAGS: UiExperimentFlags = {
 }
 
 export function resolveUiFlags(_flags?: Partial<UiExperimentFlags>): UiExperimentFlags {
+  void _flags // reserved for future selective overrides
   return { ...DEFAULT_UI_FLAGS }
 }

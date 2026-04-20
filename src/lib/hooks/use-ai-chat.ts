@@ -35,7 +35,12 @@ export interface ChatMessage {
   citations?: Citation[]
 }
 
-export interface Contradiction {
+/**
+ * Partial contradiction returned by handleToolCall — AI-provided fields only.
+ * The caller fills in id, projectId, conversationId, messageId, exempted,
+ * createdAt before persisting to db.contradictions.
+ */
+export interface PartialContradiction {
   entryName: string
   entryType: WorldEntryType
   description: string
@@ -71,7 +76,7 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
   const [streamingContent, setStreamingContent] = useState('')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [contradictions, setContradictions] = useState<Contradiction[]>([])
+  const [contradictions, setContradictions] = useState<PartialContradiction[]>([])
   const [isCheckingConsistency] = useState(false)
   const [interruptedToolCalls, setInterruptedToolCalls] = useState<InterruptedToolCall[]>([])
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -198,7 +203,7 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     abortControllerRef.current = new AbortController()
     let fullContent = ''
     const pendingSuggestions: Suggestion[] = []
-    const pendingContradictions: Contradiction[] = []
+    const pendingContradictions: PartialContradiction[] = []
     const pendingCitations: Citation[] = []
     const startedAt = Date.now()
     let inputTokens = 0
@@ -228,8 +233,9 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
           setMessages(prev =>
             prev.map(m => (m.id === assistantMsgId ? { ...m, content: fullContent } : m))
           )
-        } else if (event.type === 'tool_call') {
-          handleToolCall(event, pendingSuggestions, pendingContradictions, exemptionsRef.current)
+} else if (event.type === 'tool_call') {
+          const pc = handleToolCall(event, pendingSuggestions, exemptionsRef.current)
+          if (pc) pendingContradictions.push(pc)
         } else if (event.type === 'tool_call_partial') {
           // Stream was aborted mid-tool. Store partial result so UI can surface it.
           setInterruptedToolCalls(prev => [
@@ -291,9 +297,38 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
         setSuggestions(pendingSuggestions)
       }
 
-      setContradictions(pendingContradictions)
+setContradictions(pendingContradictions)
 
-      // Async compaction: if messages beyond window have grown by ≥ 6 since
+      // Persist contradictions to DB with dedup (CEO-4C: 7d window by entryName+description).
+      // Fire-and-forget; never block the chat UI.
+      if (pendingContradictions.length > 0) {
+        void (async () => {
+          const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
+          const now = Date.now()
+          for (const pc of pendingContradictions) {
+            // Check for a recent same-description contradiction for this entry (within 7d).
+            const cutoff = now - SEVEN_DAYS
+            const recent = await db.contradictions
+              .where('[projectId+entryName]')
+              .equals([projectId, pc.entryName])
+              .and(row => row.createdAt >= cutoff && !row.exempted)
+              .toArray()
+            const isDupe = recent.some(r => r.description === pc.description)
+            if (isDupe) continue
+await db.contradictions.add({
+              id: crypto.randomUUID(),
+              projectId,
+              conversationId,
+              messageId: assistantMsgId,
+              entryName: pc.entryName,
+              entryType: pc.entryType,
+              description: pc.description,
+              exempted: false,
+              createdAt: now,
+            })
+          }
+        })()
+      }
       // the last summary, rebuild the rollingSummary. Fire-and-forget; never
       // block the chat UI, never throw up to the caller.
       const totalAfter = newCount
@@ -412,12 +447,11 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
 function handleToolCall(
   event: Extract<AIEvent, { type: 'tool_call' }>,
   suggestions: Suggestion[],
-  contradictions: Contradiction[],
   exemptions: Array<{ exemptionKey: string }> | undefined
-): void {
+): PartialContradiction | null {
   if (event.name === 'suggest_entry') {
     const input = event.input as Partial<SuggestEntryInput>
-    if (!input.entryType || !input.name) return
+    if (!input.entryType || !input.name) return null
     suggestions.push({
       type: 'newEntry',
       entryType: input.entryType,
@@ -426,12 +460,12 @@ function handleToolCall(
       extractedFields: input.fields ?? {},
       confidence: input.confidence ?? 'medium',
     })
-    return
+    return null
   }
 
   if (event.name === 'suggest_relation') {
     const input = event.input as Partial<SuggestRelationInput>
-    if (!input.entry1Name || !input.entry2Name || !input.relationshipType) return
+    if (!input.entry1Name || !input.entry2Name || !input.relationshipType) return null
     suggestions.push({
       type: 'relationship',
       entry1Name: input.entry1Name,
@@ -444,19 +478,21 @@ function handleToolCall(
         `${input.entry1Name}与${input.entry2Name}存在${input.relationshipType}关系`,
       confidence: input.confidence ?? 'medium',
     })
-    return
+    return null
   }
 
   if (event.name === 'report_contradiction') {
     const input = event.input as Partial<ReportContradictionInput>
-    if (!input.entryName || !input.entryType || !input.description) return
-    if (input.severity === 'low') return
+    if (!input.entryName || !input.entryType || !input.description) return null
+    if (input.severity === 'low') return null
     const key = `${input.entryName}:${input.entryType}`
-    if (exemptions?.some(e => e.exemptionKey === key)) return
-    contradictions.push({
+    if (exemptions?.some(e => e.exemptionKey === key)) return null
+    return {
       entryName: input.entryName,
       entryType: input.entryType,
       description: input.description,
-    })
+    }
   }
+
+  return null
 }

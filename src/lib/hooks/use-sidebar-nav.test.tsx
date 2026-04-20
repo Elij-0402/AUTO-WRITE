@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import type { ReactNode } from 'react'
+import type { ReactNode, JSX } from 'react'
 import {
   SidebarNavProvider,
   useSidebarNav,

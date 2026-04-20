@@ -1,22 +1,23 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import Link from 'next/link'
 import { useState, useMemo } from 'react'
-import { ArrowLeft, Network, Clock } from 'lucide-react'
+import { ArrowLeft, Network, Clock, AlertTriangle } from 'lucide-react'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useAllRelations } from '@/lib/hooks/use-all-relations'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { RelationGraph } from '@/components/analysis/relation-graph'
 import { TimelineView } from '@/components/analysis/timeline-view'
+import { ContradictionDashboard } from '@/components/analysis/contradiction-dashboard'
 import { Button } from '@/components/ui/button'
 import { ThemeProvider } from '@/components/editor/theme-provider'
 
-type Tab = 'relations' | 'timeline'
+type Tab = 'relations' | 'timeline' | 'contradictions'
 
 const ALL_TABS: Array<{ id: Tab; label: string; icon: typeof Network }> = [
   { id: 'relations', label: '关系图', icon: Network },
   { id: 'timeline', label: '时间线', icon: Clock },
+  { id: 'contradictions', label: '矛盾记录', icon: AlertTriangle },
 ]
 
 export default function AnalysisPage() {
@@ -30,7 +31,7 @@ export default function AnalysisPage() {
     return ALL_TABS.filter(t => {
       if (t.id === 'relations') return true
       if (t.id === 'timeline') return uiFlags.showTimelineView
-      return false
+      return true
     })
   }, [uiFlags.showTimelineView])
 
@@ -41,9 +42,9 @@ export default function AnalysisPage() {
       <div className="h-screen flex flex-col">
         <div className="h-12 shrink-0 border-b bg-background flex items-center gap-2 px-3">
           <Button asChild variant="ghost" size="icon" className="h-8 w-8">
-            <Link href={`/projects/${params.id}`} aria-label="返回编辑器">
+            <a href={`/projects/${params.id}`} aria-label="返回编辑器">
               <ArrowLeft className="h-4 w-4" />
-            </Link>
+            </a>
           </Button>
           <span className="text-sm font-medium">创作者分析</span>
         </div>
@@ -77,7 +78,12 @@ export default function AnalysisPage() {
             {activeTab === 'relations' && (
               <RelationGraph entries={entries ?? []} relations={relations} />
             )}
-            {activeTab === 'timeline' && uiFlags.showTimelineView && <TimelineView entries={entries ?? []} />}
+            {activeTab === 'timeline' && uiFlags.showTimelineView && (
+              <TimelineView entries={entries ?? []} />
+            )}
+            {activeTab === 'contradictions' && (
+              <ContradictionDashboard projectId={params.id} />
+            )}
           </div>
         </div>
       </div>

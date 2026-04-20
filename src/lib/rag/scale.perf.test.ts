@@ -131,11 +131,10 @@ function generateRelations(entries: WorldEntry[], total: number): Relation[] {
       projectId: PROJECT_ID,
       sourceEntryId: a.id,
       targetEntryId: b.id,
-      sourceRoleDescription: i % 2 === 0 ? '师父' : '挚友',
-      targetRoleDescription: i % 2 === 0 ? '弟子' : '挚友',
+      sourceToTargetLabel: i % 2 === 0 ? '师父' : '挚友',
       category: 'character_relation',
+      description: '',
       createdAt: new Date(),
-      updatedAt: new Date(),
       deletedAt: null,
     })
   }

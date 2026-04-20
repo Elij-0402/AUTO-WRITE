@@ -61,6 +61,9 @@ describe('flattenSystemPrompt', () => {
       baseInstruction: 'A',
       worldBibleContext: 'B',
       runtimeContext: '',
+      worldBibleBlocks: [],
+      useCitations: false,
+      useExtendedCacheTtl: false,
     })
     expect(flat).toBe('A\n\nB')
   })
@@ -70,6 +73,9 @@ describe('flattenSystemPrompt', () => {
       baseInstruction: 'BASE',
       worldBibleContext: 'WORLD',
       runtimeContext: 'RUN',
+      worldBibleBlocks: [],
+      useCitations: false,
+      useExtendedCacheTtl: false,
     })
     expect(flat).toBe('BASE\n\nWORLD\n\nRUN')
   })

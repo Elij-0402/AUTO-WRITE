@@ -68,7 +68,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const { entriesByType, addEntry } = useWorldEntries(projectId)
   const { addRelation } = useRelations(projectId)
   const { dismiss, filterDismissed, reset } = useDismissedSuggestions()
-  const { config: aiConfig, saveConfig: saveAIConfig } = useAIConfig(projectId)
+  const { config: aiConfig, saveConfig: saveAIConfig, experimentFlags } = useAIConfig(projectId)
 
   const handleNewConversation = useCallback(async () => {
     const id = await createConversation('新对话')
@@ -402,6 +402,7 @@ const handleIntentionalContradiction = async (contradiction: Contradiction, _ind
                 projectId={projectId}
                 conversationId={activeConversationId}
                 onInsertDraft={handleInsertDraft}
+                useCitations={experimentFlags.citations}
               />
             ))}
 

@@ -14,6 +14,8 @@ interface MessageBubbleProps {
   conversationId?: string | null
   onInsertDraft?: (draftId: string, content: string) => void
   onCitationClick?: (entryId: string | undefined) => void
+  /** Guard: only render CitationChip when citations experiment flag is enabled */
+  useCitations?: boolean
 }
 
 export function MessageBubble({
@@ -22,6 +24,7 @@ export function MessageBubble({
   conversationId,
   onInsertDraft,
   onCitationClick,
+  useCitations = false,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user'
   const [copied, setCopied] = useState(false)
@@ -89,7 +92,7 @@ export function MessageBubble({
           {message.content}
         </div>
 
-        {message.citations && message.citations.length > 0 && (
+        {useCitations && message.citations && message.citations.length > 0 && (
           <div className="flex flex-wrap gap-1 pt-1">
             <span className="text-[11px] text-muted-foreground self-center mr-1">溯源:</span>
             {message.citations.map((citation, idx) => (

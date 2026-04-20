@@ -37,7 +37,7 @@ export interface ExperimentFlagCapabilities {
  */
 export function providerCapabilities(provider: AIProvider | undefined): ExperimentFlagCapabilities {
   if (provider === 'anthropic') {
-    return { citations: true, extendedCacheTtl: true, thinking: true }
+    return { citations: true, extendedCacheTtl: true, thinking: false }
   }
   return { citations: false, extendedCacheTtl: false, thinking: false }
 }

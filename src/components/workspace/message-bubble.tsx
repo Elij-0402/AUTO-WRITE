@@ -148,7 +148,9 @@ export function MessageBubble({
           </div>
         )}
 
-        <StarRating messageId={message.id} projectId={projectId} />
+        {useCitations && message.citations && message.citations.length > 0 && (
+          <StarRating messageId={message.id} projectId={projectId} />
+        )}
 
         {message.hasDraft && message.draftId && (
           <div className="pt-2">

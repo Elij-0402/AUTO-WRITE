@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useAIConfig, AIConfig, AIProvider } from '@/lib/hooks/use-ai-config'
 import type { ExperimentFlags } from '@/lib/ai/experiment-flags'
 import { providerCapabilities } from '@/lib/ai/experiment-flags'
@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, Sparkles, XCircle } from 'lucide-react'
+import { Sparkles, XCircle, ChevronDown } from 'lucide-react'
 
 interface AIConfigDialogProps {
   projectId: string
@@ -41,7 +41,7 @@ const PROVIDER_PRESETS: Record<AIProvider, ProviderPreset> = {
     description:
       '原生 Claude API。支持 prompt caching（世界观重复注入自动省 token）与结构化 tool use（更准的建议/矛盾检测）。',
     defaultBaseUrl: 'https://api.anthropic.com',
-    defaultModel: 'claude-sonnet-4-5',
+    defaultModel: 'claude-sonnet-4-20250514',
     supportsToolUse: true,
   },
   'openai-compatible': {
@@ -54,14 +54,46 @@ const PROVIDER_PRESETS: Record<AIProvider, ProviderPreset> = {
   },
 }
 
+// 常用 Provider 的模型预设
+const POPULAR_MODELS: Record<string, string[]> = {
+  anthropic: [
+    'claude-sonnet-4-20250514',
+    'claude-opus-4-20250514',
+    'claude-sonnet-3-5',
+  ],
+  deepseek: [
+    'deepseek-chat',
+    'deepseek-reasoner',
+  ],
+  openai: [
+    'gpt-4o',
+    'gpt-4o-mini',
+    'gpt-4-turbo',
+    'gpt-4',
+  ],
+  siliconflow: [
+    'deepseek-ai/DeepSeek-V3',
+    'deepseek-ai/DeepSeek-R1',
+    'Qwen/Qwen2.5-72B-Instruct',
+  ],
+}
+
+// 根据 Base URL 识别 Provider 类型
+function detectProviderType(baseUrl: string): keyof typeof POPULAR_MODELS | null {
+  const url = baseUrl.toLowerCase()
+  if (url.includes('deepseek')) return 'deepseek'
+  if (url.includes('siliconflow') || url.includes('silicon')) return 'siliconflow'
+  if (url.includes('openai.com') && !url.includes('deepseek') && !url.includes('silicon')) return 'openai'
+  return null
+}
+
 export function AIConfigDialog({ projectId, open, onClose, isOnboarding = false, onSaveComplete }: AIConfigDialogProps) {
   const { config, saveConfig } = useAIConfig(projectId)
   const [formData, setFormData] = useState<Partial<AIConfig>>({})
-  const [testing, setTesting] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null)
-  const [modelList, setModelList] = useState<string[]>([])
-  const [showModels, setShowModels] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string>('')
+  const [isCustomModel, setIsCustomModel] = useState(false)
   const saveCompletedRef = useRef(false)
 
   useEffect(() => {
@@ -78,14 +110,26 @@ export function AIConfigDialog({ projectId, open, onClose, isOnboarding = false,
       })
       setTestResult(null)
       setErrorMsg('')
-      const cached = config.availableModels ?? []
-      setModelList(cached)
-      setShowModels(cached.length > 0)
+      setIsCustomModel(false)
     }
   }, [open, config])
 
   const provider: AIProvider = formData.provider ?? 'anthropic'
   const preset = PROVIDER_PRESETS[provider]
+
+  // 获取当前可用的模型列表
+  const availableModels = useMemo(() => {
+    if (provider === 'anthropic') {
+      return POPULAR_MODELS.anthropic
+    }
+    // OpenAI 兼容模式：根据 Base URL 识别 Provider 或使用已探测的列表
+    const detectedType = detectProviderType(formData.baseUrl || preset.defaultBaseUrl)
+    if (detectedType && POPULAR_MODELS[detectedType]) {
+      return POPULAR_MODELS[detectedType]
+    }
+    // 回退到已缓存的探测列表
+    return formData.availableModels ?? []
+  }, [provider, formData.baseUrl, preset.defaultBaseUrl, formData.availableModels])
 
   const handleProviderChange = (next: AIProvider) => {
     const nextPreset = PROVIDER_PRESETS[next]
@@ -96,30 +140,23 @@ export function AIConfigDialog({ projectId, open, onClose, isOnboarding = false,
       model: nextPreset.defaultModel,
       availableModels: [],
     }))
-    setShowModels(false)
-    setModelList([])
+    setIsCustomModel(false)
     setTestResult(null)
   }
 
-  const handleDetectModels = async () => {
-    setTesting(true)
+  // 验证并探测模型
+  const verifyAndDetect = async (): Promise<boolean> => {
     setTestResult(null)
     setErrorMsg('')
-    setModelList([])
 
     try {
       if (!formData.apiKey) {
         setErrorMsg('请先填写 API Key')
-        return
-      }
-      if (provider === 'openai-compatible' && !formData.baseUrl) {
-        setErrorMsg('OpenAI 兼容模式需要填写 Base URL')
-        return
+        return false
       }
 
       if (provider === 'anthropic') {
-        // Anthropic doesn't expose a /v1/models list over BYOK — skip detection
-        // and just verify the key works by requesting a 1-token message.
+        // Anthropic: 直接验证 key 是否可用
         const probeBase = (formData.baseUrl || preset.defaultBaseUrl).replace(/\/+$/, '')
         const res = await fetch(`${probeBase}/v1/messages`, {
           method: 'POST',
@@ -140,42 +177,53 @@ export function AIConfigDialog({ projectId, open, onClose, isOnboarding = false,
           throw new Error(body.slice(0, 200) || `HTTP ${res.status}`)
         }
         setTestResult('success')
-        return
+        return true
       }
 
-      const base = (formData.baseUrl || preset.defaultBaseUrl).replace(/\/+$/, '')
-      const normalized = base.endsWith('/v1') ? base : `${base}/v1`
-      const response = await fetch(`${normalized}/models`, {
-        headers: { Authorization: `Bearer ${formData.apiKey}` },
-      })
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}))
-        throw new Error(body.error?.message || `HTTP ${response.status}`)
+      // OpenAI 兼容模式：尝试探测模型列表
+      if (formData.baseUrl) {
+        const base = formData.baseUrl.replace(/\/+$/, '')
+        const normalized = base.endsWith('/v1') ? base : `${base}/v1`
+        try {
+          const response = await fetch(`${normalized}/models`, {
+            headers: { Authorization: `Bearer ${formData.apiKey}` },
+          })
+          if (response.ok) {
+            const data = await response.json()
+            const models = (data?.data ?? []).map((m: { id: string }) => m.id)
+            if (models.length > 0) {
+              // 如果当前选择的模型不在列表中，使用第一个可用模型
+              const currentModel = formData.model || ''
+              const validModel = models.includes(currentModel) ? currentModel : models[0]
+              setFormData(prev => ({ ...prev, model: validModel, availableModels: models }))
+            }
+          }
+        } catch {
+          // 探测失败不影响保存，用户可能使用的是非标准端点
+        }
       }
-      const data = await response.json()
-      const models = (data?.data ?? []).map((m: { id: string }) => m.id)
-      if (models.length === 0) {
-        setErrorMsg('未找到任何模型，请检查 API 凭证')
-        setTestResult('error')
-        return
-      }
-      setModelList(models)
-      setShowModels(true)
+
       setTestResult('success')
-      const defaultModel = formData.model && models.includes(formData.model) ? formData.model : models[0]
-      setFormData(prev => ({ ...prev, model: defaultModel, availableModels: models }))
+      return true
     } catch (error) {
       const msg = error instanceof Error ? error.message : '连接失败'
       setErrorMsg(msg)
       setTestResult('error')
-    } finally {
-      setTesting(false)
+      return false
     }
   }
 
   const handleSave = async () => {
+    setSaving(true)
+    const verified = await verifyAndDetect()
+    if (!verified) {
+      setSaving(false)
+      return
+    }
+
     saveCompletedRef.current = true
     await saveConfig({ ...formData, provider })
+    setSaving(false)
     if (isOnboarding && onSaveComplete) {
       onSaveComplete()
     } else {
@@ -271,61 +319,63 @@ export function AIConfigDialog({ projectId, open, onClose, isOnboarding = false,
             />
           </div>
 
-          {testResult && (
-            <div
-              className={`flex items-center gap-2 text-[12px] ${
-                testResult === 'success' ? 'text-[hsl(var(--accent-jade))]' : 'text-[hsl(var(--accent-coral))]'
-              }`}
-            >
-              {testResult === 'success' ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>已成功连接</span>
-                </>
-              ) : (
-                <>
-                  <XCircle className="h-4 w-4" />
-                  <span>{errorMsg || '连接失败，请检查配置'}</span>
-                </>
-              )}
+          {testResult === 'error' && (
+            <div className="flex items-center gap-2 text-[12px] text-[hsl(var(--accent-coral))]">
+              <XCircle className="h-4 w-4" />
+              <span>{errorMsg || '连接失败，请检查配置'}</span>
             </div>
           )}
 
-          {/* 模型选择 / 探测 — 引导模式和完整模式都显示，确保一次配完 */}
-          {showModels && modelList.length > 0 ? (
-            <div className="space-y-2">
-              <Label>模型列表</Label>
-              <div className="rounded-[var(--radius-card)] surface-2 film-edge p-1 max-h-48 overflow-y-auto">
-                {modelList.map(model => (
-                  <label
-                    key={model}
-                    className="flex items-center gap-2 cursor-pointer hover:bg-[hsl(var(--surface-3))] px-2 py-1.5 rounded-[var(--radius-control)]"
-                  >
-                    <input
-                      type="radio"
-                      name="model"
-                      value={model}
-                      checked={formData.model === model}
-                      onChange={e => setFormData({ ...formData, model: e.target.value })}
-                      className="w-3.5 h-3.5 accent-[hsl(var(--accent-amber))]"
-                    />
-                    <span className="text-[13px] text-mono">{model}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
+          {/* 模型选择 — 智能下拉框或自定义输入 */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
               <Label htmlFor="model">模型</Label>
+              {availableModels.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setIsCustomModel(!isCustomModel)}
+                  className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {isCustomModel ? '选择常用模型' : '输入其他模型'}
+                </button>
+              )}
+            </div>
+            
+            {isCustomModel || availableModels.length === 0 ? (
+              // 自定义输入模式
               <Input
                 id="model"
                 type="text"
                 value={formData.model || ''}
                 onChange={e => setFormData({ ...formData, model: e.target.value })}
                 placeholder={preset.defaultModel}
+                className="font-mono"
               />
-            </div>
-          )}
+            ) : (
+              // 下拉选择模式
+              <div className="relative">
+                <select
+                  id="model"
+                  value={formData.model || ''}
+                  onChange={e => setFormData({ ...formData, model: e.target.value })}
+                  className="w-full h-9 px-3 rounded-[var(--radius-control)] bg-[hsl(var(--surface-2))] border border-[hsl(var(--border))] text-[13px] appearance-none cursor-pointer hover:border-[hsl(var(--foreground)/0.3)] transition-colors"
+                >
+                  {availableModels.map(model => (
+                    <option key={model} value={model}>
+                      {model}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              </div>
+            )}
+            
+            {provider === 'anthropic' && (
+              <p className="text-[11px] text-muted-foreground">
+                推荐 claude-sonnet-4-20250514，性价比最佳
+              </p>
+            )}
+          </div>
 
           {/* 实验性 AI 特性仅在完整设置里显示，引导模式不打扰新用户 */}
           {!isOnboarding && (
@@ -338,15 +388,12 @@ export function AIConfigDialog({ projectId, open, onClose, isOnboarding = false,
         </div>
 
         <DialogFooter>
-          <Button
-            variant="subtle"
-            onClick={handleDetectModels}
-            disabled={testing || !formData.apiKey}
+          <Button 
+            onClick={handleSave} 
+            className={isOnboarding ? 'flex-1' : ''}
+            disabled={saving || !formData.apiKey}
           >
-            {testing ? '测试中…' : provider === 'anthropic' ? '验证凭证' : '自动探测模型'}
-          </Button>
-          <Button onClick={handleSave} className={isOnboarding ? 'flex-1' : ''}>
-            保存
+            {saving ? '验证并保存中…' : '保存'}
           </Button>
         </DialogFooter>
       </DialogContent>

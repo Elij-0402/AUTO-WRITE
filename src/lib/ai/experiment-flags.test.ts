@@ -17,11 +17,11 @@ describe('experiment-flags', () => {
   })
 
   describe('providerCapabilities', () => {
-    it('anthropic supports all three', () => {
+    it('anthropic supports citations and extendedCacheTtl (thinking disabled as stub)', () => {
       expect(providerCapabilities('anthropic')).toEqual({
         citations: true,
         extendedCacheTtl: true,
-        thinking: true,
+        thinking: false,
       })
     })
 
@@ -65,13 +65,13 @@ describe('experiment-flags', () => {
       ).toEqual({ citations: false, extendedCacheTtl: false, thinking: false })
     })
 
-    it('merges partial flag objects with defaults', () => {
+    it('thinking flag is coerced to false regardless of user request (stub removed)', () => {
       expect(
         resolveExperimentFlags({
           provider: 'anthropic',
           experimentFlags: { thinking: true },
         })
-      ).toEqual({ citations: false, extendedCacheTtl: true, thinking: true })
+      ).toEqual({ citations: false, extendedCacheTtl: true, thinking: false })
     })
 
     it('defaults provider to undefined → capabilities all false', () => {

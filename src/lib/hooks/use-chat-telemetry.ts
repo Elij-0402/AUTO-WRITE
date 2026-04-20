@@ -79,7 +79,7 @@ export async function recordChatTurn(params: RecordChatTurnParams): Promise<void
     console.warn('[chat-telemetry] recordUsage failed:', e)
   }
 
-  const experimentGroup = resolveExperimentFlags({
+  const resolvedFlags = resolveExperimentFlags({
     provider: params.config.provider,
     experimentFlags: params.config.experimentFlags,
   })
@@ -88,7 +88,7 @@ export async function recordChatTurn(params: RecordChatTurnParams): Promise<void
     projectId: params.projectId,
     conversationId: params.conversationId,
     messageId: params.assistantMessageId,
-    experimentGroup,
+    experimentGroup: resolvedFlags,
     latencyMs: params.latencyMs,
     inputTokens,
     outputTokens,
@@ -96,6 +96,11 @@ export async function recordChatTurn(params: RecordChatTurnParams): Promise<void
     cacheWriteTokens,
     citationCount: params.citationCount,
     createdAt: Date.now(),
+  }
+
+  // Compute emptyCitationRate — only set when citations flag is enabled
+  if (resolvedFlags.citations) {
+    metric.emptyCitationRate = params.citationCount === 0 ? 1 : 0
   }
 
   try {

@@ -382,6 +382,7 @@ function ExperimentFlagsSection({ provider, flags, onChange }: ExperimentFlagsSe
       <div className="rounded-[var(--radius-card)] surface-2 film-edge p-2 space-y-1">
         {(Object.keys(FLAG_LABELS) as (keyof ExperimentFlags)[]).map(key => {
           const meta = FLAG_LABELS[key]
+          if (!meta) return null
           const canEnable = caps[key]
           const checked = canEnable && flags[key]
           return (

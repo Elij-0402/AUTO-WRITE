@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useAIChat, ChatMessage } from '@/lib/hooks/use-ai-chat'
 import { ConsistencyWarningCard, type Contradiction } from './consistency-warning-card'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
@@ -38,18 +38,30 @@ const STARTER_PROMPTS = [
 const CHAR_LIMIT = 4000
 
 export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete, onSwitchToWorldTab }: AIChatPanelProps) {
-  const { conversations, create: createConversation, rename: renameConversation, remove: removeConversation } = useConversations(projectId)
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
+  const { conversations, remove: removeConversation } = useConversations(projectId)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  // Auto-select most recent conversation when the list first loads a conversation
-  // (or replace the active one when it vanishes). Using "set state during render"
-  // per React docs to avoid useEffect cascading renders.
-  if (activeConversationId === null && conversations.length > 0) {
-    setActiveConversationId(conversations[0].id)
-  }
+  // Always use the single conversation (conversations[0]).
+  // Auto-create if none exist yet (user-triggered session management removed).
+  const db = useMemo(() => createProjectDB(projectId), [projectId])
+  const activeConversationId = conversations[0]?.id ?? null
 
-  const activeConversation = conversations.find(c => c.id === activeConversationId) ?? null
+  // Auto-create the single default conversation if list is empty
+  useEffect(() => {
+    if (!conversations.length && activeConversationId === null) {
+      const id = crypto.randomUUID()
+      db.table('conversations').add({
+        id,
+        projectId,
+        title: '对话',
+        messageCount: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }).catch(console.error)
+    }
+  }, [conversations.length, activeConversationId, db, projectId])
+
+  const activeConversation = conversations[0] ?? null
 
   const {
     messages,
@@ -70,23 +82,9 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const { dismiss, filterDismissed, reset } = useDismissedSuggestions()
   const { config: aiConfig, saveConfig: saveAIConfig, experimentFlags } = useAIConfig(projectId)
 
-  const handleNewConversation = useCallback(async () => {
-    const id = await createConversation('新对话')
-    setActiveConversationId(id)
-    setDrawerOpen(false)
-  }, [createConversation])
-
-  const handleSelectConversation = useCallback((id: string) => {
-    setActiveConversationId(id)
-    setDrawerOpen(false)
-  }, [])
-
   const handleDeleteConversation = useCallback(async (id: string) => {
     await removeConversation(id)
-    if (activeConversationId === id) {
-      setActiveConversationId(null)
-    }
-  }, [removeConversation, activeConversationId])
+  }, [removeConversation])
 
   const [input, setInput] = useState('')
   const [chatError, setChatError] = useState<string | null>(null)
@@ -135,22 +133,6 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     const text = (overrideText ?? input).trim()
     if (!text || loading) return
     if (!overrideText) setInput('')
-
-    // Ensure a conversation exists before sending. Auto-name new conversations
-    // from the first user message (truncated to 20 chars).
-    let convId = activeConversationId
-    const isFirstMessage = convId !== null && activeConversation?.messageCount === 0
-    if (!convId) {
-      const title = text.length > 20 ? text.slice(0, 20) + '…' : text
-      convId = await createConversation(title)
-      setActiveConversationId(convId)
-      // useAIChat will pick up the new id on next render; defer sendMessage.
-      // Wait one tick so hook effect updates state before sendMessage closes over it.
-      await new Promise(r => setTimeout(r, 0))
-    } else if (isFirstMessage && activeConversation?.title === '新对话') {
-      const title = text.length > 20 ? text.slice(0, 20) + '…' : text
-      await renameConversation(convId, title)
-    }
 
     const result = await sendMessage(text)
     if (!result.success && result.needsConfig) {
@@ -310,14 +292,6 @@ const handleIntentionalContradiction = async (contradiction: Contradiction, _ind
           title="对话历史"
         >
           <History className="h-4 w-4" />
-        </button>
-        <button
-          onClick={handleNewConversation}
-          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground hover:bg-[hsl(var(--surface-2))] hover:text-foreground transition-colors"
-          aria-label="新建对话"
-          title="新建对话"
-        >
-          <Feather className="h-4 w-4" />
         </button>
         <div className="flex flex-col min-w-0 flex-1 px-1">
           <span className="text-[14px] font-semibold text-foreground leading-none truncate" title={activeConversation?.title ?? '墨客'}>
@@ -601,10 +575,6 @@ const handleIntentionalContradiction = async (contradiction: Contradiction, _ind
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         conversations={conversations}
-        activeId={activeConversationId}
-        onSelect={handleSelectConversation}
-        onCreate={handleNewConversation}
-        onRename={renameConversation}
         onDelete={handleDeleteConversation}
       />
     </div>

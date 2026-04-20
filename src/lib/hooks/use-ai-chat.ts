@@ -8,8 +8,6 @@ import { useConsistencyExemptions } from './use-consistency-exemptions'
 import {
   trimToTokenBudget,
 } from './use-context-injection'
-import { searchRelevantEntries } from '../rag/search'
-import { getDefaultEmbedder } from '../rag/default-embedder'
 import { parseAISuggestions, type Suggestion } from '../ai/suggestion-parser'
 import { streamChat, supportsToolUse, type ProviderStreamMessage } from '../ai/client'
 import { buildSegmentedSystemPrompt } from '../ai/prompts'
@@ -21,7 +19,7 @@ import type {
   ReportContradictionInput,
 } from '../ai/tools/schemas'
 import type { AIEvent, AIToolInput } from '../ai/events'
-import type { WorldEntryType } from '../types'
+import type { WorldEntry, WorldEntryType } from '../types'
 
 export interface ChatMessage {
   id: string
@@ -121,21 +119,9 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     // Clear interrupted tool calls from any prior aborted stream.
     setInterruptedToolCalls([])
 
-    // Hybrid RAG retrieval replaces the pure keyword matcher (Stage 2).
+    // Pure keyword matching replaces hybrid RAG — implemented in Task 7
     const db = createProjectDB(projectId)
-    const embedder = getDefaultEmbedder()
-    const relevantEntries = entries
-      ? await searchRelevantEntries({
-          db,
-          projectId,
-          embedder,
-          query: content,
-          entries,
-          entriesByType,
-          topK: 12,
-        })
-      : []
-    const trimmedEntries = trimToTokenBudget(relevantEntries, 4000)
+    const trimmedEntries: WorldEntry[] = []
 
     // Load the conversation for rollingSummary + window boundary.
     const conversation = await db.table('conversations').get(conversationId) as

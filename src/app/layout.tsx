@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
-import { Noto_Sans_SC, JetBrains_Mono, Instrument_Serif } from "next/font/google";
+import { Noto_Sans_SC, JetBrains_Mono, Instrument_Serif, Inter } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
 
 const notoSansSC = Noto_Sans_SC({
   variable: "--font-noto-sans-sc",
@@ -38,9 +44,12 @@ export default function RootLayout({
     <html
       lang="zh-CN"
       suppressHydrationWarning
-      className={`${notoSansSC.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className={`${inter.variable} ${notoSansSC.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
       <head>
+        {/* Google Fonts — Inter for UI */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         {/* LXGW 字体家族 — CDN。Google Fonts 不提供。per DESIGN.md */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css" />

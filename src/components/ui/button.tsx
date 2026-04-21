@@ -6,10 +6,10 @@ import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
   [
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap",
-    "rounded-[var(--radius-control)] text-[14px] font-medium",
-    "transition-colors duration-[var(--dur-fast)] ease-[cubic-bezier(0.4,0,0.2,1)]",
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm",
+    "text-[14px] font-medium transition-colors duration-100 ease-out",
     "disabled:pointer-events-none disabled:opacity-40",
+    "active:scale-[0.98] active:duration-100",
     "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   ].join(" "),
   {
@@ -17,7 +17,7 @@ const buttonVariants = cva(
       variant: {
         default: [
           "bg-primary text-primary-foreground",
-          "hover:bg-primary/90",
+          "hover:opacity-90",
         ].join(" "),
         subtle: [
           "bg-[hsl(var(--surface-2))] text-foreground border border-border",
@@ -25,25 +25,21 @@ const buttonVariants = cva(
         ].join(" "),
         destructive: [
           "bg-destructive text-destructive-foreground",
-          "hover:bg-destructive/90",
+          "hover:opacity-90",
         ].join(" "),
         outline: [
           "bg-transparent text-foreground border border-border",
-          "hover:bg-[hsl(var(--surface-2))] hover:border-[hsl(var(--border-strong))]",
+          "hover:bg-[hsl(var(--surface-1))] hover:border-[hsl(var(--border-strong))]",
         ].join(" "),
         secondary: [
           "bg-[hsl(var(--surface-2))] text-foreground",
           "hover:bg-[hsl(var(--surface-3))]",
         ].join(" "),
-        ghost: "bg-transparent hover:bg-[hsl(var(--surface-2))] text-foreground/90 hover:text-foreground",
+        ghost: "bg-transparent hover:bg-[hsl(var(--surface-2))] text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        amber: [
+        primary: [
           "bg-primary text-primary-foreground",
-          "hover:bg-primary/90",
-        ].join(" "),
-        jade: [
-          "bg-[hsl(var(--accent-jade))]/12 text-[hsl(var(--accent-jade))] border border-[hsl(var(--accent-jade))]/30",
-          "hover:bg-[hsl(var(--accent-jade))]/20",
+          "hover:opacity-90",
         ].join(" "),
       },
       size: {

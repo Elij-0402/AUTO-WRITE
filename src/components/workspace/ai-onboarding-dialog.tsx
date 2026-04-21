@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useId } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAIConfig, AIProvider } from '@/lib/hooks/use-ai-config'
 import {
   Dialog,
@@ -21,9 +21,12 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { XCircle, ExternalLink, ChevronDown } from 'lucide-react'
 
-interface AIConfigDialogProps {
+interface AIOnboardingDialogProps {
   open: boolean
-  onClose: () => void
+  /** Called when user explicitly skips onboarding */
+  onSkip: () => void
+  /** Called on successful save */
+  onSaveComplete: () => void
 }
 
 type PresetKey = 'anthropic' | 'deepseek' | 'openrouter'
@@ -104,25 +107,23 @@ async function probeEndpoint(
   }
 }
 
-export function AIConfigDialog({ open, onClose }: AIConfigDialogProps) {
-  const { config, saveConfig } = useAIConfig()
+export function AIOnboardingDialog({ open, onSkip, onSaveComplete }: AIOnboardingDialogProps) {
+  const { saveConfig } = useAIConfig()
   const [presetKey, setPresetKey] = useState<PresetKey>('anthropic')
   const [apiKey, setApiKey] = useState('')
-  const [model, setModel] = useState('')
+  const [model, setModel] = useState('claude-sonnet-4-20250514')
   const [saving, setSaving] = useState(false)
   const [probeError, setProbeError] = useState('')
   const saveCompletedRef = useRef(false)
-  const modelInputId = useId()
-  const modelListId = useId()
 
   useEffect(() => {
     if (open) {
       saveCompletedRef.current = false
       setProbeError('')
-      setApiKey(config.apiKey ?? '')
-      setModel(config.model ?? '')
+      setApiKey('')
+      setModel('claude-sonnet-4-20250514')
     }
-  }, [open, config])
+  }, [open])
 
   const preset = PRESETS[presetKey]
 
@@ -152,22 +153,35 @@ export function AIConfigDialog({ open, onClose }: AIConfigDialogProps) {
     })
     saveCompletedRef.current = true
     setSaving(false)
-    onClose()
+    onSaveComplete()
+  }
+
+  function handleEscapeKeyDown(e: KeyboardEvent) {
+    if (!saveCompletedRef.current) e.preventDefault()
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handleInteractOutside(e: any) {
+    if (!saveCompletedRef.current) e.preventDefault()
   }
 
   return (
-    <Dialog open={open} onOpenChange={openState => { if (!openState) onClose() }}>
-      <DialogContent className="sm:max-w-[460px]">
+    <Dialog open={open}>
+      <DialogContent
+        className="sm:max-w-[460px]"
+        onEscapeKeyDown={handleEscapeKeyDown}
+        onInteractOutside={handleInteractOutside}
+      >
         <DialogHeader>
-          <DialogTitle>AI 设置</DialogTitle>
+          <DialogTitle>配置 AI</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
           {/* 服务商 dropdown */}
           <div className="space-y-1.5">
-            <Label htmlFor="provider">服务商</Label>
+            <Label htmlFor="onboard-provider">服务商</Label>
             <Select value={presetKey} onValueChange={(v: PresetKey) => handleProviderChange(v)}>
-              <SelectTrigger id="provider">
+              <SelectTrigger id="onboard-provider">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -183,7 +197,7 @@ export function AIConfigDialog({ open, onClose }: AIConfigDialogProps) {
           {/* API Key */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="apiKey">API Key</Label>
+              <Label htmlFor="onboard-apiKey">API Key</Label>
               {preset.consoleUrl && (
                 <a
                   href={preset.consoleUrl}
@@ -196,7 +210,7 @@ export function AIConfigDialog({ open, onClose }: AIConfigDialogProps) {
               )}
             </div>
             <Input
-              id="apiKey"
+              id="onboard-apiKey"
               type="password"
               value={apiKey}
               onChange={e => setApiKey(e.target.value)}
@@ -205,23 +219,19 @@ export function AIConfigDialog({ open, onClose }: AIConfigDialogProps) {
             <p className="text-[11px] text-muted-foreground">API Key 只保存在本地浏览器，不会上传</p>
           </div>
 
-          {/* 模型 — datalist combobox; only visible when apiKey is non-empty */}
+          {/* 模型 — only shown when apiKey is non-empty */}
           {apiKey && (
             <div className="space-y-1.5">
-              <Label htmlFor={modelInputId}>模型</Label>
+              <Label htmlFor="onboard-model">模型</Label>
               <div className="relative">
                 <input
-                  id={modelInputId}
+                  id="onboard-model"
                   type="text"
-                  list={modelListId}
                   value={model}
                   onChange={e => setModel(e.target.value)}
                   placeholder={preset.defaultModel}
                   className="w-full h-9 px-3 rounded-[var(--radius-control)] bg-[hsl(var(--surface-2))] border border-[hsl(var(--border))] text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(var(--accent))] transition-colors"
                 />
-                <datalist id={modelListId}>
-                  {preset.popularModels.map(m => <option key={m} value={m} />)}
-                </datalist>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
             </div>
@@ -237,6 +247,9 @@ export function AIConfigDialog({ open, onClose }: AIConfigDialogProps) {
         </div>
 
         <DialogFooter className="gap-2">
+          <Button variant="ghost" onClick={onSkip}>
+            跳过
+          </Button>
           <Button
             onClick={handleSave}
             disabled={saving || !apiKey}

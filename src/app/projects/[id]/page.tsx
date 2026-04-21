@@ -19,6 +19,7 @@ import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
 import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
+import { AIOnboardingDialog } from '@/components/workspace/ai-onboarding-dialog'
 import { OnboardingTourDialog } from '@/components/workspace/onboarding-tour-dialog'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
@@ -50,7 +51,7 @@ export default function ProjectPage() {
   const { chapters } = useChapters(params.id)
   const idle = useIdleMode()
   const { entries, entriesByType, addEntry } = useWorldEntries(params.id)
-  const { config, loading: aiConfigLoading } = useAIConfig(params.id)
+  const { config, loading: aiConfigLoading } = useAIConfig()
   const [onboardingOpen, setOnboardingOpen] = useState(false)
   const [tourOpen, setTourOpen] = useState(false)
 
@@ -241,17 +242,16 @@ export default function ProjectPage() {
           setSelectedEntryId={setActiveWorldEntryId}
         >
         <AIConfigDialog
-          projectId={params.id}
           open={aiConfigOpen}
           onClose={() => setAiConfigOpen(false)}
-          isOnboarding={false}
         />
 
-        <AIConfigDialog
-          projectId={params.id}
+        <AIOnboardingDialog
           open={onboardingOpen}
-          onClose={() => {}}
-          isOnboarding={true}
+          onSkip={() => {
+            setOnboardingOpen(false)
+            setTourOpen(true)
+          }}
           onSaveComplete={() => {
             setOnboardingOpen(false)
             setTourOpen(true)

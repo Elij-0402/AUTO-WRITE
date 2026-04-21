@@ -25,7 +25,7 @@ export default function AnalysisPage() {
   const [tab, setTab] = useState<Tab>('relations')
   const { entries } = useWorldEntries(params.id)
   const relations = useAllRelations(params.id)
-  const { uiFlags } = useAIConfig(params.id)
+  const { uiFlags } = useAIConfig()
 
   const tabs = useMemo(() => {
     return ALL_TABS.filter(t => {

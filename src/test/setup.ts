@@ -4,6 +4,11 @@ import { vi } from 'vitest'
 // Mock IndexedDB for Dexie.js tests
 import 'fake-indexeddb/auto'
 
+// JSDOM missing hasPointerCapture — needed by @radix-ui/react-select
+Element.prototype.hasPointerCapture = vi.fn()
+// JSDOM missing scrollIntoView — needed by @radix-ui/react-select
+Element.prototype.scrollIntoView = vi.fn()
+
 // Mock Supabase client for tests
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({

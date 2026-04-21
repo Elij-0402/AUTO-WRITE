@@ -86,7 +86,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const { entriesByType, addEntry, updateEntryFields } = useWorldEntries(projectId)
   const { addRelation } = useRelations(projectId)
   const { dismiss, filterDismissed, reset } = useDismissedSuggestions()
-  const { config: aiConfig, saveConfig: saveAIConfig } = useAIConfig(projectId)
+  const { config: aiConfig, saveConfig: saveAIConfig } = useAIConfig()
 
   const handleDeleteConversation = useCallback(async (id: string) => {
     await removeConversation(id)

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useAIChat, ChatMessage } from '@/lib/hooks/use-ai-chat'
+import { useWizardMode } from '@/lib/hooks/use-wizard-mode'
 import { ConsistencyWarningCard, type Contradiction } from './consistency-warning-card'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { useConversations } from '@/lib/hooks/use-conversations'
@@ -31,6 +32,8 @@ interface AIChatPanelProps {
   selectedText?: string | null
   onDiscussComplete?: () => void
   onSwitchToWorldTab?: () => void
+  wizardModeActive?: boolean
+  onWizardModeComplete?: () => void
 }
 
 const STARTER_PROMPTS = [
@@ -42,7 +45,7 @@ const STARTER_PROMPTS = [
 
 const CHAR_LIMIT = 4000
 
-export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete, onSwitchToWorldTab }: AIChatPanelProps) {
+export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete, onSwitchToWorldTab, wizardModeActive, onWizardModeComplete }: AIChatPanelProps) {
   const { conversations, remove: removeConversation } = useConversations(projectId)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -82,6 +85,36 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     clearContradiction,
     cacheHint,
   } = useAIChat(projectId, activeConversationId, { selectedText: selectedText || undefined })
+
+  // Wizard mode
+  const {
+    state: wizardState,
+    options: wizardOptions,
+    result: wizardResult,
+    error: wizardError,
+    triggerWizardMode,
+    selectOption,
+    cancel: cancelWizard,
+    reset: resetWizard,
+  } = useWizardMode({
+    projectId,
+    conversationId: activeConversationId,
+    selectedText,
+  })
+
+  // Trigger wizard mode when externally activated
+  useEffect(() => {
+    if (wizardModeActive && wizardState === 'idle') {
+      void triggerWizardMode()
+    }
+  }, [wizardModeActive, wizardState, triggerWizardMode])
+
+  // Notify parent when wizard mode completes
+  useEffect(() => {
+    if ((wizardState === 'done' || wizardState === 'error') && wizardModeActive) {
+      onWizardModeComplete?.()
+    }
+  }, [wizardState, wizardModeActive, onWizardModeComplete])
 
   const { entriesByType, addEntry, updateEntryFields } = useWorldEntries(projectId)
   const { addRelation } = useRelations(projectId)
@@ -484,6 +517,138 @@ const handleIntentionalContradiction = async (contradiction: Contradiction, _ind
           </button>
         )}
       </div>
+
+      {/* ── Wizard Mode Overlay ─────────────────────────────── */}
+      {wizardState !== 'idle' && (
+        <div className="absolute inset-x-0 top-0 z-30 flex items-start justify-center pt-16 px-4">
+          <div
+            className="w-full max-w-sm p-4 rounded-[var(--radius-lg)] border border-[hsl(var(--accent))]/30 bg-[hsl(var(--surface-1))]/95 backdrop-blur-sm shadow-[var(--shadow-lift-md)] animate-fade-up"
+            role="dialog"
+            aria-modal="true"
+            aria-label="AI构思搭档"
+          >
+            {/* Thinking state */}
+            {wizardState === 'thinking' && (
+              <div className="flex flex-col items-center gap-3 py-4">
+                <div className="flex items-center gap-2">
+                  <span className="w-0.5 h-4 bg-[hsl(var(--accent))] animate-blink" />
+                  <span className="text-[14px] font-medium text-[hsl(var(--foreground))]">构思搭档思考中…</span>
+                </div>
+                <p className="text-[12px] text-[hsl(var(--muted))]">AI正在分析世界观和上下文</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { cancelWizard(); onWizardModeComplete?.() }}
+                  className="text-[hsl(var(--muted))]"
+                >
+                  取消
+                </Button>
+              </div>
+            )}
+
+            {/* Options state */}
+            {wizardState === 'options' && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-0.5 h-4 bg-[hsl(var(--accent))]" />
+                  <span className="text-[14px] font-medium text-[hsl(var(--foreground))]">请选择方向</span>
+                </div>
+                <div className="space-y-2">
+                  {wizardOptions.map((option, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => void selectOption(option)}
+                      className="w-full text-left p-3 rounded-[var(--radius-md)] border border-[hsl(var(--border))] hover:border-[hsl(var(--accent))]/40 hover:bg-[hsl(var(--surface-2))] transition-colors animate-slide-in"
+                      style={{ animationDelay: `${idx * 100}ms` }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-medium text-[hsl(var(--foreground))]">{option.title}</span>
+                        <span className="text-[11px] px-1.5 py-0.5 rounded bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))]">
+                          {option.type === 'logical' ? '情理之中' : option.type === 'wild' ? '天马行空' : '自定义'}
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-[hsl(var(--muted))] mt-1">{option.description}</p>
+                    </button>
+                  ))}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { cancelWizard(); onWizardModeComplete?.() }}
+                  className="w-full text-[hsl(var(--muted))] mt-2"
+                >
+                  取消
+                </Button>
+              </div>
+            )}
+
+            {/* Expanding state */}
+            {wizardState === 'expanding' && (
+              <div className="flex flex-col items-center gap-3 py-4">
+                <div className="flex items-center gap-2">
+                  <span className="w-0.5 h-4 bg-[hsl(var(--accent))] animate-blink" />
+                  <span className="text-[14px] font-medium text-[hsl(var(--foreground))]">展开情节…</span>
+                </div>
+                <p className="text-[12px] text-[hsl(var(--muted))]">正在生成具体建议</p>
+              </div>
+            )}
+
+            {/* Done state */}
+            {wizardState === 'done' && wizardResult && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-0.5 h-4 bg-[hsl(var(--accent))]" />
+                  <span className="text-[14px] font-medium text-[hsl(var(--foreground))]">情节建议</span>
+                </div>
+                <div className="p-3 rounded-[var(--radius-md)] bg-[hsl(var(--surface-2))] border border-[hsl(var(--border))]">
+                  <p className="text-[13px] text-[hsl(var(--foreground))]/90 leading-relaxed whitespace-pre-wrap">
+                    {wizardResult}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      onInsertDraft?.(wizardResult)
+                      resetWizard()
+                      onWizardModeComplete?.()
+                    }}
+                    className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent-dim))]"
+                  >
+                    插入编辑器
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { resetWizard(); onWizardModeComplete?.() }}
+                    className="text-[hsl(var(--muted))]"
+                  >
+                    关闭
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Error state */}
+            {wizardState === 'error' && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-[hsl(var(--danger))]" />
+                  <span className="text-[14px] font-medium text-[hsl(var(--danger))]">{wizardError || '发生错误'}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { resetWizard(); onWizardModeComplete?.() }}
+                  className="text-[hsl(var(--muted))]"
+                >
+                  关闭
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Input ──────────────────────────────────────────── */}
       <div className="p-3 space-y-2 border-t border-border">

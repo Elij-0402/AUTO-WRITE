@@ -46,6 +46,7 @@ export default function ProjectPage() {
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
+  const [wizardModeActive, setWizardModeActive] = useState(false)
 
   const { activeTab, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(params.id)
   const { chapters } = useChapters(params.id)
@@ -167,6 +168,18 @@ export default function ProjectPage() {
           e.preventDefault()
           handleTabChange('world')
         }
+      }
+
+      // Ctrl+Shift+W: trigger wizard mode
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'w') {
+        const target = e.target as HTMLElement | null
+        const isEditable =
+          target?.tagName === 'INPUT' ||
+          target?.tagName === 'TEXTAREA' ||
+          target?.isContentEditable
+        if (isEditable) return
+        e.preventDefault()
+        setWizardModeActive(true)
       }
     }
     document.addEventListener('keydown', handleKeyDown)
@@ -354,7 +367,7 @@ export default function ProjectPage() {
                 >
                   <div className="h-full">
                     <PanelErrorBoundary label="AI 对话">
-                      <AIChatPanel projectId={params.id} onInsertDraft={handleInsertDraft} selectedText={selectedText} onDiscussComplete={() => setSelectedText(null)} />
+                      <AIChatPanel projectId={params.id} onInsertDraft={handleInsertDraft} selectedText={selectedText} onDiscussComplete={() => setSelectedText(null)} wizardModeActive={wizardModeActive} onWizardModeComplete={() => setWizardModeActive(false)} />
                     </PanelErrorBoundary>
                   </div>
                 </Panel>

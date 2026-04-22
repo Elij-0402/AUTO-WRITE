@@ -14,8 +14,9 @@ import { MessageBubble } from './message-bubble'
 import { RelationshipSuggestionCard, NewEntrySuggestionCard } from './suggestion-card'
 import { NewEntryDialog, type NewEntryPrefillData } from './new-entry-dialog'
 import { ConversationDrawer } from './conversation-drawer'
-import { Send, Loader2, Lightbulb, AlertTriangle, Feather, X, ArrowDown, Quote, Square, History } from 'lucide-react'
+import { Send, Loader2, Lightbulb, AlertTriangle, Feather, X, ArrowDown, Quote, Square, History, Wand } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Textarea } from '@/components/ui/textarea'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 import type { Suggestion, RelationshipSuggestion, NewEntrySuggestion } from '@/lib/ai/suggestion-parser'
@@ -34,6 +35,8 @@ interface AIChatPanelProps {
   onSwitchToWorldTab?: () => void
   wizardModeActive?: boolean
   onWizardModeComplete?: () => void
+  /** Called when the user clicks the wizard mode button in the header */
+  onTriggerWizardMode?: () => void
 }
 
 const STARTER_PROMPTS = [
@@ -45,7 +48,7 @@ const STARTER_PROMPTS = [
 
 const CHAR_LIMIT = 4000
 
-export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete, onSwitchToWorldTab, wizardModeActive, onWizardModeComplete }: AIChatPanelProps) {
+export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete, onSwitchToWorldTab, wizardModeActive, onWizardModeComplete, onTriggerWizardMode }: AIChatPanelProps) {
   const { conversations, loading: conversationsLoading, remove: removeConversation } = useConversations(projectId)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -354,6 +357,20 @@ const handleIntentionalContradiction = async (contradiction: Contradiction, _ind
           </span>
         </div>
         <div className="flex items-center gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={onTriggerWizardMode}
+                aria-label="构思搭档"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Wand className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>构思搭档 (Ctrl+Shift+W)</TooltipContent>
+          </Tooltip>
           <span className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
             <span
               aria-hidden

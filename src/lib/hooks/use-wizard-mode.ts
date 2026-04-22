@@ -21,6 +21,7 @@ import {
 } from './use-context-injection'
 import { type SegmentedSystemPrompt } from '../ai/prompts'
 import { streamChat, type ProviderStreamMessage } from '../ai/client'
+import { errorHint } from '../ai/error-hint'
 
 export type WizardModeState =
   | 'idle'
@@ -215,7 +216,7 @@ export function useWizardMode({ projectId, conversationId, selectedText }: UseWi
         setState('idle')
       } else {
         console.error('Wizard mode error:', err)
-        setError(err instanceof Error ? err.message : '发生错误')
+        setError(errorHint(err instanceof Error ? err.message : '发生错误'))
         setState('error')
       }
     }
@@ -312,7 +313,7 @@ export function useWizardMode({ projectId, conversationId, selectedText }: UseWi
         setState('options')
       } else {
         console.error('Expand option error:', err)
-        setError(err instanceof Error ? err.message : '发生错误')
+        setError(errorHint(err instanceof Error ? err.message : '发生错误'))
         setState('error')
       }
     }

@@ -58,9 +58,11 @@ export default function ProjectPage() {
 
   // 强制引导：只有在 aiConfig 加载完、确认没 key 时才弹
   // （否则 Dexie 还在读的时候会误触发）
+  // 只在用户首次到达时弹出（localStorage 标记），跳过后不再重复打扰
   useEffect(() => {
     if (aiConfigLoading) return
-    if (!config.apiKey) {
+    const hasSeenOnboarding = localStorage.getItem('inkforge-has-seen-onboarding')
+    if (!hasSeenOnboarding && !config.apiKey) {
       setOnboardingOpen(true)
     }
   }, [aiConfigLoading, config.apiKey])
@@ -262,10 +264,12 @@ export default function ProjectPage() {
         <AIOnboardingDialog
           open={onboardingOpen}
           onSkip={() => {
+            localStorage.setItem('inkforge-has-seen-onboarding', '1')
             setOnboardingOpen(false)
             setTourOpen(true)
           }}
           onSaveComplete={() => {
+            localStorage.setItem('inkforge-has-seen-onboarding', '1')
             setOnboardingOpen(false)
             setTourOpen(true)
           }}
@@ -367,7 +371,7 @@ export default function ProjectPage() {
                 >
                   <div className="h-full">
                     <PanelErrorBoundary label="AI 对话">
-                      <AIChatPanel projectId={params.id} onInsertDraft={handleInsertDraft} selectedText={selectedText} onDiscussComplete={() => setSelectedText(null)} wizardModeActive={wizardModeActive} onWizardModeComplete={() => setWizardModeActive(false)} />
+                      <AIChatPanel projectId={params.id} onInsertDraft={handleInsertDraft} selectedText={selectedText} onDiscussComplete={() => setSelectedText(null)} wizardModeActive={wizardModeActive} onWizardModeComplete={() => setWizardModeActive(false)} onTriggerWizardMode={() => setWizardModeActive(true)} />
                     </PanelErrorBoundary>
                   </div>
                 </Panel>

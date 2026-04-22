@@ -44,7 +44,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — 系统分层与数据模型
 - [`docs/AI-LAYER.md`](docs/AI-LAYER.md) — provider 抽象 / tool use / prompt caching
-- [`docs/RAG.md`](docs/RAG.md) — 嵌入、向量存储、hybrid 检索
 - [`CHANGELOG.md`](CHANGELOG.md) — 版本变更
 
 ## License

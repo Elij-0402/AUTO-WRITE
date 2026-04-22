@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useId } from 'react'
 import { useAIConfig, AIProvider } from '@/lib/hooks/use-ai-config'
+import { validateURLForSSRF, SSRFError } from '@/lib/ai/ssrf-guard'
 import {
   Dialog,
   DialogContent,
@@ -137,8 +138,15 @@ export function AIConfigDialog({ open, onClose }: AIConfigDialogProps) {
     setSaving(true)
     setProbeError('')
     try {
-      await probeEndpoint(preset.storeAs, preset.baseUrl, apiKey, model || preset.defaultModel)
+      const probeBase = preset.baseUrl.replace(/\/+$/, '')
+      validateURLForSSRF(probeBase)
+      await probeEndpoint(preset.storeAs, probeBase, apiKey, model || preset.defaultModel)
     } catch (err) {
+      if (err instanceof SSRFError) {
+        setProbeError('SSRF 防护：禁止访问内网或云元数据地址')
+        setSaving(false)
+        return
+      }
       const msg = err instanceof Error ? err.message : '连接失败'
       setProbeError(errorHint(msg))
       setSaving(false)

@@ -83,7 +83,7 @@ export function ConsistencyScanner({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <ShieldCheck className="h-5 w-5 text-[hsl(var(--accent-teal))]" />
+        <ShieldCheck className="h-5 w-5 text-[hsl(var(--success))]" />
         <h2 className="text-[15px] font-medium">主动一致性扫描</h2>
       </div>
 
@@ -152,7 +152,7 @@ export function ConsistencyScanner({
           </div>
           <div className="h-2 rounded-full bg-[hsl(var(--surface-3))] overflow-hidden">
             <div
-              className="h-full bg-[hsl(var(--accent-teal))] transition-all duration-300 ease-out"
+              className="h-full bg-[hsl(var(--success))] transition-all duration-300 ease-out"
               style={{ width: `${(progress.current / progress.total) * 100}%` }}
             />
           </div>
@@ -182,7 +182,7 @@ export function ConsistencyScanner({
       {/* Empty state - no violations */}
       {noViolations && (
         <div className="text-center py-12 rounded-[var(--radius-card)] surface-2">
-          <ShieldCheck className="h-10 w-10 mx-auto mb-3 text-[hsl(var(--accent-teal))] opacity-40" />
+          <ShieldCheck className="h-10 w-10 mx-auto mb-3 text-[hsl(var(--success))] opacity-40" />
           <p className="text-[14px] font-medium text-foreground">未发现矛盾</p>
           <p className="text-[12px] text-muted-foreground mt-1">
             章节内容与世界观百科保持一致

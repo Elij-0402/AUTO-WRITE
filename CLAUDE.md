@@ -90,3 +90,9 @@ Active changes live in `openspec/changes/`, archived changes in `openspec/change
 - Prompt caching enabled by default (1 hour TTL) for Anthropic provider
 - Structured suggestions via tool use, not regex parsing
 - Two-level database isolation: meta-level (projects) and project-level (content)
+
+## GStack
+
+Use the `/browse` skill from gstack for all web browsing. Never use `mcp__playwright__*` or `mcp__claude-in-chrome__*` tools.
+
+Available skills: /office-hours, /plan-ceo-review, /plan-eng-review, /plan-design-review, /design-consultation, /design-shotgun, /design-html, /review, /ship, /land-and-deploy, /canary, /benchmark, /browse, /connect-chrome, /qa, /qa-only, /design-review, /setup-browser-cookies, /setup-deploy, /retro, /investigate, /document-release, /codex, /cso, /autoplan, /plan-devex-review, /devex-review, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade, /learn

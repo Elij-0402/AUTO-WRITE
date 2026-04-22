@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogFooter,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
 import {
   Select,
@@ -158,8 +159,9 @@ export function AIConfigDialog({ open, onClose }: AIConfigDialogProps) {
   return (
     <Dialog open={open} onOpenChange={openState => { if (!openState) onClose() }}>
       <DialogContent className="sm:max-w-[460px]">
-        <DialogHeader>
+<DialogHeader>
           <DialogTitle>AI 设置</DialogTitle>
+          <DialogDescription>配置 AI 服务商、API Key 和模型参数</DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-2">

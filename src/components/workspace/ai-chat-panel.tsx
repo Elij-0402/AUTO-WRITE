@@ -46,7 +46,7 @@ const STARTER_PROMPTS = [
 const CHAR_LIMIT = 4000
 
 export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete, onSwitchToWorldTab, wizardModeActive, onWizardModeComplete }: AIChatPanelProps) {
-  const { conversations, remove: removeConversation } = useConversations(projectId)
+  const { conversations, loading: conversationsLoading, remove: removeConversation } = useConversations(projectId)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   // Always use the single conversation (conversations[0]).
@@ -54,20 +54,21 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const db = useMemo(() => createProjectDB(projectId), [projectId])
   const activeConversationId = conversations[0]?.id ?? null
 
-  // Auto-create the single default conversation if list is empty
+// Auto-create the single default conversation if list is empty
   useEffect(() => {
-    if (!conversations.length && activeConversationId === null) {
-      const id = crypto.randomUUID()
-      db.table('conversations').add({
-        id,
-        projectId,
-        title: '对话',
-        messageCount: 0,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }).catch(console.error)
-    }
-  }, [conversations.length, activeConversationId, db, projectId])
+    if (conversationsLoading) return
+    if (conversations.length > 0) return
+    if (activeConversationId !== null) return
+    const id = crypto.randomUUID()
+    db.table('conversations').add({
+      id,
+      projectId,
+      title: '对话',
+      messageCount: 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }).catch(console.error)
+  }, [conversationsLoading, conversations.length, activeConversationId, db, projectId])
 
   const activeConversation = conversations[0] ?? null
 

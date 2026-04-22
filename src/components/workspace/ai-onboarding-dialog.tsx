@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogFooter,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
 import {
   Select,
@@ -174,6 +175,7 @@ export function AIOnboardingDialog({ open, onSkip, onSaveComplete }: AIOnboardin
       >
         <DialogHeader>
           <DialogTitle>配置 AI</DialogTitle>
+          <DialogDescription>设置你的 AI API Key 以开始使用</DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-2">

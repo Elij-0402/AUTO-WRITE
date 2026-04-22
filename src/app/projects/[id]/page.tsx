@@ -21,6 +21,7 @@ import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import { AIOnboardingDialog } from '@/components/workspace/ai-onboarding-dialog'
 import { OnboardingTourDialog } from '@/components/workspace/onboarding-tour-dialog'
+import { ChapterDraftDialog } from '@/components/workspace/chapter-draft-dialog'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
@@ -43,6 +44,7 @@ export default function ProjectPage() {
   const [activeOutlineId, setActiveOutlineId] = useState<string | null>(null)
   const [activeWorldEntryId, setActiveWorldEntryId] = useState<string | null>(null)
   const [aiConfigOpen, setAiConfigOpen] = useState(false)
+  const [draftDialogOpen, setDraftDialogOpen] = useState(false)
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
@@ -281,11 +283,22 @@ export default function ProjectPage() {
           onComplete={() => setTourOpen(false)}
         />
 
+        <ChapterDraftDialog
+          open={draftDialogOpen}
+          onOpenChange={setDraftDialogOpen}
+          projectId={params.id}
+          config={config}
+          worldEntries={entries || []}
+          chapters={chapters || []}
+          onDraftAccepted={handleInsertDraft}
+        />
+
         <WorkspaceTopbar
           projectId={params.id}
           focusMode={focusMode}
           onToggleFocusMode={() => setFocusMode(!focusMode)}
           onOpenAIConfig={() => setAiConfigOpen(true)}
+          onOpenDraftDialog={() => setDraftDialogOpen(true)}
           idle={idle}
         />
 

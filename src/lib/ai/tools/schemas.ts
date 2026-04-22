@@ -91,6 +91,12 @@ export const SUGGEST_RELATION_SCHEMA = {
   },
 } as const
 
+export interface ChapterDraftInput {
+  outline: string
+  targetWordCount?: [number, number]
+  chapterTitle?: string
+}
+
 export const REPORT_CONTRADICTION_SCHEMA = {
   name: 'report_contradiction',
   description:
@@ -111,10 +117,31 @@ export const REPORT_CONTRADICTION_SCHEMA = {
   },
 } as const
 
+export const CHAPTER_DRAFT_SCHEMA = {
+  name: 'chapter_draft',
+  description: '当用户请求生成章节草稿时，用此工具输出结构化草稿内容。草稿应符合世界观设定，字数在用户指定范围内。',
+  input_schema: {
+    type: 'object',
+    properties: {
+      outline: { type: 'string', description: '章节大纲或写作要点' },
+      targetWordCount: {
+        type: 'array',
+        items: { type: 'number' },
+        minItems: 2,
+        maxItems: 2,
+        description: '目标字数范围 [最小字数, 最大字数]',
+      },
+      chapterTitle: { type: 'string', description: '章节标题（可选）' },
+    },
+    required: ['outline'],
+  },
+} as const
+
 export const ALL_TOOL_SCHEMAS = [
   SUGGEST_ENTRY_SCHEMA,
   SUGGEST_RELATION_SCHEMA,
   REPORT_CONTRADICTION_SCHEMA,
+  CHAPTER_DRAFT_SCHEMA,
 ] as const
 
 export type ToolName = (typeof ALL_TOOL_SCHEMAS)[number]['name']

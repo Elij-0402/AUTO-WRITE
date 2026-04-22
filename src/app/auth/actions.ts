@@ -45,8 +45,8 @@ function checkRateLimit(ip: string, email: string): { allowed: boolean; remainin
   return { allowed: true, remaining: MAX_ATTEMPTS - entry.count, retryAfterMs: 0 }
 }
 
-function getClientIP(): string {
-  const headersList = headers()
+async function getClientIP(): Promise<string> {
+  const headersList = await headers()
   const forwarded = headersList.get('x-forwarded-for')
   if (forwarded) return forwarded.split(',')[0].trim()
   const realIP = headersList.get('x-real-ip')
@@ -58,7 +58,7 @@ export async function signUp(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const ip = getClientIP()
+  const ip = await getClientIP()
   const rl = checkRateLimit(ip, email)
   if (!rl.allowed) {
     return { error: '请求过于频繁，请稍后再试' }
@@ -85,7 +85,7 @@ export async function signIn(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const ip = getClientIP()
+  const ip = await getClientIP()
   const rl = checkRateLimit(ip, email)
   if (!rl.allowed) {
     return { error: '请求过于频繁，请稍后再试' }
@@ -113,7 +113,7 @@ export async function signOut() {
 
 export async function resetPassword(formData: FormData) {
   const email = formData.get('email') as string
-  const ip = getClientIP()
+  const ip = await getClientIP()
   const rl = checkRateLimit(ip, email)
   if (!rl.allowed) {
     return { error: '请求过于频繁，请稍后再试' }

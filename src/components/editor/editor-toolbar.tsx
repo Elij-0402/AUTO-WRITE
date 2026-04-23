@@ -42,7 +42,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         : Heading1
 
   return (
-    <div className="editor-toolbar flex items-center gap-0.5 divider-hair px-3 py-1.5 surface-1 sticky top-0 z-10">
+    <div className="editor-toolbar group flex items-center gap-0.5 divider-hair px-3 py-1.5 surface-1 sticky top-0 z-10 opacity-15 hover:opacity-100 transition-opacity duration-300">
       <Tooltip>
         <TooltipTrigger asChild>
           <Button

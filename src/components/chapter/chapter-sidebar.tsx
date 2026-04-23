@@ -144,7 +144,7 @@ export function ChapterSidebar({
   const activeItem = RAIL_ITEMS.find((i) => i.value === activeTab) ?? RAIL_ITEMS[0]
 
   return (
-    <div className="flex h-full overflow-hidden surface-1">
+    <div className="flex h-full overflow-hidden surface-1 group/sidebar">
       <nav
         aria-label="侧栏导航"
         className="flex w-11 shrink-0 flex-col divider-hair-v py-2"
@@ -190,7 +190,10 @@ export function ChapterSidebar({
         })}
       </nav>
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden divider-hair-v animate-slide-in-left" key={activeTab}>
+      <div className={cn(
+          'flex min-w-0 flex-1 flex-col overflow-hidden divider-hair-v animate-slide-in-left transition-all duration-300',
+          'group-hover/sidebar:opacity-100 opacity-60'
+        )} key={activeTab}>
         <div className="flex h-10 shrink-0 items-center justify-between px-3 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
           <span>{activeItem.label}</span>
           {activeTab === 'chapters' && chaptersHeaderCount > 0 && (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useCallback, useEffect } from 'react'
+import { cn } from '@/lib/utils'
 import {
   Group,
   Panel,
@@ -38,6 +39,8 @@ export interface ResizablePanelGroupProps {
   minSidebarWidth?: number
   /** Whether to show the sidebar (false = focus mode) */
   showSidebar?: boolean
+  /** Whether to collapse sidebar to a narrow rail (4px) when not hovered */
+  collapseToRail?: boolean
   /** Additional CSS class for the panel group container */
   className?: string
 }
@@ -58,6 +61,7 @@ export function ResizablePanelGroup({
   mainContent,
   minSidebarWidth = MIN_SIDEBAR_WIDTH,
   showSidebar = true,
+  collapseToRail = false,
   className,
 }: ResizablePanelGroupProps) {
   const groupRef = useRef<GroupImperativeHandle>(null)
@@ -113,11 +117,15 @@ export function ResizablePanelGroup({
       <Panel
         id="sidebar"
         panelRef={sidebarPanelRef}
-        defaultSize={DEFAULT_SIDEBAR_WIDTH}
-        minSize={minSidebarWidth}
+        defaultSize={collapseToRail ? 4 : DEFAULT_SIDEBAR_WIDTH}
+        minSize={collapseToRail ? 4 : minSidebarWidth}
         groupResizeBehavior="preserve-pixel-size"
+        className={collapseToRail ? 'group relative overflow-hidden' : undefined}
       >
-        <div className="h-full flex flex-col overflow-hidden">
+        <div className={cn(
+          'h-full flex flex-col overflow-hidden transition-all duration-300',
+          collapseToRail && 'w-1 group-hover:w-full'
+        )}>
           {sidebarContent}
         </div>
       </Panel>

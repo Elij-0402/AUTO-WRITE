@@ -21,6 +21,7 @@ import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import { AIOnboardingDialog } from '@/components/workspace/ai-onboarding-dialog'
 import { OnboardingTourDialog } from '@/components/workspace/onboarding-tour-dialog'
+import { ChapterDraftDialog } from '@/components/workspace/chapter-draft-dialog'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
@@ -43,6 +44,7 @@ export default function ProjectPage() {
   const [activeOutlineId, setActiveOutlineId] = useState<string | null>(null)
   const [activeWorldEntryId, setActiveWorldEntryId] = useState<string | null>(null)
   const [aiConfigOpen, setAiConfigOpen] = useState(false)
+  const [draftDialogOpen, setDraftDialogOpen] = useState(false)
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
@@ -281,11 +283,22 @@ export default function ProjectPage() {
           onComplete={() => setTourOpen(false)}
         />
 
+        <ChapterDraftDialog
+          open={draftDialogOpen}
+          onOpenChange={setDraftDialogOpen}
+          projectId={params.id}
+          config={config}
+          worldEntries={entries || []}
+          chapters={chapters || []}
+          onDraftAccepted={handleInsertDraft}
+        />
+
         <WorkspaceTopbar
           projectId={params.id}
           focusMode={focusMode}
           onToggleFocusMode={() => setFocusMode(!focusMode)}
           onOpenAIConfig={() => setAiConfigOpen(true)}
+          onOpenDraftDialog={() => setDraftDialogOpen(true)}
           idle={idle}
         />
 
@@ -343,7 +356,7 @@ export default function ProjectPage() {
               className="group relative flex items-center justify-center w-px shrink-0 cursor-col-resize bg-[hsl(var(--border))]"
             >
               <div className="absolute inset-y-0 -left-1.5 -right-1.5" />
-              <div className="absolute inset-y-0 left-0 w-px group-hover:w-[3px] group-hover:bg-[hsl(var(--accent-amber))] group-active:bg-[hsl(var(--accent-amber))] transition-[width,background-color] duration-150" />
+              <div className="absolute inset-y-0 left-0 w-px group-hover:w-[3px] group-hover:bg-[hsl(var(--accent))] group-active:bg-[hsl(var(--accent))] transition-[width,background-color] duration-150" />
             </PanelSeparator>
 
             <Panel id="editor-chat" minSize={500} groupResizeBehavior="preserve-relative-size">
@@ -359,7 +372,7 @@ export default function ProjectPage() {
                   className="group relative flex items-center justify-center w-px shrink-0 cursor-col-resize bg-[hsl(var(--border))]"
                 >
                   <div className="absolute inset-y-0 -left-1.5 -right-1.5" />
-                  <div className="absolute inset-y-0 left-0 w-px group-hover:w-[3px] group-hover:bg-[hsl(var(--accent-amber))] group-active:bg-[hsl(var(--accent-amber))] transition-[width,background-color] duration-150" />
+                  <div className="absolute inset-y-0 left-0 w-px group-hover:w-[3px] group-hover:bg-[hsl(var(--accent))] group-active:bg-[hsl(var(--accent))] transition-[width,background-color] duration-150" />
                 </PanelSeparator>
 
                 <Panel
@@ -437,8 +450,8 @@ function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editor
             className={
               'h-1.5 w-1.5 rounded-full ' +
               (isSaving
-                ? 'bg-[hsl(var(--accent-amber))] animate-amber-pulse'
-                : 'bg-[hsl(var(--accent-jade))]')
+                ? 'bg-[hsl(var(--warning))] animate-pulse'
+                : 'bg-[hsl(var(--success))]')
             }
           />
           {isSaving ? '保存中' : '已保存'}
@@ -467,7 +480,7 @@ function Placeholder({ activeTab }: { activeTab: ActiveTab }) {
   const Icon = copy.Icon
 
   return (
-    <div className="relative flex-1 flex items-center justify-center overflow-hidden surface-0 bg-amber-vignette bg-grain">
+    <div className="relative flex-1 flex items-center justify-center overflow-hidden surface-0">
       <div className="relative flex flex-col items-center gap-5 text-center px-6 animate-fade-up">
         <Icon
           className="h-14 w-14 text-[hsl(var(--accent-amber))]/35"

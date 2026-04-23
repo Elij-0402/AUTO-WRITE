@@ -34,6 +34,8 @@ export interface BuildSystemPromptParams {
   selectedText?: string
   /** Optional rolling summary of prior turns beyond the sliding window. */
   rollingSummary?: string
+  /** Optional chapter draft instruction for draft generation. */
+  chapterDraftInstruction?: string
 }
 
 /**
@@ -48,6 +50,8 @@ export interface SegmentedSystemPrompt {
   worldBibleContext: string
   /** Per-message preamble describing current discussion context. */
   runtimeContext: string
+  /** Chapter draft generation context — only set when generating a draft. */
+  chapterDraftContext?: string
 }
 
 export function buildSegmentedSystemPrompt(
@@ -67,6 +71,7 @@ export function buildSegmentedSystemPrompt(
     baseInstruction: BASE_INSTRUCTION,
     worldBibleContext,
     runtimeContext,
+    chapterDraftContext: params.chapterDraftInstruction,
   }
 }
 
@@ -78,9 +83,28 @@ export function buildWorldBibleBlock(entries: WorldEntry[]): string {
   return `【世界观百科】\n${body}`
 }
 
+export const CHAPTER_DRAFT_INSTRUCTION = `【章节草稿生成任务】
+
+你需要根据作者提供的【章节大纲】，生成一段符合要求的中文网文初稿。
+
+【要求】
+1. 严格遵循章节大纲的方向，不要偏离
+2. 内容必须与【世界观百科】保持一致，不得臆造设定
+3. 人物行为和对话必须符合其性格设定
+4. 场景描写要符合地点设定
+5. 草稿开头必须标注"以下是草稿"四字
+6. 生成后，用 chapter_draft 工具输出完整草稿
+
+【输出格式】
+通过 chapter_draft 工具输出，outline 字段填入本章大纲。
+
+请开始生成草稿：`
+
 /** Concatenate the segments for providers without cache support. */
 export function flattenSystemPrompt(segments: SegmentedSystemPrompt): string {
-  return [segments.baseInstruction, segments.worldBibleContext, segments.runtimeContext]
-    .filter(Boolean)
-    .join('\n\n')
+  const parts = [segments.baseInstruction, segments.worldBibleContext, segments.runtimeContext]
+  if (segments.chapterDraftContext) {
+    parts.push(segments.chapterDraftContext)
+  }
+  return parts.filter(Boolean).join('\n\n')
 }

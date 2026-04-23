@@ -138,6 +138,9 @@ function buildSystemBlocks(
   if (segments.runtimeContext) {
     blocks.push({ type: 'text', text: segments.runtimeContext })
   }
+  if (segments.chapterDraftContext) {
+    blocks.push({ type: 'text', text: segments.chapterDraftContext })
+  }
   return blocks
 }
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowLeft, BarChart3, Bot, Maximize2, Minimize2, Moon, Sun } from 'lucide-react'
+import { ArrowLeft, BarChart3, Bot, Maximize2, Minimize2, Moon, PenLine, Sun } from 'lucide-react'
 import { metaDb } from '@/lib/db/meta-db'
 import { useTotalWordCount, useTodayWordCount } from '@/lib/hooks/use-word-count'
 import { useTheme } from '@/components/editor/theme-provider'
@@ -19,6 +19,7 @@ interface WorkspaceTopbarProps {
   focusMode: boolean
   onToggleFocusMode: () => void
   onOpenAIConfig: () => void
+  onOpenDraftDialog: () => void
   /** True after the user has been idle for the configured timeout (T6). */
   idle?: boolean
 }
@@ -28,6 +29,7 @@ export function WorkspaceTopbar({
   focusMode,
   onToggleFocusMode,
   onOpenAIConfig,
+  onOpenDraftDialog,
   idle = false,
 }: WorkspaceTopbarProps) {
   const project = useLiveQuery(
@@ -105,6 +107,20 @@ export function WorkspaceTopbar({
           </Button>
         </TooltipTrigger>
         <TooltipContent>AI 设置</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onOpenDraftDialog}
+            aria-label="生成章节草稿"
+          >
+            <PenLine />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>生成章节草稿</TooltipContent>
       </Tooltip>
 
       <Tooltip>

@@ -117,10 +117,10 @@ export function ResizablePanelGroup({
       <Panel
         id="sidebar"
         panelRef={sidebarPanelRef}
-        defaultSize={DEFAULT_SIDEBAR_WIDTH}
-        minSize={minSidebarWidth}
+        defaultSize={collapseToRail ? 4 : DEFAULT_SIDEBAR_WIDTH}
+        minSize={collapseToRail ? 4 : minSidebarWidth}
         groupResizeBehavior="preserve-pixel-size"
-        className={collapseToRail ? 'group relative' : undefined}
+        className={collapseToRail ? 'group relative overflow-hidden' : undefined}
       >
         <div className={cn(
           'h-full flex flex-col overflow-hidden transition-all duration-300',

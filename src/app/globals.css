@@ -143,6 +143,14 @@ html.dark {
   --destructive: 0 62% 50%;
   --destructive-foreground: 0 0% 100%;
 
+  /* Semantic colors — per DESIGN.md */
+  --success: 142 71% 45%;             /* 竹青 — #6B8E4E */
+  --warning: 38 92% 50%;              /* 陈黄 — #C79A5E */
+
+  /* Semantic accent aliases — per DESIGN.md */
+  --accent-amber: var(--warning);    /* 陈黄 */
+  --accent-jade: var(--success);      /* 竹青 */
+
   /* Linear border system — dark mode */
   --border: 0 0% 100% / 0.07;        /* rgba(255,255,255,0.07) */
   --border-strong: 0 0% 100% / 0.12; /* rgba(255,255,255,0.12) */

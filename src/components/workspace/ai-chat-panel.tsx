@@ -174,7 +174,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   useEffect(() => {
     if (cacheHint && !cacheHintShown.current) {
       cacheHintShown.current = true
-      setCacheHintVisible(true)
+      queueMicrotask(() => setCacheHintVisible(true))
       setTimeout(() => setCacheHintVisible(false), 3000)
     }
   }, [cacheHint])
@@ -305,22 +305,20 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   }
 
 const handleIntentionalContradiction = async (contradiction: Contradiction, _index: number) => {
-    await addExemption(contradiction.entryName, contradiction.entryType)
-    // Also mark the most recent non-exempted row as exempted so the dashboard
-    // reflects the decision immediately (CEO-4C: multiple rows per entry possible).
-    const db = createProjectDB(projectId)
-    const rows = await db.contradictions
-      .where('[projectId+entryName]')
-      .equals([projectId, contradiction.entryName])
-      .and(r => !r.exempted)
-      .sortBy('createdAt')
-    const latest = rows[rows.length - 1]
-    if (latest) {
-      await db.contradictions.update(latest.id, { exempted: true })
+  await addExemption(contradiction.entryName, contradiction.entryType)
+  const db = createProjectDB(projectId)
+  const rows = await db.contradictions
+    .where('[projectId+entryName]')
+    .equals([projectId, contradiction.entryName])
+    .toArray()
+  for (const row of rows) {
+    if (row.entryType === contradiction.entryType && !row.exempted) {
+      await db.contradictions.update(row.id, { exempted: true })
     }
-    clearContradiction(_index)
-    showToast('已记录为有意为之')
   }
+  clearContradiction(_index)
+  showToast('已记录为有意为之')
+}
 
   const handleFixWorldEntry = () => {
     onSwitchToWorldTab?.()

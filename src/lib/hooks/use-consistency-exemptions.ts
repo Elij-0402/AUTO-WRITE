@@ -49,6 +49,34 @@ export function useConsistencyExemptions(projectId: string) {
   }, [db])
 
   /**
+   * Revoke an exemption by entryName + entryType.
+   * Deletes the exemption record AND sets exempted=false on all matching contradiction rows.
+   */
+  const revokeExemption = useCallback(async (entryName: string, entryType: string): Promise<void> => {
+    const exemptionKey = `${entryName}:${entryType}`
+
+    // Find the exemption record to get its id
+    const exemption = await db.consistencyExemptions
+      .where('projectId')
+      .equals(projectId)
+      .toArray()
+      .then(rows => rows.find(e => e.exemptionKey === exemptionKey))
+
+    if (exemption) {
+      await db.consistencyExemptions.delete(exemption.id)
+    }
+
+    // Unmark all matching contradiction rows concurrently
+    const rows = await db.contradictions
+      .where('[projectId+entryName]')
+      .equals([projectId, entryName])
+      .toArray()
+
+    const matchingRows = rows.filter(row => row.entryType === entryType && row.exempted)
+    await Promise.all(matchingRows.map(row => db.contradictions.update(row.id, { exempted: false })))
+  }, [db, projectId])
+
+  /**
    * Check if a specific contradiction is exempted.
    */
   const isExempted = useCallback((entryId: string, type: string): boolean => {
@@ -61,6 +89,7 @@ export function useConsistencyExemptions(projectId: string) {
     exemptions,
     addExemption,
     removeExemption,
+    revokeExemption,
     isExempted,
     loading: exemptions === undefined
   }

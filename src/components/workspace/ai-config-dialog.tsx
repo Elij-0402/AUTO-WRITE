@@ -120,11 +120,13 @@ export function AIConfigDialog({ open, onClose }: AIConfigDialogProps) {
   useEffect(() => {
     if (open) {
       saveCompletedRef.current = false
-      setProbeError('')
-      setApiKey(config.apiKey ?? '')
-      setModel(config.model ?? '')
+      queueMicrotask(() => {
+        setProbeError('')
+        setApiKey(config.apiKey ?? '')
+        setModel(config.model ?? '')
+      })
     }
-  }, [open, config])
+  }, [open, config.apiKey, config.model])
 
   const preset = PRESETS[presetKey]
 

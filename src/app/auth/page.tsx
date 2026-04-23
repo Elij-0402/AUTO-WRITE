@@ -79,7 +79,7 @@ export default function AuthPage() {
             >
               登录
               {mode === 'login' && (
-                <span aria-hidden className="absolute left-0 right-0 -bottom-px h-[2px] bg-primary" />
+                <span aria-hidden className="absolute left-0 right-0 -bottom-px h-[2px] bg-[hsl(var(--accent))]" />
               )}
             </button>
             <button
@@ -94,7 +94,7 @@ export default function AuthPage() {
             >
               注册
               {mode === 'register' && (
-                <span aria-hidden className="absolute left-0 right-0 -bottom-px h-[2px] bg-primary" />
+                <span aria-hidden className="absolute left-0 right-0 -bottom-px h-[2px] bg-[hsl(var(--accent))]" />
               )}
             </button>
           </div>
@@ -126,7 +126,7 @@ export default function AuthPage() {
 
             {mode === 'login' && (
               <div className="text-right">
-                <a href="/auth/forgot-password" className="text-[13px] text-primary hover:underline">
+                <a href="/auth/forgot-password" className="text-[13px] text-[hsl(var(--accent))] hover:underline">
                   忘记密码？
                 </a>
               </div>

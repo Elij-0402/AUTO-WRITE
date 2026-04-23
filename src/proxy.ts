@@ -6,6 +6,11 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
+  // Let API routes and Next.js internals pass through so 404s work correctly
+  if (pathname.startsWith('/api')) {
+    return supabaseResponse
+  }
+
   // D-49: Unauthenticated access to protected routes → redirect to /auth with return URL
   if (!user && !pathname.startsWith('/auth')) {
     const returnUrl = encodeURIComponent(pathname + request.nextUrl.search)

@@ -3,7 +3,14 @@
 import { useState, useMemo } from 'react'
 import { AlertTriangle, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
 import { useContradictions } from '@/lib/hooks/use-contradictions'
+import { useConsistencyExemptions } from '@/lib/hooks/use-consistency-exemptions'
 import type { WorldEntryType } from '@/lib/types'
+
+interface ChapterSummary {
+  id: string
+  title: string
+  order: number
+}
 
 const TYPE_LABEL: Record<WorldEntryType, string> = {
   character: '角色',
@@ -39,9 +46,12 @@ interface ContradictionRowProps {
   exempted: boolean
   createdAt: number
   chapterId?: string
+  chapterTitle?: string
+  exemptionKey?: string
+  onRevoke?: (entryName: string, entryType: string) => void
 }
 
-function ContradictionRow({ entryName, entryType, description, exempted, createdAt, chapterId }: ContradictionRowProps) {
+function ContradictionRow({ entryName, entryType, description, exempted, createdAt, chapterId, chapterTitle, exemptionKey, onRevoke }: ContradictionRowProps) {
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -73,6 +83,14 @@ function ContradictionRow({ entryName, entryType, description, exempted, created
                 已豁免
               </span>
             )}
+            {exemptionKey && (
+              <button
+                onClick={() => onRevoke?.(entryName, entryType)}
+                className="text-[11px] text-muted-foreground hover:text-[hsl(var(--accent-coral))] underline ml-auto"
+              >
+                撤销豁免
+              </button>
+            )}
           </div>
           {expanded && (
             <div className="space-y-2">
@@ -89,7 +107,7 @@ function ContradictionRow({ entryName, entryType, description, exempted, created
                     className="text-[11px] text-[hsl(var(--accent-coral))] hover:underline flex items-center gap-0.5"
                   >
                     <ExternalLink className="w-2.5 h-2.5" />
-                    去第 X 章
+                    {chapterTitle ? `去第 ${chapterTitle} 章` : `去第 X 章`}
                   </a>
                 )}
               </div>
@@ -104,10 +122,18 @@ function ContradictionRow({ entryName, entryType, description, exempted, created
 interface ContradictionGroupProps {
   entryName: string
   entryType: WorldEntryType
-  rows: Array<{ exempted: boolean; description: string; createdAt: number; chapterId?: string }>
+  rows: Array<{
+    exempted: boolean
+    description: string
+    createdAt: number
+    chapterId?: string
+    exemptionKey?: string
+  }>
+  chapters?: ChapterSummary[]
+  onRevoke?: (entryName: string, entryType: string) => void
 }
 
-function ContradictionGroup({ entryName, entryType, rows }: ContradictionGroupProps) {
+function ContradictionGroup({ entryName, entryType, rows, chapters = [], onRevoke }: ContradictionGroupProps) {
   const [expanded, setExpanded] = useState(true)
   const openCount = rows.filter(r => !r.exempted).length
 
@@ -129,17 +155,23 @@ function ContradictionGroup({ entryName, entryType, rows }: ContradictionGroupPr
       </button>
       {expanded && (
         <div className="space-y-1 pl-2">
-          {rows.map((row, i) => (
-            <ContradictionRow
-              key={i}
-              entryName={entryName}
-              entryType={entryType}
-              description={row.description}
-              exempted={row.exempted}
-              createdAt={row.createdAt}
-              chapterId={row.chapterId}
-            />
-          ))}
+          {rows.map((row, i) => {
+            const chapter = chapters.find(c => c.id === row.chapterId)
+            return (
+              <ContradictionRow
+                key={i}
+                entryName={entryName}
+                entryType={entryType}
+                description={row.description}
+                exempted={row.exempted}
+                createdAt={row.createdAt}
+                chapterId={row.chapterId}
+                chapterTitle={chapter?.title}
+                exemptionKey={row.exemptionKey}
+                onRevoke={onRevoke}
+              />
+            )
+          })}
         </div>
       )}
     </div>
@@ -148,10 +180,12 @@ function ContradictionGroup({ entryName, entryType, rows }: ContradictionGroupPr
 
 interface ContradictionDashboardProps {
   projectId: string
+  chapters?: ChapterSummary[]
 }
 
-export function ContradictionDashboard({ projectId }: ContradictionDashboardProps) {
+export function ContradictionDashboard({ projectId, chapters = [] }: ContradictionDashboardProps) {
   const { contradictions } = useContradictions(projectId)
+  const { revokeExemption } = useConsistencyExemptions(projectId)
   const [filter, setFilter] = useState<Filter>('all')
 
   const filtered = useMemo(() => {
@@ -226,14 +260,22 @@ export function ContradictionDashboard({ projectId }: ContradictionDashboardProp
 
       {/* Grouped list */}
       <div className="space-y-3">
-        {grouped.map(([entryName, { entryType, rows }]) => (
-          <ContradictionGroup
-            key={entryName}
-            entryName={entryName}
-            entryType={entryType}
-            rows={rows}
-          />
-        ))}
+        {grouped.map(([entryName, { entryType, rows }]) => {
+          const rowsWithKeys = rows.map(row => ({
+            ...row,
+            exemptionKey: row.exempted ? `${entryName}:${entryType}` : undefined,
+          }))
+          return (
+            <ContradictionGroup
+              key={entryName}
+              entryName={entryName}
+              entryType={entryType}
+              rows={rowsWithKeys}
+              chapters={chapters}
+              onRevoke={revokeExemption}
+            />
+          )
+        })}
       </div>
     </div>
   )

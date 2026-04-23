@@ -121,9 +121,11 @@ export function AIOnboardingDialog({ open, onSkip, onSaveComplete }: AIOnboardin
   useEffect(() => {
     if (open) {
       saveCompletedRef.current = false
-      setProbeError('')
-      setApiKey('')
-      setModel('claude-sonnet-4-20250514')
+      queueMicrotask(() => {
+        setProbeError('')
+        setApiKey('')
+        setModel('claude-sonnet-4-20250514')
+      })
     }
   }, [open])
 

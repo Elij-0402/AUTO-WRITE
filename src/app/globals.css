@@ -35,7 +35,7 @@ html.light-root {
   --popover: var(--surface-1);
   --popover-foreground: var(--foreground);
 
-  --primary: 258 90% 66%;          /* #8B5CF6 - purple-500 accent */
+  --primary: 10 50% 45%;           /* #C8553D - 朱砂 red per DESIGN.md */
   --primary-foreground: 0 0% 100%;
 
   --secondary: var(--surface-2);
@@ -44,7 +44,7 @@ html.light-root {
   --muted: var(--surface-2);
   --muted-foreground: 240 4% 46%;  /* #6B6B6B */
 
-  --accent: var(--surface-2);
+  --accent: 10 50% 45%;             /* #C8553D - 朱砂 red per DESIGN.md */
   --accent-foreground: var(--foreground);
 
   --destructive: 0 84% 60%;
@@ -115,7 +115,7 @@ html.dark {
 
   /* Linear color palette — dark mode */
   --background: 240 7% 5%;           /* #0D0D0F */
-  --foreground: 0 0% 98%;           /* #FAFAFA */
+  --foreground: 36 20% 93%;          /* #EDE7DC - warm ink white per DESIGN.md */
 
   --surface-0: 240 7% 5%;            /* #0D0D0F - app bg */
   --surface-1: 240 6% 9%;            /* #161618 - chrome */
@@ -128,7 +128,7 @@ html.dark {
   --popover: var(--surface-1);
   --popover-foreground: var(--foreground);
 
-  --primary: 258 90% 66%;            /* #8B5CF6 - purple-500 */
+  --primary: 10 50% 45%;            /* #C8553D - 朱砂 red per DESIGN.md */
   --primary-foreground: 0 0% 100%;
 
   --secondary: var(--surface-2);
@@ -137,11 +137,19 @@ html.dark {
   --muted: var(--surface-2);
   --muted-foreground: 240 4% 65%;    /* #A1A1AA */
 
-  --accent: var(--surface-2);
+  --accent: 10 50% 45%;              /* #C8553D - 朱砂 red per DESIGN.md */
   --accent-foreground: var(--foreground);
 
   --destructive: 0 62% 50%;
   --destructive-foreground: 0 0% 100%;
+
+  /* Semantic colors — per DESIGN.md */
+  --success: 142 71% 45%;             /* 竹青 — #6B8E4E */
+  --warning: 38 92% 50%;              /* 陈黄 — #C79A5E */
+
+  /* Semantic accent aliases — per DESIGN.md */
+  --accent-amber: var(--warning);    /* 陈黄 */
+  --accent-jade: var(--success);      /* 竹青 */
 
   /* Linear border system — dark mode */
   --border: 0 0% 100% / 0.07;        /* rgba(255,255,255,0.07) */

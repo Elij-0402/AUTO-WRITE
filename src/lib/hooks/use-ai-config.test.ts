@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useAIConfig } from './use-ai-config'
 import { metaDb } from '../db/meta-db'
+import path from 'node:path'
+import fs from 'node:fs'
 
 vi.mock('dexie-react-hooks', () => ({
   useLiveQuery: vi.fn(),
@@ -62,8 +64,6 @@ describe('useAIConfig', () => {
   })
 
   it('hook source does not contain migration scan logic', () => {
-    const path = require('path')
-    const fs = require('fs')
     const hookPath = path.resolve(__dirname, 'use-ai-config.ts')
     const source = fs.readFileSync(hookPath, 'utf8')
     expect(source).not.toMatch(/MIGRATION_FLAG|migrationScanned|localStorage.*migrated/)

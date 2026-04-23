@@ -65,7 +65,7 @@ export default function ProjectPage() {
     if (aiConfigLoading) return
     const hasSeenOnboarding = localStorage.getItem('inkforge-has-seen-onboarding')
     if (!hasSeenOnboarding && !config.apiKey) {
-      setOnboardingOpen(true)
+      queueMicrotask(() => setOnboardingOpen(true))
     }
   }, [aiConfigLoading, config.apiKey])
 

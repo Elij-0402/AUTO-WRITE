@@ -174,7 +174,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   useEffect(() => {
     if (cacheHint && !cacheHintShown.current) {
       cacheHintShown.current = true
-      setCacheHintVisible(true)
+      queueMicrotask(() => setCacheHintVisible(true))
       setTimeout(() => setCacheHintVisible(false), 3000)
     }
   }, [cacheHint])

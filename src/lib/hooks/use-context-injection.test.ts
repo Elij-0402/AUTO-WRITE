@@ -191,7 +191,7 @@ describe('formatEntryForContext', () => {
 describe('calculateTokenCount', () => {
   it('estimates ~1.5 chars per token for Chinese text', () => {
     const entry = makeCharacter()
-    const count = calculateTokenCount([entry])
+    const count = calculateTokenCount(formatEntryForContext(entry))
     // A character entry with all fields is ~60 chars → ~40 tokens
     expect(count).toBeGreaterThan(20)
     expect(count).toBeLessThan(100)
@@ -199,8 +199,8 @@ describe('calculateTokenCount', () => {
 
   it('sums tokens across multiple entries', () => {
     const entries = [makeCharacter(), makeLocation()]
-    const total = calculateTokenCount(entries)
-    const single = calculateTokenCount([makeCharacter()])
+    const total = calculateTokenCount(entries.map(formatEntryForContext).join('\n'))
+    const single = calculateTokenCount(formatEntryForContext(makeCharacter()))
     expect(total).toBeGreaterThan(single)
   })
 })

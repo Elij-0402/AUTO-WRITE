@@ -40,9 +40,33 @@ export function formatEntriesForPrompt(entries: WorldEntry[]): string {
   return entries.map(formatEntryForContext).join('\n')
 }
 
-export function calculateTokenCount(entries: WorldEntry[]): number {
-  return entries.reduce((total, entry) => {
-    const formatted = formatEntryForContext(entry)
-    return total + Math.ceil(formatted.length / 1.5)
-  }, 0)
+export function calculateTokenCount(text: string): number {
+  const cleaned = text.replace(/[#*_`~[\]()]/g, '')
+
+  let chineseChars = 0
+  let englishWords = 0
+  let currentWord = ''
+
+  for (const char of cleaned) {
+    if (/[一-鿿]/.test(char)) {
+      if (currentWord.length > 0) {
+        englishWords += 1
+        currentWord = ''
+      }
+      chineseChars++
+    } else if (/\s/.test(char)) {
+      if (currentWord.length > 0) {
+        englishWords += 1
+        currentWord = ''
+      }
+    } else {
+      currentWord += char
+    }
+  }
+
+  if (currentWord.length > 0) {
+    englishWords += 1
+  }
+
+  return Math.ceil(chineseChars * 1.5 + englishWords * 1.3)
 }

@@ -1,11 +1,10 @@
 'use client'
 
-import { Group, Panel, PanelSeparator } from '../resizable-panel'
+import { Group, Panel, Separator as PanelSeparator } from '../resizable-panel'
 import { ChapterSidebar } from '../../chapter/chapter-sidebar'
 import { DEFAULT_SIDEBAR_WIDTH } from '../resizable-panel'
 import { PanelErrorBoundary } from '../error-boundary'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
-import type { Chapter } from '@/lib/types'
 
 const DEFAULT_CHAT_PANEL_WIDTH = 340
 const MIN_CHAT_PANEL_WIDTH = 300

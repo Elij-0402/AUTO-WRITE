@@ -139,7 +139,7 @@ function matchKeyword(value: string | undefined, keywords: string[]): boolean {
  * Chinese characters average ~1.5 tokens, English words ~1.3 tokens.
  */
 function estimateTokens(text: string): number {
-  const cleaned = text.replace(/[#*_`~[\]()]=/g, '')
+  const cleaned = text.replace(/[#*_`~[\]()=]/g, '')
 
   let chineseChars = 0
   let englishWords = 0

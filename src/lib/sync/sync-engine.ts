@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import { getPendingChanges, markSynced, markFailed, setLastSyncAt, clearSyncedItems } from './sync-queue'
+import { getPendingChanges, getRetryableItems, markSynced, markFailed, setLastSyncAt, clearSyncedItems } from './sync-queue'
 import { metaDb } from '@/lib/db/meta-db'
 import { createProjectDB } from '@/lib/db/project-db'
 import { mapCloudToLocal, mapLocalToCloud, type TableName } from './field-mapping'
@@ -38,7 +38,7 @@ export async function flushSyncQueue(
   let totalFailed = 0
 
   while (Date.now() - start < maxDurationMs) {
-    const pending = await getPendingChanges()
+    const pending = [...await getPendingChanges(), ...await getRetryableItems()]
     if (pending.length === 0) break
 
     const batch = pending.slice(0, SYNC_BATCH_SIZE)

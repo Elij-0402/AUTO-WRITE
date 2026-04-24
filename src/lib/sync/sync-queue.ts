@@ -21,6 +21,9 @@ interface SyncQueueDB extends DBSchema {
   }
 }
 
+/** Exponential backoff delays for failed sync retries: 30s, 1m, 5m, 15m, 1h */
+const RETRY_DELAYS_MS = [30_000, 60_000, 300_000, 900_000, 3_600_000]
+
 export interface SyncQueueItem {
   id: string
   table: string  // 'projectIndex' | 'chapters' | 'worldEntries' | 'relations' | etc.
@@ -29,8 +32,12 @@ export interface SyncQueueItem {
   localUpdatedAt: number
   userId: string
   synced: boolean
-  /** True after a sync attempt failed (no automatic retry — user manually retriggers). */
+  /** True after a sync attempt failed — retried automatically with exponential backoff. */
   failed?: boolean
+  /** Number of retry attempts made. */
+  retryCount?: number
+  /** Timestamp when the item is next eligible for retry. */
+  nextRetryAt?: number
 }
 
 let dbPromise: Promise<IDBPDatabase<SyncQueueDB>> | null = null
@@ -89,7 +96,7 @@ export async function markSynced(ids: string[]): Promise<void> {
 
 /**
  * Mark items as failed after a sync attempt error.
- * Failures are not retried automatically — user manually retriggers sync.
+ * Retries are scheduled with exponential backoff.
  */
 export async function markFailed(ids: string[]): Promise<void> {
   const db = await getQueueDB()
@@ -98,10 +105,27 @@ export async function markFailed(ids: string[]): Promise<void> {
     const item = await tx.store.get(id)
     if (item) {
       item.failed = true
+      const retryCount = item.retryCount ?? 0
+      const delay = RETRY_DELAYS_MS[Math.min(retryCount, RETRY_DELAYS_MS.length - 1)] ?? 3_600_000
+      item.nextRetryAt = Date.now() + delay
+      item.retryCount = retryCount + 1
       await tx.store.put(item)
     }
   }
   await tx.done
+}
+
+/**
+ * Get items that are ready for retry (failed and past retry time).
+ */
+export async function getRetryableItems(): Promise<SyncQueueItem[]> {
+  const db = await getQueueDB()
+  const allItems = await db.getAll('queue')
+  const now = Date.now()
+  return allItems.filter(item => {
+    if (!item.failed) return false
+    return !item.nextRetryAt || item.nextRetryAt <= now
+  })
 }
 
 /**

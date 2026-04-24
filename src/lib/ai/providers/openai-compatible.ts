@@ -12,12 +12,14 @@
 import type { AIEvent } from '../events'
 import { flattenSystemPrompt } from '../prompts'
 import type { ProviderStreamParams } from './types'
+import { validateURLForSSRF } from '../ssrf-guard'
 
 export async function* streamOpenAICompatible(
   params: ProviderStreamParams
 ): AsyncIterable<AIEvent> {
   const { config, segmentedSystem, messages, signal } = params
   const baseUrl = normalizeBaseUrl(config.baseUrl)
+  validateURLForSSRF(`${baseUrl}/chat/completions`)
   const systemPrompt = flattenSystemPrompt(segmentedSystem)
 
   const body = {

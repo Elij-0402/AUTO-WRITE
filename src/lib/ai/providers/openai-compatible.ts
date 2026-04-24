@@ -55,6 +55,7 @@ export async function* streamOpenAICompatible(
 
   const decoder = new TextDecoder()
   let buffer = ''
+  let lastUsage: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number } | null = null
 
   while (true) {
     const { done, value } = await reader.read()
@@ -72,6 +73,9 @@ export async function* streamOpenAICompatible(
       if (payload === '[DONE]') continue
       try {
         const parsed = JSON.parse(payload)
+        if (parsed.usage) {
+          lastUsage = parsed.usage
+        }
         const delta = parsed.choices?.[0]?.delta?.content
         if (typeof delta === 'string' && delta.length > 0) {
           yield { type: 'text_delta', delta }
@@ -79,6 +83,15 @@ export async function* streamOpenAICompatible(
       } catch {
         // Ignore malformed fragments — the provider may have split JSON.
       }
+    }
+  }
+
+  if (lastUsage) {
+    yield {
+      type: 'usage',
+      inputTokens: lastUsage.prompt_tokens ?? 0,
+      outputTokens: lastUsage.completion_tokens ?? 0,
+      totalTokens: lastUsage.total_tokens ?? 0,
     }
   }
 

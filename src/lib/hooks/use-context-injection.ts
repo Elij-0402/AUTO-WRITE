@@ -135,6 +135,41 @@ function matchKeyword(value: string | undefined, keywords: string[]): boolean {
 
 
 /**
+ * Chinese-friendly token estimation.
+ * Chinese characters average ~1.5 tokens, English words ~1.3 tokens.
+ */
+function estimateTokens(text: string): number {
+  const cleaned = text.replace(/[#*_`~[\]()]=/g, '')
+
+  let chineseChars = 0
+  let englishWords = 0
+  let currentWord = ''
+
+  for (const char of cleaned) {
+    if (/[一-鿿]/.test(char)) {
+      if (currentWord.length > 0) {
+        englishWords += 1
+        currentWord = ''
+      }
+      chineseChars++
+    } else if (/\s/.test(char)) {
+      if (currentWord.length > 0) {
+        englishWords += 1
+        currentWord = ''
+      }
+    } else {
+      currentWord += char
+    }
+  }
+
+  if (currentWord.length > 0) {
+    englishWords += 1
+  }
+
+  return Math.ceil(chineseChars * 1.5 + englishWords * 1.3)
+}
+
+/**
  * Trim entries to fit within token budget.
  * Preserves caller ordering — RAG/relevance ranking wins over type priority.
  * Stops as soon as the next entry would exceed budget.
@@ -149,7 +184,7 @@ export function trimToTokenBudget(
   let currentTokens = 0
 
   for (const entry of entries) {
-    const entryTokens = Math.ceil(_formatEntryForContext(entry).length / 1.5)
+    const entryTokens = estimateTokens(_formatEntryForContext(entry))
     if (currentTokens + entryTokens > maxTokens) break
     result.push(entry)
     currentTokens += entryTokens

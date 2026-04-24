@@ -1,202 +1,48 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef, useMemo, type RefObject } from 'react'
+import { useState, useCallback, useRef, type RefObject } from 'react'
 import { useParams } from 'next/navigation'
-import { Group, Panel, Separator as PanelSeparator } from '@/components/workspace/resizable-panel'
-import { ChapterSidebar } from '@/components/chapter/chapter-sidebar'
-import { OutlineEditForm } from '@/components/outline/outline-edit-form'
-import { Editor } from '@/components/editor/editor'
-import { FloatingToolbar } from '@/components/editor/floating-toolbar'
-import { HistoryDrawer } from '@/components/editor/history-drawer'
-import { useChapterEditor } from '@/lib/hooks/use-chapter-editor'
 import { ThemeProvider } from '@/components/editor/theme-provider'
-import { DEFAULT_SIDEBAR_WIDTH } from '@/components/workspace/resizable-panel'
-import { useLayout } from '@/lib/hooks/use-layout'
-import { useChapters } from '@/lib/hooks/use-chapters'
-import { useIdleMode } from '@/lib/hooks/use-idle-mode'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { SidebarNavProvider, type SidebarTab } from '@/lib/hooks/use-sidebar-nav'
-import { useWorldEntries } from '@/lib/hooks/use-world-entries'
-import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
-import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import { AIOnboardingDialog } from '@/components/workspace/ai-onboarding-dialog'
 import { OnboardingTourDialog } from '@/components/workspace/onboarding-tour-dialog'
 import { ChapterDraftDialog } from '@/components/workspace/chapter-draft-dialog'
-import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
-import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
-import { TooltipProvider } from '@/components/ui/tooltip'
+import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
+import { useWorkspaceLayout } from '@/lib/hooks/use-workspace-layout'
+import { useAIConfig } from '@/lib/hooks/use-ai-config'
+import { useAIConfigDialog, useAIOnboardingDialog, useOnboardingTourDialog, useChapterDraftDialog } from '@/components/workspace/dialogs'
+import { NormalLayout } from '@/components/workspace/layouts/normal-layout'
+import { FocusLayout } from '@/components/workspace/layouts/focus-layout'
+import type { EditorHandle } from '@/components/editor/editor-types'
+import type { ActiveTab } from '@/lib/hooks/use-layout'
+import { useChapterEditor } from '@/lib/hooks/use-chapter-editor'
+import { Editor } from '@/components/editor/editor'
+import { FloatingToolbar } from '@/components/editor/floating-toolbar'
+import { HistoryDrawer } from '@/components/editor/history-drawer'
+import { ChapterMetaStrip } from '@/components/editor/chapter-meta-strip'
 import { Button } from '@/components/ui/button'
 import { Clock, BookOpen, ListTree, Globe2 } from 'lucide-react'
-import type { ActiveTab } from '@/lib/hooks/use-layout'
-import type { EditorHandle } from '@/components/editor/editor-types'
 import type { Chapter } from '@/lib/types'
-import { ChapterMetaStrip } from '@/components/editor/chapter-meta-strip'
-
-const DEFAULT_CHAT_PANEL_WIDTH = 340
-const MIN_CHAT_PANEL_WIDTH = 300
-const MAX_CHAT_PANEL_WIDTH = 520
+import { OutlineEditForm } from '@/components/outline/outline-edit-form'
+import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
+import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
 
 export default function ProjectPage() {
   const params = useParams<{ id: string }>()
-  const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
-  const [focusMode, setFocusMode] = useState(false)
-  const [activeOutlineId, setActiveOutlineId] = useState<string | null>(null)
-  const [activeWorldEntryId, setActiveWorldEntryId] = useState<string | null>(null)
-  const [aiConfigOpen, setAiConfigOpen] = useState(false)
-  const [draftDialogOpen, setDraftDialogOpen] = useState(false)
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
-  const [wizardModeActive, setWizardModeActive] = useState(false)
 
-  const { activeTab, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(params.id)
-  const { chapters } = useChapters(params.id)
-  const idle = useIdleMode()
-  const { entries, entriesByType, addEntry } = useWorldEntries(params.id)
-  const { config, loading: aiConfigLoading } = useAIConfig()
-  const [onboardingOpen, setOnboardingOpen] = useState(false)
-  const [tourOpen, setTourOpen] = useState(false)
+  const layout = useWorkspaceLayout({ projectId: params.id })
+  const { config } = useAIConfig()
 
-  // 强制引导：只有在 aiConfig 加载完、确认没 key 时才弹
-  // （否则 Dexie 还在读的时候会误触发）
-  // 只在用户首次到达时弹出（localStorage 标记），跳过后不再重复打扰
-  useEffect(() => {
-    if (aiConfigLoading) return
-    const hasSeenOnboarding = localStorage.getItem('inkforge-has-seen-onboarding')
-    if (!hasSeenOnboarding && !config.apiKey) {
-      queueMicrotask(() => setOnboardingOpen(true))
-    }
-  }, [aiConfigLoading, config.apiKey])
-
-  const handleSelectOutline = useCallback((chapterId: string) => {
-    setActiveOutlineId(chapterId)
-  }, [])
-
-  const handleSelectWorldEntry = useCallback((entryId: string) => {
-    setActiveWorldEntryId(entryId)
-  }, [])
-
-  const handleEditWorldEntry = useCallback((entryId: string) => {
-    setActiveWorldEntryId(entryId)
-  }, [])
-
-  const handleCreateWorldEntry = useCallback(async (type: import('@/lib/types').WorldEntryType) => {
-    const id = await addEntry(type)
-    saveActiveTab('world')
-    setActiveOutlineId(null)
-    setActiveWorldEntryId(id)
-  }, [addEntry, saveActiveTab])
-
-  const handleDeleteWorldEntry = useCallback((entryId: string) => {
-    if (entryId === activeWorldEntryId) {
-      setActiveWorldEntryId(null)
-    }
-  }, [activeWorldEntryId])
-
-  const handleTabChange = useCallback((tab: ActiveTab) => {
-    saveActiveTab(tab)
-    if (tab === 'chapters') {
-      setActiveOutlineId(null)
-    } else if (tab === 'outline') {
-      setActiveWorldEntryId(null)
-    } else if (tab === 'world') {
-      setActiveOutlineId(null)
-    }
-  }, [saveActiveTab])
-
-  const sortedChapters = chapters.filter(c => !c.deletedAt)
-  const currentChapter = activeChapterId ? sortedChapters.find(c => c.id === activeChapterId) : undefined
-  const currentChapterNumber = activeChapterId ? sortedChapters.findIndex(c => c.id === activeChapterId) + 1 : 0
-  const currentOutlineIndex = sortedChapters.findIndex(c => c.id === activeOutlineId)
-  const handleOutlinePrevious = useCallback(() => {
-    if (currentOutlineIndex > 0) {
-      setActiveOutlineId(sortedChapters[currentOutlineIndex - 1].id)
-    }
-  }, [currentOutlineIndex, sortedChapters])
-
-  const handleOutlineNext = useCallback(() => {
-    if (currentOutlineIndex < sortedChapters.length - 1 && currentOutlineIndex !== -1) {
-      setActiveOutlineId(sortedChapters[currentOutlineIndex + 1].id)
-    }
-  }, [currentOutlineIndex, sortedChapters])
-
-  const currentWorldEntry = entries?.find(e => e.id === activeWorldEntryId)
-  const currentEntryType = currentWorldEntry?.type
-  const sameTypeEntries = useMemo(
-    () => currentEntryType ? entriesByType[currentEntryType] || [] : [],
-    [currentEntryType, entriesByType]
-  )
-  const currentWorldIndex = sameTypeEntries.findIndex(e => e.id === activeWorldEntryId)
-  const hasWorldPrevious = currentWorldIndex > 0
-  const hasWorldNext = currentWorldIndex < sameTypeEntries.length - 1
-
-  const handleWorldPrevious = useCallback(() => {
-    if (currentWorldIndex > 0) {
-      setActiveWorldEntryId(sameTypeEntries[currentWorldIndex - 1].id)
-    }
-  }, [currentWorldIndex, sameTypeEntries])
-
-  const handleWorldNext = useCallback(() => {
-    if (currentWorldIndex < sameTypeEntries.length - 1) {
-      setActiveWorldEntryId(sameTypeEntries[currentWorldIndex + 1].id)
-    }
-  }, [currentWorldIndex, sameTypeEntries])
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (activeOutlineId) {
-          setActiveOutlineId(null)
-        }
-        if (activeWorldEntryId) {
-          setActiveWorldEntryId(null)
-        }
-      }
-
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
-        const target = e.target as HTMLElement | null
-        const isEditable =
-          target?.tagName === 'INPUT' ||
-          target?.tagName === 'TEXTAREA' ||
-          target?.isContentEditable
-        if (isEditable) return
-
-        if (e.key === '1') {
-          e.preventDefault()
-          handleTabChange('chapters')
-        } else if (e.key === '2') {
-          e.preventDefault()
-          handleTabChange('outline')
-        } else if (e.key === '3') {
-          e.preventDefault()
-          handleTabChange('world')
-        }
-      }
-
-      // Ctrl+Shift+W: trigger wizard mode
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'w') {
-        const target = e.target as HTMLElement | null
-        const isEditable =
-          target?.tagName === 'INPUT' ||
-          target?.tagName === 'TEXTAREA' ||
-          target?.isContentEditable
-        if (isEditable) return
-        e.preventDefault()
-        setWizardModeActive(true)
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [activeOutlineId, activeWorldEntryId, handleTabChange])
-
-  const handleSidebarDoubleClickReset = () => {
-    saveSidebarWidth(DEFAULT_SIDEBAR_WIDTH)
-  }
-
-  const handleChatPanelDoubleClickReset = () => {
-    saveChatPanelWidth(DEFAULT_CHAT_PANEL_WIDTH)
-  }
+  const aiConfigDialog = useAIConfigDialog()
+  const onboardingDialog = useAIOnboardingDialog()
+  const tourDialog = useOnboardingTourDialog(params.id)
+  const draftDialog = useChapterDraftDialog({ onDraftAccepted: (c) => editorRef.current?.insertText(c) })
 
   const handleInsertDraft = useCallback((content: string) => {
     editorRef.current?.insertText(content)
@@ -206,193 +52,100 @@ export default function ProjectPage() {
     setSelectedText(text)
   }, [])
 
-  const hasPrevious = currentOutlineIndex > 0
-  const hasNext = currentOutlineIndex < sortedChapters.length - 1 && currentOutlineIndex !== -1
-
-  const isEditorMain =
-    Boolean(activeChapterId) &&
-    !(activeTab === 'outline' && activeOutlineId) &&
-    !(activeTab === 'world' && activeWorldEntryId)
-
-  const mainContent =
-    activeTab === 'outline' && activeOutlineId ? (
-      <OutlineEditForm
-        projectId={params.id}
-        chapterId={activeOutlineId}
-        onPrevious={handleOutlinePrevious}
-        onNext={handleOutlineNext}
-        hasPrevious={hasPrevious}
-        hasNext={hasNext}
-      />
-    ) : activeTab === 'world' && activeWorldEntryId ? (
-      <WorldEntryEditForm
-        projectId={params.id}
-        entryId={activeWorldEntryId}
-        onPrevious={handleWorldPrevious}
-        onNext={handleWorldNext}
-        hasPrevious={hasWorldPrevious}
-        hasNext={hasWorldNext}
-        onSelectEntry={handleSelectWorldEntry}
-        allEntries={entries || []}
-      />
-    ) : activeChapterId ? (
-      <EditorWithStatus
-        projectId={params.id}
-        chapterId={activeChapterId}
-        chapter={currentChapter}
-        chapterNumber={currentChapterNumber}
-        editorRef={editorRef}
-        editorContentRef={editorContentRef}
-        onDiscuss={handleDiscuss}
-      />
-    ) : (
-      <Placeholder activeTab={activeTab} />
-    )
+  const mainContent = layout.activeTab === 'outline' && layout.activeOutlineId ? (
+    <OutlineEditForm
+      projectId={params.id}
+      chapterId={layout.activeOutlineId}
+      onPrevious={layout.handleOutlinePrevious}
+      onNext={layout.handleOutlineNext}
+      hasPrevious={layout.hasPrevious}
+      hasNext={layout.hasNext}
+    />
+  ) : layout.activeTab === 'world' && layout.activeWorldEntryId ? (
+    <WorldEntryEditForm
+      projectId={params.id}
+      entryId={layout.activeWorldEntryId}
+      onPrevious={layout.handleWorldPrevious}
+      onNext={layout.handleWorldNext}
+      hasPrevious={layout.hasWorldPrevious}
+      hasNext={layout.hasWorldNext}
+      onSelectEntry={layout.handleSelectWorldEntry}
+      allEntries={layout.entries || []}
+    />
+  ) : layout.activeChapterId ? (
+    <EditorWithStatus
+      projectId={params.id}
+      chapterId={layout.activeChapterId}
+      chapter={layout.currentChapter}
+      chapterNumber={layout.currentChapterNumber}
+      editorRef={editorRef}
+      editorContentRef={editorContentRef}
+      onDiscuss={handleDiscuss}
+    />
+  ) : (
+    <Placeholder activeTab={layout.activeTab} />
+  )
 
   return (
     <ThemeProvider>
       <TooltipProvider delayDuration={300}>
         <SidebarNavProvider
-          activeTab={activeTab as SidebarTab}
-          selectedEntryId={activeWorldEntryId}
-          setActiveTab={saveActiveTab as (t: SidebarTab) => void}
-          setSelectedEntryId={setActiveWorldEntryId}
+          activeTab={layout.activeTab as SidebarTab}
+          selectedEntryId={layout.activeWorldEntryId}
+          setActiveTab={layout.handleTabChange as (t: SidebarTab) => void}
+          setSelectedEntryId={(id) => { if (id) layout.handleSelectWorldEntry(id) }}
         >
-        <AIConfigDialog
-          open={aiConfigOpen}
-          onClose={() => setAiConfigOpen(false)}
-        />
+          <AIConfigDialog open={aiConfigDialog.open} onClose={aiConfigDialog.onClose} />
+          <AIOnboardingDialog open={onboardingDialog.open} onSkip={onboardingDialog.onSkip} onSaveComplete={onboardingDialog.onSaveComplete} />
+          <OnboardingTourDialog projectId={params.id} open={tourDialog.open} onComplete={tourDialog.onComplete} />
+          <ChapterDraftDialog open={draftDialog.open} onOpenChange={draftDialog.onOpenChange} projectId={params.id} config={config} worldEntries={layout.entries || []} chapters={layout.sortedChapters || []} onDraftAccepted={handleInsertDraft} />
 
-        <AIOnboardingDialog
-          open={onboardingOpen}
-          onSkip={() => {
-            localStorage.setItem('inkforge-has-seen-onboarding', '1')
-            setOnboardingOpen(false)
-            setTourOpen(true)
-          }}
-          onSaveComplete={() => {
-            localStorage.setItem('inkforge-has-seen-onboarding', '1')
-            setOnboardingOpen(false)
-            setTourOpen(true)
-          }}
-        />
+          <WorkspaceTopbar
+            projectId={params.id}
+            focusMode={layout.focusMode}
+            onToggleFocusMode={() => layout.setFocusMode(!layout.focusMode)}
+            onOpenAIConfig={() => aiConfigDialog.onClose()}
+            onOpenDraftDialog={() => draftDialog.onOpenChange(true)}
+            idle={layout.idle}
+          />
 
-        <OnboardingTourDialog
-          projectId={params.id}
-          open={tourOpen}
-          onComplete={() => setTourOpen(false)}
-        />
-
-        <ChapterDraftDialog
-          open={draftDialogOpen}
-          onOpenChange={setDraftDialogOpen}
-          projectId={params.id}
-          config={config}
-          worldEntries={entries || []}
-          chapters={chapters || []}
-          onDraftAccepted={handleInsertDraft}
-        />
-
-        <WorkspaceTopbar
-          projectId={params.id}
-          focusMode={focusMode}
-          onToggleFocusMode={() => setFocusMode(!focusMode)}
-          onOpenAIConfig={() => setAiConfigOpen(true)}
-          onOpenDraftDialog={() => setDraftDialogOpen(true)}
-          idle={idle}
-        />
-
-        <div
-          className={`flex-1 flex overflow-hidden transition-[opacity] duration-[var(--dur-slow)] ease-[cubic-bezier(0.16,1,0.3,1)]`}
-        >
-        {focusMode ? (
-          <div className="flex-1 flex flex-col overflow-hidden animate-fade-in">
-            {activeChapterId && (
-              <div className="px-4 py-1.5 divider-hair text-[11px] text-muted-foreground text-center uppercase tracking-[0.2em]">
-                {sortedChapters.find(c => c.id === activeChapterId)?.title || ''}
-              </div>
-            )}
-            {isEditorMain ? (
-              <div className="flex-1 overflow-hidden surface-0 px-6 py-6">
-                <div className="paper h-full flex flex-col">
-                  <PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>
-                </div>
-              </div>
+          <div className="flex-1 flex overflow-hidden transition-[opacity] duration-[var(--dur-slow)] ease-[cubic-bezier(0.16,1,0.3,1)]">
+            {layout.focusMode ? (
+              <FocusLayout
+                activeChapterId={layout.activeChapterId}
+                sortedChapters={layout.sortedChapters}
+                mainContent={<PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>}
+              />
             ) : (
-              <PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>
+              <NormalLayout
+                projectId={params.id}
+                activeChapterId={layout.activeChapterId}
+                activeTab={layout.activeTab}
+                activeOutlineId={layout.activeOutlineId}
+                activeWorldEntryId={layout.activeWorldEntryId}
+                mainContent={<PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>}
+                handleSidebarDoubleClickReset={layout.handleSidebarDoubleClickReset}
+                handleChatPanelDoubleClickReset={layout.handleChatPanelDoubleClickReset}
+                onSelectChapter={layout.setActiveChapterId}
+                onTabChange={layout.handleTabChange}
+                onSelectOutline={layout.handleSelectOutline}
+                onSelectWorldEntry={layout.handleSelectWorldEntry}
+                onEditWorldEntry={layout.handleEditWorldEntry}
+                onDeleteWorldEntry={layout.handleDeleteWorldEntry}
+                onCreateWorldEntry={layout.handleCreateWorldEntry}
+              >
+                <AIChatPanel
+                  projectId={params.id}
+                  selectedText={selectedText}
+                  onDiscussComplete={() => setSelectedText(null)}
+                  wizardModeActive={layout.wizardModeActive}
+                  onWizardModeComplete={() => layout.setWizardModeActive(false)}
+                  onTriggerWizardMode={() => layout.setWizardModeActive(true)}
+                  onInsertDraft={handleInsertDraft}
+                />
+              </NormalLayout>
             )}
           </div>
-        ) : (
-          <Group orientation="horizontal" className="flex-1 flex overflow-hidden">
-            <Panel
-              id="sidebar"
-              defaultSize={DEFAULT_SIDEBAR_WIDTH}
-              minSize={200}
-              maxSize={400}
-              groupResizeBehavior="preserve-pixel-size"
-            >
-              <div className="h-full flex flex-col overflow-hidden surface-1">
-                <PanelErrorBoundary label="侧边栏">
-                  <ChapterSidebar
-                    projectId={params.id}
-                    activeChapterId={activeChapterId}
-                    onSelectChapter={setActiveChapterId}
-                    activeTab={activeTab}
-                    onTabChange={handleTabChange}
-                    activeOutlineId={activeOutlineId}
-                    onSelectOutline={handleSelectOutline}
-                    activeWorldEntryId={activeWorldEntryId}
-                    onSelectWorldEntry={handleSelectWorldEntry}
-                    onEditWorldEntry={handleEditWorldEntry}
-                    onDeleteWorldEntry={handleDeleteWorldEntry}
-                    onCreateWorldEntry={handleCreateWorldEntry}
-                  />
-                </PanelErrorBoundary>
-              </div>
-            </Panel>
-
-            <PanelSeparator
-              onDoubleClick={handleSidebarDoubleClickReset}
-              className="group relative flex items-center justify-center w-px shrink-0 cursor-col-resize bg-[hsl(var(--border))]"
-            >
-              <div className="absolute inset-y-0 -left-1.5 -right-1.5" />
-              <div className="absolute inset-y-0 left-0 w-px group-hover:w-[3px] group-hover:bg-[hsl(var(--accent))] group-active:bg-[hsl(var(--accent))] transition-[width,background-color] duration-150" />
-            </PanelSeparator>
-
-            <Panel id="editor-chat" minSize={500} groupResizeBehavior="preserve-relative-size">
-              <Group orientation="horizontal" className="h-full overflow-hidden">
-                <Panel id="editor" groupResizeBehavior="preserve-relative-size">
-                  <div className="h-full flex flex-col overflow-hidden surface-0">
-                    <PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>
-                  </div>
-                </Panel>
-
-                <PanelSeparator
-                  onDoubleClick={handleChatPanelDoubleClickReset}
-                  className="group relative flex items-center justify-center w-px shrink-0 cursor-col-resize bg-[hsl(var(--border))]"
-                >
-                  <div className="absolute inset-y-0 -left-1.5 -right-1.5" />
-                  <div className="absolute inset-y-0 left-0 w-px group-hover:w-[3px] group-hover:bg-[hsl(var(--accent))] group-active:bg-[hsl(var(--accent))] transition-[width,background-color] duration-150" />
-                </PanelSeparator>
-
-                <Panel
-                  id="chat"
-                  defaultSize={DEFAULT_CHAT_PANEL_WIDTH}
-                  minSize={MIN_CHAT_PANEL_WIDTH}
-                  maxSize={MAX_CHAT_PANEL_WIDTH}
-                  groupResizeBehavior="preserve-pixel-size"
-                >
-                  <div className="h-full">
-                    <PanelErrorBoundary label="AI 对话">
-                      <AIChatPanel projectId={params.id} onInsertDraft={handleInsertDraft} selectedText={selectedText} onDiscussComplete={() => setSelectedText(null)} wizardModeActive={wizardModeActive} onWizardModeComplete={() => setWizardModeActive(false)} onTriggerWizardMode={() => setWizardModeActive(true)} />
-                    </PanelErrorBoundary>
-                  </div>
-                </Panel>
-              </Group>
-            </Panel>
-          </Group>
-        )}
-        </div>
         </SidebarNavProvider>
       </TooltipProvider>
     </ThemeProvider>
@@ -400,10 +153,10 @@ export default function ProjectPage() {
 }
 
 function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editorRef, editorContentRef, onDiscuss }: {
-  projectId: string;
-  chapterId: string;
-  chapter: Chapter | undefined;
-  chapterNumber: number;
+  projectId: string
+  chapterId: string
+  chapter: Chapter | undefined
+  chapterNumber: number
   editorRef: RefObject<EditorHandle | null>
   editorContentRef: RefObject<HTMLDivElement | null>
   onDiscuss: (text: string) => void

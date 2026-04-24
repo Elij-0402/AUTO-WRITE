@@ -3,13 +3,12 @@
 import type { Chapter } from '@/lib/types'
 
 interface FocusLayoutProps {
-  projectId: string
   activeChapterId: string | null
   sortedChapters: Chapter[]
   mainContent: React.ReactNode
 }
 
-export function FocusLayout({ projectId, activeChapterId, sortedChapters, mainContent }: FocusLayoutProps) {
+export function FocusLayout({ activeChapterId, sortedChapters, mainContent }: FocusLayoutProps) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden animate-fade-in">
       {activeChapterId && (

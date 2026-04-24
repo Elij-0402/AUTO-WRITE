@@ -1,6 +1,5 @@
 'use client'
 
-import type { RefObject } from 'react'
 import { Group, Panel, PanelSeparator } from '../resizable-panel'
 import { ChapterSidebar } from '../../chapter/chapter-sidebar'
 import { DEFAULT_SIDEBAR_WIDTH } from '../resizable-panel'
@@ -18,7 +17,6 @@ interface NormalLayoutProps {
   activeTab: ActiveTab
   activeOutlineId: string | null
   activeWorldEntryId: string | null
-  sortedChapters: Chapter[]
   mainContent: React.ReactNode
   handleSidebarDoubleClickReset: () => void
   handleChatPanelDoubleClickReset: () => void
@@ -38,7 +36,6 @@ export function NormalLayout({
   activeTab,
   activeOutlineId,
   activeWorldEntryId,
-  sortedChapters,
   mainContent,
   handleSidebarDoubleClickReset,
   handleChatPanelDoubleClickReset,

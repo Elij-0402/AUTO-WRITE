@@ -39,3 +39,10 @@ export function formatEntryForContext(entry: WorldEntry): string {
 export function formatEntriesForPrompt(entries: WorldEntry[]): string {
   return entries.map(formatEntryForContext).join('\n')
 }
+
+export function calculateTokenCount(entries: WorldEntry[]): number {
+  return entries.reduce((total, entry) => {
+    const formatted = formatEntryForContext(entry)
+    return total + Math.ceil(formatted.length / 1.5)
+  }, 0)
+}

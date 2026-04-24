@@ -10,6 +10,7 @@ import { formatEntryForContext as _formatEntryForContext } from '../ai/formatter
 
 // Re-export for backwards compatibility
 export { formatEntryForContext } from '../ai/formatters'
+export { calculateTokenCount } from '../ai/formatters'
 
 /** Entry type groupings for context injection — per D-09 */
 export interface EntriesByType {

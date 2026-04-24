@@ -41,7 +41,7 @@ export function formatEntriesForPrompt(entries: WorldEntry[]): string {
 }
 
 export function calculateTokenCount(text: string): number {
-  const cleaned = text.replace(/[#*_`~[\]()]/g, '')
+  const cleaned = text.replace(/[#*_`~[\]()=]/g, '')
 
   let chineseChars = 0
   let englishWords = 0

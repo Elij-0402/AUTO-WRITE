@@ -18,6 +18,7 @@ import { Send, Loader2, Lightbulb, AlertTriangle, Feather, X, ArrowDown, Quote, 
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Textarea } from '@/components/ui/textarea'
+import { findEntryIdByName } from '@/lib/ai/find-entry-by-name'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 import type { Suggestion, RelationshipSuggestion, NewEntrySuggestion } from '@/lib/ai/suggestion-parser'
 
@@ -203,14 +204,6 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
   const handleInsertDraft = (_draftId: string, content: string) => {
     onInsertDraft?.(content)
-  }
-
-  const findEntryIdByName = (name: string): string | null => {
-    for (const [, entries] of Object.entries(entriesByType)) {
-      const found = entries.find(e => e.name === name || name.includes(e.name))
-      if (found) return found.id
-    }
-    return null
   }
 
   const showToast = (message: string) => {

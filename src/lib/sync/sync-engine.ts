@@ -113,7 +113,7 @@ export async function performInitialSync(
   await flushSyncQueue()
   
   // Then pull cloud data
-  const cloudTables = ['project_index', 'chapters', 'world_entries', 'relations', 'conversations']
+  const cloudTables = ['project_index', 'chapters', 'world_entries', 'relations', 'messages', 'conversations']
   let merged = 0
   let errors = 0
 
@@ -240,6 +240,18 @@ export async function performInitialSync(
                   messageCount: Number(local.messageCount ?? 0),
                   rollingSummary: local.rollingSummary as string | undefined,
                   summarizedUpTo: local.summarizedUpTo as number | undefined,
+                })
+              } else if (cloudTable === 'messages') {
+                const local = mapCloudToLocal('messages', record) as Record<string, unknown>
+                await projectDb.messages.put({
+                  id: local.id as string,
+                  projectId: local.projectId as string,
+                  conversationId: local.conversationId as string,
+                  role: local.role as 'user' | 'assistant',
+                  content: local.content as string,
+                  timestamp: Number(local.timestamp ?? local.createdAt ?? Date.now()),
+                  hasDraft: local.hasDraft as boolean | undefined,
+                  draftId: local.draftId as string | undefined,
                 })
               }
               merged++

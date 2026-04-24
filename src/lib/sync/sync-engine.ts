@@ -38,10 +38,14 @@ export async function flushSyncQueue(
   let totalFailed = 0
 
   while (Date.now() - start < maxDurationMs) {
-    const pending = [...await getPendingChanges(), ...await getRetryableItems()]
-    if (pending.length === 0) break
+    const pending = await getPendingChanges()
+    const retryable = await getRetryableItems()
+    // Filter out items that are already in pending to avoid processing the same item twice
+    // (an item can be in both when failed=true but synced=false)
+    const newRetryable = retryable.filter(item => !pending.some(p => p.id === item.id))
+    const batch = [...pending, ...newRetryable].slice(0, SYNC_BATCH_SIZE)
+    if (batch.length === 0) break
 
-    const batch = pending.slice(0, SYNC_BATCH_SIZE)
     const syncedIds: string[] = []
     const failedIds: string[] = []
 

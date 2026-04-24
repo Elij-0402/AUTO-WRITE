@@ -6,6 +6,10 @@
  */
 
 import type { WorldEntry } from '../types/world-entry'
+import { formatEntryForContext as _formatEntryForContext } from '../ai/formatters'
+
+// Re-export for backwards compatibility
+export { formatEntryForContext } from '../ai/formatters'
 
 /** Entry type groupings for context injection — per D-09 */
 export interface EntriesByType {
@@ -128,59 +132,6 @@ function matchKeyword(value: string | undefined, keywords: string[]): boolean {
   return keywords.some(k => lower.includes(k))
 }
 
-/**
- * Estimate token count using ~1.5 chars per token for Chinese text.
- * Per D-01: uses this estimation for token budgeting.
- */
-export function calculateTokenCount(entries: WorldEntry[]): number {
-  return entries.reduce((total, entry) => {
-    // Format the entry and count characters
-    const formatted = formatEntryForContext(entry)
-    // ~1.5 Chinese characters per token is a reasonable estimate
-    return total + Math.ceil(formatted.length / 1.5)
-  }, 0)
-}
-
-/**
- * Format a single entry for injection into system prompt.
- * Per D-26: 【角色】Name｜外貌: X｜性格: X｜背景: X
- * Empty fields are omitted so we don't burn tokens on "外貌 , 性格 ,".
- */
-export function formatEntryForContext(entry: WorldEntry): string {
-  const prefix =
-    entry.type === 'character' ? '【角色】'
-      : entry.type === 'location' ? '【地点】'
-        : entry.type === 'rule' ? '【规则】'
-          : entry.type === 'timeline' ? '【时间线】'
-            : `【${entry.type}】`
-
-  const parts: string[] = [`${prefix}${entry.name}`]
-  const push = (label: string, value: string | undefined) => {
-    const v = value?.trim()
-    if (v) parts.push(`${label}: ${v}`)
-  }
-
-  if (entry.type === 'character') {
-    push('别名', entry.alias)
-    push('外貌', entry.appearance)
-    push('性格', entry.personality)
-    push('背景', entry.background)
-  } else if (entry.type === 'location') {
-    push('描述', entry.description)
-    push('特征', entry.features)
-  } else if (entry.type === 'rule') {
-    push('内容', entry.content)
-    push('适用范围', entry.scope)
-  } else if (entry.type === 'timeline') {
-    push('时间点', entry.timePoint)
-    push('事件', entry.eventDescription)
-  }
-
-  const tags = entry.tags?.filter(t => t?.trim()).join(',')
-  if (tags) parts.push(`标签: ${tags}`)
-
-  return parts.join('｜')
-}
 
 /**
  * Trim entries to fit within token budget.
@@ -197,7 +148,7 @@ export function trimToTokenBudget(
   let currentTokens = 0
 
   for (const entry of entries) {
-    const entryTokens = Math.ceil(formatEntryForContext(entry).length / 1.5)
+    const entryTokens = Math.ceil(_formatEntryForContext(entry).length / 1.5)
     if (currentTokens + entryTokens > maxTokens) break
     result.push(entry)
     currentTokens += entryTokens
@@ -213,7 +164,7 @@ export function trimToTokenBudget(
 export function buildContextPrompt(entries: WorldEntry[]): string {
   if (entries.length === 0) return ''
   
-  const formatted = entries.map(formatEntryForContext)
+  const formatted = entries.map(_formatEntryForContext)
   return formatted.join('\n')
 }
 

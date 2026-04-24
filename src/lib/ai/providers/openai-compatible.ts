@@ -91,7 +91,6 @@ export async function* streamOpenAICompatible(
       type: 'usage',
       inputTokens: lastUsage.prompt_tokens ?? 0,
       outputTokens: lastUsage.completion_tokens ?? 0,
-      totalTokens: lastUsage.total_tokens ?? 0,
     }
   }
 

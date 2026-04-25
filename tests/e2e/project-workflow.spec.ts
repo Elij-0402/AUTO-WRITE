@@ -6,9 +6,10 @@ import { readFileSync } from 'fs'
 async function createProject(page: Page, title: string) {
   await page.goto('/')
   await page.waitForLoadState('networkidle')
-  await page.getByRole('button', { name: '新建项目' }).click()
-  await page.getByPlaceholder('输入书名').fill(title)
-  await page.getByRole('button', { name: '创建' }).click()
+  await page.getByRole('button', { name: '开始第一个故事' }).click()
+  const dialog = page.getByRole('dialog', { name: '新建项目' })
+  await dialog.getByLabel(/标题/).fill(title)
+  await dialog.getByRole('button', { name: '创建' }).click()
   await page.waitForURL(/\/projects\/[^/]+$/)
   return page.url().match(/\/projects\/([^/]+)/)?.[1] ?? ''
 }

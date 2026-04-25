@@ -7,10 +7,10 @@ describe('project-db v14 migration', () => {
     __resetProjectDBCache()
   })
 
-  it('opens at version 15 successfully', async () => {
+  it('opens at version 16 successfully', async () => {
     const db = createProjectDB('test-migration-v14')
     await db.open()
-    expect(db.verno).toBe(15)
+    expect(db.verno).toBe(16)
     db.close()
   })
 

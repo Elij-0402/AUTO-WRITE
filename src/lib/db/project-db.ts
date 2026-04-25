@@ -200,6 +200,23 @@ export interface AIUsageEvent {
 }
 
 /**
+ * Node layout position snapshot per D-24.
+ * Stores x/y coordinates for each node in a named layout (Phase 1 = 'default').
+ * Fixed nodes (dragged by user) have their fx/fy set, which takes precedence
+ * over force-layout computed positions on next render.
+ */
+export interface LayoutSnapshot {
+  id: string           // nanoid
+  projectId: string
+  layoutId: string     // Phase 1 = 'default'
+  nodeId: string       // WorldEntry.id
+  x: number
+  y: number
+  isDefault: boolean
+  updatedAt: number
+}
+
+/**
  * Layout settings stored per-project in IndexedDB per D-24.
  * sidebarWidth: persisted sidebar width in pixels per D-25
  * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world') per D-08, D-14
@@ -233,6 +250,7 @@ export class InkForgeProjectDB extends Dexie {
   conversations!: Table<Conversation, string>
   aiUsage!: Table<AIUsageEvent, string>
   contradictions!: Table<Contradiction, string>
+  layoutSnapshots!: Table<LayoutSnapshot, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -514,6 +532,25 @@ export class InkForgeProjectDB extends Dexie {
           // Table may already be absent — safe to ignore.
         }
       })
+    // v16: LayoutSnapshot table for node position persistence
+    this.version(16).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+      aiConfig: 'id',
+      messages: 'id, projectId, conversationId, role, timestamp',
+      consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+      revisions: 'id, projectId, chapterId, createdAt',
+      analyses: 'id, kind, invalidationKey, createdAt',
+      conversations: 'id, projectId, updatedAt',
+      aiUsage: 'id, projectId, conversationId, createdAt, model',
+      contradictions:
+        'id, projectId, messageId, entryName, exempted, createdAt, ' +
+        '[projectId+entryName], [projectId+createdAt]',
+      layoutSnapshots: 'id, projectId, [projectId+layoutId], nodeId',
+    })
   }
 }
 

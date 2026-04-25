@@ -133,10 +133,8 @@ export function InteractiveRelationGraph({
 
   const entryById = useMemo(() => new Map(activeEntries.map(e => [e.id, e])), [activeEntries])
 
-  // Handle node click - trigger AI analysis
-  const handleNodeClick = useCallback(async (nodeId: string, event: React.MouseEvent) => {
-    if (dragState?.hasMoved) return
-
+  // Analyze a node - extracted for reuse in handleNodeClick and onRetry
+  const analyzeNode = useCallback(async (nodeId: string) => {
     const entry = entryById.get(nodeId)
     if (!entry) return
 
@@ -188,7 +186,13 @@ export function InteractiveRelationGraph({
     } finally {
       setIsAnalyzing(false)
     }
-  }, [entryById, layout, projectId, relations, activeEntries, dragState])
+  }, [entryById, layout, projectId, relations, activeEntries])
+
+  // Handle node click - trigger AI analysis
+  const handleNodeClick = useCallback(async (nodeId: string, event: React.MouseEvent) => {
+    if (dragState?.hasMoved) return
+    await analyzeNode(nodeId)
+  }, [dragState, analyzeNode])
 
   // Handle mouse down for drag
   const handleMouseDown = useCallback((nodeId: string, event: React.MouseEvent) => {
@@ -315,13 +319,9 @@ export function InteractiveRelationGraph({
           isLoading={isAnalyzing}
           error={analysisError}
           onRetry={() => {
-            if (!lastAnalyzedNodeId) return
-            const entry = entryById.get(lastAnalyzedNodeId)
-            if (!entry) return
-            setSelectedNodeId(lastAnalyzedNodeId)
-            setIsAnalyzing(true)
-            setAnalysisError(null)
-            setRecommendations([])
+            if (lastAnalyzedNodeId) {
+              analyzeNode(lastAnalyzedNodeId)
+            }
           }}
           onSelectRecommendation={handleSelectRecommendation}
           onClose={() => setSelectedNodeId(null)}

@@ -46,6 +46,24 @@ async function waitForHMR(page: Page) {
   }
 }
 
+function getChapterRow(page: Page, title: string) {
+  return page.locator(`//span[normalize-space()="${title}"]/ancestor::div[contains(@class,'cursor-pointer')][1]`)
+}
+
+async function waitForEditorHydration(page: Page, chapterTitle: string, expectedText: string) {
+  const chapterRow = getChapterRow(page, chapterTitle).first()
+  await expect(chapterRow).toBeVisible()
+
+  for (let i = 0; i < 20; i++) {
+    await chapterRow.click()
+    const editorText = (await page.locator('.ProseMirror').first().textContent().catch(() => '')) ?? ''
+    if (editorText.includes(expectedText)) return
+    await page.waitForTimeout(500)
+  }
+
+  await expect(page.locator('.ProseMirror').first()).toContainText(expectedText, { timeout: 1000 })
+}
+
 async function waitForChapterContentPersisted(page: Page, projectId: string, text: string) {
   await page.waitForFunction(
     async ([pid, expected]) => {
@@ -134,8 +152,7 @@ test('1. 创建项目 + 创建章节 + 编辑器保存，刷新后仍在', async
   await page.getByRole('button', { name: '章节' }).nth(0).click()
   await page.waitForLoadState('domcontentloaded')
   await waitForHMR(page)
-  await page.getByText('第一章 序幕').first().click()
-  await expect(page.locator('.ProseMirror').first()).toContainText('e2e 测试', { timeout: 10000 })
+  await waitForEditorHydration(page, '第一章 序幕', 'e2e 测试')
 
   await page.evaluate((id) => {
     indexedDB.deleteDatabase(`inkforge-project-${id}`)

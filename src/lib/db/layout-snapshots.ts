@@ -63,7 +63,10 @@ export async function deleteLayoutSnapshotsForNode(
   nodeId: string
 ): Promise<void> {
   const db = createProjectDB(projectId)
-  await db.layoutSnapshots.where('nodeId').equals(nodeId).delete()
+  await db.layoutSnapshots
+    .where('[projectId+nodeId]')
+    .equals([projectId, nodeId])
+    .delete()
 }
 
 /**

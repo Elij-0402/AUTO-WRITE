@@ -549,7 +549,7 @@ export class InkForgeProjectDB extends Dexie {
       contradictions:
         'id, projectId, messageId, entryName, exempted, createdAt, ' +
         '[projectId+entryName], [projectId+createdAt]',
-      layoutSnapshots: 'id, projectId, [projectId+layoutId], nodeId',
+      layoutSnapshots: 'id, projectId, [projectId+layoutId], [projectId+nodeId], nodeId',
     })
   }
 }

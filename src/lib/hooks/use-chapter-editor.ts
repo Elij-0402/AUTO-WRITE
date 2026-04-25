@@ -44,35 +44,43 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
   // Sync content from chapter to local state ONLY when chapterId changes (chapter switch)
   // Don't sync on every content change (e.g., autosave updates) to avoid editor resets
   useEffect(() => {
-    // Detect chapter switch
-    if (chapterId !== prevChapterIdRef.current) {
-      // Chapter changed - update content
-      if (chapter?.content !== undefined) {
-        setContent(chapter.content)
-        // Initialize previous word count for delta tracking
-        prevWordCountRef.current = chapter.wordCount || 0
-      } else {
-        setContent(null)
-        prevWordCountRef.current = 0
-      }
-      prevChapterIdRef.current = chapterId
+    const chapterSwitched = chapterId !== prevChapterIdRef.current
+    const chapterLoadedAfterSelection =
+      chapterId !== null &&
+      chapterId === prevChapterIdRef.current &&
+      content === null &&
+      chapter?.content !== undefined
+
+    if (!chapterSwitched && !chapterLoadedAfterSelection) return
+
+    if (chapter?.content !== undefined) {
+      setContent(chapter.content)
+      // Initialize previous word count for delta tracking
+      prevWordCountRef.current = chapter.wordCount || 0
+    } else {
+      setContent(null)
+      prevWordCountRef.current = 0
     }
-  }, [chapterId, chapter?.content]) // eslint-disable-line react-hooks/exhaustive-deps
+    prevChapterIdRef.current = chapterId
+  }, [chapterId, chapter?.content, chapter?.wordCount, content])
   
-  // Update function that will be called by autosave
-  // Note: This updates IndexedDB directly, which triggers the chapter query
-  // But we DON'T sync back to content state unless chapterId changes
-  const updateContent = useCallback(async (newContent: object) => {
+  const persistContent = useCallback(async (nextContent: object) => {
     if (!chapterId) return
-    await updateChapterContentQuery(db, chapterId, newContent)
+    await updateChapterContentQuery(db, chapterId, nextContent)
   }, [db, chapterId])
+
+  // Editor changes should update local state immediately; persistence is
+  // handled by the debounced autosave effect below.
+  const updateContent = useCallback((newContent: object) => {
+    setContent(newContent)
+  }, [])
   
   // Autosave hook with 500ms debounce
   // Wrap updateContent to capture current content from closure
   const { isSaving, lastSaved } = useAutoSave(
     async () => {
       if (content !== null) {
-        await updateContent(content)
+        await persistContent(content)
         // Compute delta and update today's word count (positive deltas only)
         const newWordCount = computeWordCount(content)
         const delta = newWordCount - prevWordCountRef.current

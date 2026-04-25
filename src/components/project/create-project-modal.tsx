@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod/v4'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -48,6 +49,7 @@ export function CreateProjectModal({
   onOpenChange,
   onSubmit,
 }: CreateProjectModalProps) {
+  const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const {
@@ -68,9 +70,12 @@ export function CreateProjectModal({
   const handleFormSubmit = async (data: CreateProjectFormData) => {
     setIsSubmitting(true)
     try {
-      await onSubmit(data)
+      const id = await onSubmit(data)
       reset()
       onOpenChange(false)
+      requestAnimationFrame(() => {
+        router.push(`/projects/${id}`)
+      })
     } finally {
       setIsSubmitting(false)
     }

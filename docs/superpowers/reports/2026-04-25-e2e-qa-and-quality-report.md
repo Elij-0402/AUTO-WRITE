@@ -122,8 +122,8 @@
 
 | 检查项 | 结果 | 修复 |
 |--------|------|------|
-| DESIGN.md 红线：硬编码阴影 | 部分违规 | `shadow-xl` → `shadow-[var(--shadow-lg)]`，`shadow-md` → `shadow-[var(--shadow-md)]` |
-| DESIGN.md 红线：undefined CSS 变量引用 | 发现并修复 | 全部 `shadow-lift-md/lg`（未定义变量）→ 替换为 `shadow-[var(--shadow-sm/md/lg)]` |
+| DESIGN.md 红线：硬编码阴影 | 部分违规 | 统一替换为基于设计 token 的自定义阴影类 |
+| DESIGN.md 红线：undefined CSS 变量引用 | 发现并修复 | 全部未定义阴影引用改为稳定的 `elev-sm/md/lg` 类 |
 | DESIGN.md 红线：pulse 动画 | 功能性使用（AI thinking indicator）| 保留，注明理由 |
 | `lang="zh-CN"` | ✅ 正确（`src/app/layout.tsx`） | — |
 | ARIA 角色 | ✅ 正确 | `role="dialog"`（wizard-overlay），`role="img"`（SVG graphs）|
@@ -131,11 +131,11 @@
 | 键盘焦点 | （在 dev server 中手动验证）| 主要交互可用 Tab/Enter |
 
 **修复的文件**：
-- `relation-form.tsx`：硬编码 `shadow-xl` → CSS token
-- `chapter-context-menu.tsx`：硬编码 `shadow-md` → CSS token
-- `outline-tab.tsx`、`chapter-row.tsx`、`tag-input.tsx`、`floating-toolbar.tsx`：broken `shadow-lift-md` → `shadow-[var(--shadow-sm/md)]`
-- `ai-chat-panel/wizard-overlay.tsx`、`ai-chat-panel/message-list.tsx`、`ai-chat-panel/index.tsx`：broken `shadow-lift-md` → `shadow-[var(--shadow-sm)]`
-- `ui/select.tsx`：broken `shadow-lift-lg` → `shadow-[var(--shadow-lg)]`
+- `relation-form.tsx`：硬编码阴影改为设计 token 阴影类
+- `chapter-context-menu.tsx`：硬编码阴影改为设计 token 阴影类
+- `outline-tab.tsx`、`chapter-row.tsx`、`tag-input.tsx`、`floating-toolbar.tsx`：未定义阴影引用改为 `elev-md`
+- `ai-chat-panel/wizard-overlay.tsx`、`ai-chat-panel/message-list.tsx`、`ai-chat-panel/index.tsx`：未定义阴影引用改为 `elev-sm/md`
+- `ui/select.tsx`：较大浮层阴影统一改为 `elev-lg`
 
 ---
 

@@ -201,7 +201,7 @@ test('4. contradiction 豁免 + 刷新 + 确认仍豁免', async ({ page }) => {
   await page.evaluate(
     ([pid, entryName]) => {
       return new Promise<void>((resolve, reject) => {
-        const dbReq = indexedDB.open(`inkforge-project-${pid}`, 13)
+        const dbReq = indexedDB.open(`inkforge-project-${pid}`)
         dbReq.onsuccess = () => {
           const db = dbReq.result as IDBDatabase
           const tx = db.transaction('contradictions', 'readwrite')

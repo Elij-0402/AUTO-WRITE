@@ -106,7 +106,7 @@ export function MessageList({
       {showScrollPill && (
         <button
           onClick={() => scrollToBottom('smooth')}
-          className="sticky bottom-3 left-1/2 ml-[-52px] z-20 inline-flex items-center gap-1 px-2.5 py-1 bg-[hsl(var(--surface-1))] border border-border rounded-full shadow-[var(--shadow-sm)] text-[12px] text-foreground/80 hover:bg-[hsl(var(--surface-2))] transition-colors animate-fade-up"
+        className="sticky bottom-3 left-1/2 ml-[-52px] z-20 inline-flex items-center gap-1 px-2.5 py-1 bg-[hsl(var(--surface-1))] border border-border rounded-full elev-sm text-[12px] text-foreground/80 hover:bg-[hsl(var(--surface-2))] transition-colors animate-fade-up"
           aria-label="跳到最新"
         >
           <ArrowDown className="w-3 h-3 text-primary" />

@@ -21,7 +21,7 @@ export function ChapterContextMenu({
 }: ChapterContextMenuProps) {
   return (
     <div
-      className="absolute right-0 top-full z-20 mt-1 w-44 rounded-md border bg-popover py-1 shadow-[var(--shadow-md)]"
+      className="absolute right-0 top-full z-20 mt-1 w-44 rounded-md border bg-popover py-1 elev-md"
       onClick={(e) => e.stopPropagation()}
     >
       <button

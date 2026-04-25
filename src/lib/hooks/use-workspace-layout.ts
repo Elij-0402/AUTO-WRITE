@@ -98,6 +98,22 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
     if (currentWorldIndex < sameTypeEntries.length - 1) setActiveWorldEntryId(sameTypeEntries[currentWorldIndex + 1].id)
   }, [currentWorldIndex, sameTypeEntries])
 
+  useEffect(() => {
+    if (activeTab !== 'chapters') return
+    if (sortedChapters.length === 0) {
+      if (activeChapterId !== null) setActiveChapterId(null)
+      return
+    }
+
+    const hasActiveChapter = activeChapterId
+      ? sortedChapters.some(chapter => chapter.id === activeChapterId)
+      : false
+
+    if (!hasActiveChapter) {
+      setActiveChapterId(sortedChapters[0].id)
+    }
+  }, [activeChapterId, activeTab, sortedChapters])
+
   // ── Keyboard shortcuts ───────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

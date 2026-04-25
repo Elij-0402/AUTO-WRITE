@@ -68,7 +68,7 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
         isActive
           ? 'border-[hsl(var(--accent-amber))] bg-[hsl(var(--surface-3))]/70 text-foreground'
           : 'hover:bg-[hsl(var(--surface-3))]/40 text-foreground/85',
-        isDragging && 'opacity-50 shadow-[var(--shadow-md)] z-50'
+      isDragging && 'opacity-50 elev-md z-50'
       )}
       onClick={onSelect}
     >

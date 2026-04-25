@@ -12,6 +12,16 @@ export interface GraphNode {
   y: number
   vx: number
   vy: number
+  /**
+   * Fixed x position. When set, the node is pinned and won't move during
+   * force simulation. Used during drag to freeze a node in place.
+   */
+  fx?: number
+  /**
+   * Fixed y position. When set, the node is pinned and won't move during
+   * force simulation. Used during drag to freeze a node in place.
+   */
+  fy?: number
 }
 
 export interface GraphEdge {
@@ -97,6 +107,14 @@ export function layoutForceDirected(
     // Center bias + damping + integration
     const damping = 0.85
     for (const n of nodes) {
+      // Skip fixed nodes — they stay at fx/fy
+      if (n.fx !== undefined && n.fy !== undefined) {
+        n.x = n.fx
+        n.y = n.fy
+        n.vx = 0
+        n.vy = 0
+        continue
+      }
       n.vx += (cx - n.x) * centerStrength
       n.vy += (cy - n.y) * centerStrength
       n.vx *= damping

@@ -1,0 +1,16 @@
+[1A[2K[2m[WebServer] [22m[33m[1m⚠[22m[39m Port 3000 is in use by process 3204, using available port 3001 instead.
+
+[1A[2K[2m[WebServer] [22m[31m[1m⨯[22m[39m Another [36mnext dev[39m server is already running.
+
+[1A[2K[2m[WebServer] [22m
+
+[1A[2K[2m[WebServer] [22m- Local:        [36mhttp://localhost:3000[39m
+[2m[WebServer] [22m- PID:          3204
+[2m[WebServer] [22m- Dir:          D:\AUTO-WRITE
+[2m[WebServer] [22m- Log:          .next\dev\logs\next-development.log
+[2m[WebServer] [22m
+[2m[WebServer] [22mRun [36mtaskkill /PID 3204 /F[39m to stop it.
+
+Error: Process from config.webServer was not able to start. Exit code: 1
+
+[1A[2K

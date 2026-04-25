@@ -1,10 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, BarChart3, Bot, Maximize2, Minimize2, Moon, PenLine, Sun } from 'lucide-react'
-import { metaDb } from '@/lib/db/meta-db'
 import { useTotalWordCount, useTodayWordCount } from '@/lib/hooks/use-word-count'
+import { useProjectMeta } from '@/lib/hooks/use-project-meta'
 import { useTheme } from '@/components/editor/theme-provider'
 import { SyncStatusIcon } from '@/components/sync/SyncStatusIcon'
 import { Button } from '@/components/ui/button'
@@ -32,10 +31,7 @@ export function WorkspaceTopbar({
   onOpenDraftDialog,
   idle = false,
 }: WorkspaceTopbarProps) {
-  const project = useLiveQuery(
-    () => metaDb.projectIndex.get(projectId),
-    [projectId]
-  )
+  const { project } = useProjectMeta(projectId)
   const totalWordCount = useTotalWordCount(projectId)
   const todayWordCount = useTodayWordCount(projectId)
 

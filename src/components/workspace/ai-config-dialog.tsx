@@ -50,8 +50,8 @@ const PRESETS: Record<PresetKey, {
     label: 'DeepSeek',
     storeAs: 'openai-compatible',
     baseUrl: 'https://api.deepseek.com',
-    defaultModel: 'deepseek-chat',
-    popularModels: ['deepseek-chat', 'deepseek-reasoner'],
+    defaultModel: 'deepseek-v4-flash',
+    popularModels: ['deepseek-v4-flash', 'deepseek-v4-pro', 'deepseek-v3.1'],
     consoleUrl: 'https://platform.deepseek.com/api_keys',
   },
   openrouter: {

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useProjects } from './use-projects'
 import { metaDb } from '../db/meta-db'
+import { createProjectDB, __resetProjectDBCache } from '../db/project-db'
 
 // We need to test the hook without actual React reactive queries
 // since useLiveQuery requires a DexieProvider. For unit tests,
@@ -10,6 +11,7 @@ import { metaDb } from '../db/meta-db'
 describe('useProjects', () => {
   beforeEach(async () => {
     await metaDb.projectIndex.clear()
+    __resetProjectDBCache()
   })
 
   it('should create a project with generated NanoID', async () => {
@@ -30,8 +32,11 @@ describe('useProjects', () => {
 
     // Verify stored in database
     const stored = await metaDb.projectIndex.get(createdId!)
+    const mirrored = await createProjectDB(createdId!).projects.get(createdId!)
     expect(stored).toBeDefined()
+    expect(mirrored).toBeDefined()
     expect(stored!.title).toBe('测试小说')
+    expect(mirrored!.title).toBe('测试小说')
     expect(stored!.genre).toBe('玄幻')
     expect(stored!.synopsis).toBe('测试简介')
     expect(stored!.deletedAt).toBeNull()
@@ -101,7 +106,9 @@ describe('useProjects', () => {
     })
 
     const stored = await metaDb.projectIndex.get('delete-me')
+    const mirrored = await createProjectDB('delete-me').projects.get('delete-me')
     expect(stored!.deletedAt).not.toBeNull()
+    expect(mirrored!.deletedAt).not.toBeNull()
   })
 
   it('should restore a soft-deleted project', async () => {
@@ -126,7 +133,9 @@ describe('useProjects', () => {
     })
 
     const stored = await metaDb.projectIndex.get('restore-me')
+    const mirrored = await createProjectDB('restore-me').projects.get('restore-me')
     expect(stored!.deletedAt).toBeNull()
+    expect(mirrored!.deletedAt).toBeNull()
   })
 
   it('should update project metadata', async () => {
@@ -154,7 +163,10 @@ describe('useProjects', () => {
     })
 
     const stored = await metaDb.projectIndex.get('update-me')
+    const mirrored = await createProjectDB('update-me').projects.get('update-me')
     expect(stored!.title).toBe('新标题')
     expect(stored!.genre).toBe('都市')
+    expect(mirrored!.title).toBe('新标题')
+    expect(mirrored!.genre).toBe('都市')
   })
 })

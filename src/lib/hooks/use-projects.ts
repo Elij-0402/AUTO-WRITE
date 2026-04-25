@@ -3,6 +3,7 @@
 import { useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { metaDb } from '../db/meta-db'
+import { createProjectDB } from '../db/project-db'
 import { enqueueChange } from '../sync/sync-queue'
 import { syncNewProject } from '../sync/sync-engine'
 import { createClient } from '../supabase/client'
@@ -46,6 +47,7 @@ export function useProjects() {
     }
 
     await metaDb.projectIndex.add(project)
+    await createProjectDB(id).projects.put(project)
 
     // D-37: Immediate sync on new project creation
     const supabase = createClient()
@@ -58,34 +60,40 @@ export function useProjects() {
   }, [])
 
   const updateProject = useCallback(async (id: string, data: Partial<ProjectMeta>): Promise<void> => {
-    await metaDb.projectIndex.update(id, {
+    const existing = await metaDb.projectIndex.get(id) ?? await createProjectDB(id).projects.get(id)
+    if (!existing) return
+
+    const updatedProject = {
+      ...existing,
       ...data,
       updatedAt: new Date(),
-    })
+    }
+
+    await metaDb.projectIndex.put(updatedProject)
+    await createProjectDB(id).projects.put(updatedProject)
 
     // Queue for cloud sync
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      const updated = await metaDb.projectIndex.get(id)
-      if (updated) {
-        await enqueueChange({
-          table: 'projectIndex',
-          operation: 'update',
-          data: updated as unknown as Record<string, unknown>,
-          localUpdatedAt: Date.now(),
-          userId: user.id,
-        })
-      }
+      await enqueueChange({
+        table: 'projectIndex',
+        operation: 'update',
+        data: updatedProject as unknown as Record<string, unknown>,
+        localUpdatedAt: Date.now(),
+        userId: user.id,
+      })
     }
   }, [])
 
   const softDeleteProject = useCallback(async (id: string): Promise<void> => {
     const now = new Date()
-    await metaDb.projectIndex.update(id, {
-      deletedAt: now,
-      updatedAt: now,
-    })
+    const existing = await metaDb.projectIndex.get(id) ?? await createProjectDB(id).projects.get(id)
+    if (existing) {
+      const deletedProject = { ...existing, deletedAt: now, updatedAt: now }
+      await metaDb.projectIndex.put(deletedProject)
+      await createProjectDB(id).projects.put(deletedProject)
+    }
 
     // Queue for cloud sync
     const supabase = createClient()
@@ -102,10 +110,13 @@ export function useProjects() {
   }, [])
 
   const restoreProject = useCallback(async (id: string): Promise<void> => {
-    await metaDb.projectIndex.update(id, {
-      deletedAt: null,
-      updatedAt: new Date(),
-    })
+    const now = new Date()
+    const existing = await metaDb.projectIndex.get(id) ?? await createProjectDB(id).projects.get(id)
+    if (existing) {
+      const restoredProject = { ...existing, deletedAt: null, updatedAt: now }
+      await metaDb.projectIndex.put(restoredProject)
+      await createProjectDB(id).projects.put(restoredProject)
+    }
   }, [])
 
   return {

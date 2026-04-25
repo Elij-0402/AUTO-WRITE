@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useProjects } from '@/lib/hooks/use-projects'
+import { useProjectMeta } from '@/lib/hooks/use-project-meta'
 import { Button } from '@/components/ui/button'
 
 export default function ProjectLayout({
@@ -11,9 +11,7 @@ export default function ProjectLayout({
 }) {
   const params = useParams<{ id: string }>()
   const router = useRouter()
-  const { projects, loading } = useProjects()
-
-  const project = projects.find((p) => p.id === params.id)
+  const { project, loading } = useProjectMeta(params.id)
 
   if (loading) {
     return (

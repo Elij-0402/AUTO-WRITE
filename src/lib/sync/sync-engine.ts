@@ -151,7 +151,7 @@ export async function performInitialSync(
       for (const record of data) {
         try {
           const local = mapCloudToLocal('projectIndex', record) as Record<string, unknown>
-          await metaDb.projectIndex.put({
+          const project = {
             id: local.id as string,
             title: local.title as string,
             genre: (local.genre as string) ?? '',
@@ -163,7 +163,9 @@ export async function performInitialSync(
             createdAt: new Date(local.createdAt as string | number),
             updatedAt: new Date(local.updatedAt as string | number),
             deletedAt: local.deletedAt ? new Date(local.deletedAt as string | number) : null,
-          })
+          }
+          await metaDb.projectIndex.put(project)
+          await createProjectDB(project.id).projects.put(project)
           merged++
         } catch (e) {
           console.error(`Error writing project ${record.id} to local DB:`, e)

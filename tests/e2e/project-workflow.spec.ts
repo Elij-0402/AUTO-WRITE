@@ -209,6 +209,27 @@ test('2. 创建 3 个 WorldEntry，刷新后确认仍在', async ({ page }) => {
   }, projectId)
 })
 
+test('2.1 项目页与分析页支持直接访问，不落入项目未找到', async ({ page }) => {
+  const projectTitle = `e2e-deeplink-${Date.now()}`
+  const projectId = await createProject(page, projectTitle)
+
+  await page.goto(`/projects/${projectId}`)
+  await page.waitForLoadState('networkidle')
+  await waitForHMR(page)
+  await expect(page.getByText('项目未找到')).toHaveCount(0)
+  await expect(page.getByText(projectTitle).first()).toBeVisible()
+
+  await page.goto(`/projects/${projectId}/analysis`)
+  await page.waitForLoadState('networkidle')
+  await waitForHMR(page)
+  await expect(page.getByText('项目未找到')).toHaveCount(0)
+  await expect(page.getByText('创作者分析')).toBeVisible()
+
+  await page.evaluate((id) => {
+    indexedDB.deleteDatabase(`inkforge-project-${id}`)
+  }, projectId)
+})
+
 // ─── Scenario 3: Chat panel accepts input ─────────────────────────────────
 
 test('3. AI 聊天输入并确认提交', async ({ page }) => {

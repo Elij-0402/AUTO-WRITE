@@ -1,16 +1,19 @@
 'use client'
 
 import { useParams } from 'next/navigation'
+import { useCallback } from 'react'
 import { useState, useMemo } from 'react'
 import { ArrowLeft, Network, Clock, AlertTriangle } from 'lucide-react'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useAllRelations } from '@/lib/hooks/use-all-relations'
+import { useRelations } from '@/lib/hooks/use-relations'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
-import { RelationGraph } from '@/components/analysis/relation-graph'
+import { InteractiveRelationGraph } from '@/components/analysis/interactive-relation-graph'
 import { TimelineView } from '@/components/analysis/timeline-view'
 import { ContradictionDashboard } from '@/components/analysis/contradiction-dashboard'
 import { Button } from '@/components/ui/button'
 import { ThemeProvider } from '@/components/editor/theme-provider'
+import type { WorldEntryType } from '@/lib/types/world-entry'
 
 type Tab = 'relations' | 'timeline' | 'contradictions'
 
@@ -25,7 +28,31 @@ export default function AnalysisPage() {
   const [tab, setTab] = useState<Tab>('relations')
   const { entries } = useWorldEntries(params.id)
   const relations = useAllRelations(params.id)
+  const { addRelation } = useRelations(params.id)
   const { uiFlags } = useAIConfig()
+
+  // Handler for editing an entry (opens entry in world-bible sidebar)
+  const handleEditEntry = useCallback((entry: { id: string }) => {
+    // In analysis page, we could navigate to project with entry selected
+    // For now, we'll use window.location to set hash
+    window.location.href = `/projects/${params.id}#entry-${entry.id}`
+  }, [params.id])
+
+  // Handler for creating a new entry
+  const handleCreateEntry = useCallback((type: WorldEntryType) => {
+    // Navigate to project page to create entry
+    window.location.href = `/projects/${params.id}?newEntry=${type}`
+  }, [params.id])
+
+  // Handler for creating a relation
+  const handleCreateRelation = useCallback(async (
+    sourceId: string,
+    targetId: string,
+    category: string,
+    description: string
+  ) => {
+    await addRelation(sourceId, targetId, category as 'character_relation' | 'general', description, '')
+  }, [addRelation])
 
   const tabs = useMemo(() => {
     return ALL_TABS.filter(t => {
@@ -76,7 +103,14 @@ export default function AnalysisPage() {
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-5xl px-4 py-6">
             {activeTab === 'relations' && (
-              <RelationGraph entries={entries ?? []} relations={relations} />
+              <InteractiveRelationGraph
+                projectId={params.id}
+                entries={entries ?? []}
+                relations={relations}
+                onEditEntry={handleEditEntry}
+                onCreateEntry={handleCreateEntry}
+                onCreateRelation={handleCreateRelation}
+              />
             )}
             {activeTab === 'timeline' && uiFlags.showTimelineView && (
               <TimelineView entries={entries ?? []} />

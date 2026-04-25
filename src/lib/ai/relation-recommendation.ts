@@ -61,17 +61,17 @@ export async function getRelationRecommendations(
 
   const events = streamChat(clientConfig, {
     segmentedSystem: {
-      segments: [{ content: SYSTEM_PROMPT, priority: 'core' }],
-      cached: [],
-      uncached: [],
+      baseInstruction: SYSTEM_PROMPT,
+      worldBibleContext: '',
+      runtimeContext: '',
     },
     messages: [{ role: 'user', content: prompt }],
   })
 
   let fullText = ''
   for await (const event of events) {
-    if (event.type === 'text') {
-      fullText += event.text
+    if (event.type === 'text_delta') {
+      fullText += event.delta
     }
   }
 
@@ -124,7 +124,7 @@ function buildRecommendationPrompt(input: AIRecommendationInput): string {
     .join('\n')
 
   return `源条目：${sourceNode.name} (${sourceNode.type})
-描述：${sourceNode.description || sourceNode.background || '无'}
+描述：${sourceNode.description || '无'}
 
 已建立的关系：
 ${existingRelationsText || '无'}

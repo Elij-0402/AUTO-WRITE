@@ -54,6 +54,7 @@ export function InteractiveRelationGraph({
   // Selection state
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [panelPosition, setPanelPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const [lastAnalyzedNodeId, setLastAnalyzedNodeId] = useState<string | null>(null)
 
   // AI recommendation state
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -141,6 +142,7 @@ export function InteractiveRelationGraph({
 
     // Set selected node and position
     setSelectedNodeId(nodeId)
+    setLastAnalyzedNodeId(nodeId)
     setIsAnalyzing(true)
     setAnalysisError(null)
     setRecommendations([])
@@ -312,7 +314,15 @@ export function InteractiveRelationGraph({
           recommendations={recommendations}
           isLoading={isAnalyzing}
           error={analysisError}
-          onRetry={() => handleNodeClick(selectedNodeId, {} as React.MouseEvent)}
+          onRetry={() => {
+            if (!lastAnalyzedNodeId) return
+            const entry = entryById.get(lastAnalyzedNodeId)
+            if (!entry) return
+            setSelectedNodeId(lastAnalyzedNodeId)
+            setIsAnalyzing(true)
+            setAnalysisError(null)
+            setRecommendations([])
+          }}
           onSelectRecommendation={handleSelectRecommendation}
           onClose={() => setSelectedNodeId(null)}
           position={panelPosition}

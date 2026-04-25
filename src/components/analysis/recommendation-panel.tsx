@@ -43,8 +43,8 @@ export function RecommendationPanel({
     <div
       className="fixed z-50 w-[280px] max-h-[400px] overflow-y-auto surface-2 border border-line-strong rounded-lg shadow-lg animate-in fade-in slide-in-from-top-2 duration-200"
       style={{
-        left: Math.min(position.x + 12, globalThis.innerWidth - 300),
-        top: position.y,
+        left: Math.max(8, Math.min(position.x + 12, globalThis.innerWidth - 300)),
+        top: Math.max(8, position.y),
       }}
     >
       {/* Header */}
@@ -104,9 +104,9 @@ export function RecommendationPanel({
             <p className="text-xs text-muted-foreground mb-3">
               为您推荐 {recommendations.length} 个潜在关系
             </p>
-            {recommendations.map((rec, idx) => (
+            {recommendations.map((rec) => (
               <RecommendationItem
-                key={idx}
+                key={rec.targetNode.id ?? `new-${rec.targetNode.name}`}
                 rec={rec}
                 onClick={() => onSelectRecommendation(rec)}
               />

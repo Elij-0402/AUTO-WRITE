@@ -174,7 +174,6 @@ interface WorldBibleTabProps {
   onSelectEntry: (id: string) => void
   onEditEntry: (id: string) => void
   onDeleteEntry: (id: string) => void
-  onCreateEntry: (type: WorldEntryType) => void
 }
 
 function getDefaultName(type: WorldEntryType): string {
@@ -196,7 +195,6 @@ export function WorldBibleTab({
   onSelectEntry,
   onEditEntry,
   onDeleteEntry,
-  onCreateEntry,
 }: WorldBibleTabProps) {
 const { entries, entriesByType, loading, addEntry, softDeleteEntry } = useWorldEntries(projectId)
   const { getRelationCount } = useRelations(projectId)
@@ -236,7 +234,6 @@ const { entries, entriesByType, loading, addEntry, softDeleteEntry } = useWorldE
     const newId = await addEntry(type, defaultName)
     onSelectEntry(newId)
     onEditEntry(newId)
-    onCreateEntry(type)
   }
 
   const handleDeleteClick = async (entry: WorldEntry) => {

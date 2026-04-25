@@ -144,7 +144,6 @@ export default function ProjectPage() {
                 onSelectWorldEntry={layout.handleSelectWorldEntry}
                 onEditWorldEntry={layout.handleEditWorldEntry}
                 onDeleteWorldEntry={layout.handleDeleteWorldEntry}
-                onCreateWorldEntry={layout.handleCreateWorldEntry}
               >
                 <AIChatPanel
                   projectId={params.id}

@@ -25,7 +25,6 @@ interface NormalLayoutProps {
   onSelectWorldEntry: (id: string) => void
   onEditWorldEntry: (id: string) => void
   onDeleteWorldEntry: (id: string) => void
-  onCreateWorldEntry: (type: import('@/lib/types').WorldEntryType) => void
   children?: React.ReactNode
 }
 
@@ -44,7 +43,6 @@ export function NormalLayout({
   onSelectWorldEntry,
   onEditWorldEntry,
   onDeleteWorldEntry,
-  onCreateWorldEntry,
   children,
 }: NormalLayoutProps) {
   return (
@@ -70,7 +68,6 @@ export function NormalLayout({
               onSelectWorldEntry={onSelectWorldEntry}
               onEditWorldEntry={onEditWorldEntry}
               onDeleteWorldEntry={onDeleteWorldEntry}
-              onCreateWorldEntry={onCreateWorldEntry}
             />
           </PanelErrorBoundary>
         </div>

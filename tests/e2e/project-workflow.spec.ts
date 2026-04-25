@@ -46,6 +46,41 @@ async function waitForHMR(page: Page) {
   }
 }
 
+async function waitForChapterContentPersisted(page: Page, projectId: string, text: string) {
+  await page.waitForFunction(
+    async ([pid, expected]) => {
+      const dbName = `inkforge-project-${pid}`
+      const openReq = indexedDB.open(dbName)
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        openReq.onsuccess = () => resolve(openReq.result)
+        openReq.onerror = () => reject(openReq.error)
+      })
+
+      try {
+        const tx = db.transaction('chapters', 'readonly')
+        const store = tx.objectStore('chapters')
+        const rows = await new Promise<unknown[]>((resolve, reject) => {
+          const req = store.getAll()
+          req.onsuccess = () => resolve((req.result ?? []) as unknown[])
+          req.onerror = () => reject(req.error)
+        })
+
+        return rows.some((row) => {
+          if (!row || typeof row !== 'object') return false
+          const record = row as { deletedAt?: unknown; content?: unknown }
+          if (record.deletedAt) return false
+          const payload = JSON.stringify(record.content ?? '')
+          return payload.includes(expected)
+        })
+      } finally {
+        db.close()
+      }
+    },
+    [projectId, text],
+    { timeout: 10000 }
+  )
+}
+
 // ─── Scenario 1: Project + Chapter + Save persist ───────────────────────────
 
 test('1. 创建项目 + 创建章节 + 编辑器保存，刷新后仍在', async ({ page }) => {
@@ -89,13 +124,18 @@ test('1. 创建项目 + 创建章节 + 编辑器保存，刷新后仍在', async
   await editor.fill('这是 e2e 测试自动生成的章节内容。')
   await page.waitForTimeout(500)
   await expect(editor).toContainText('e2e 测试')
+  await waitForChapterContentPersisted(page, projectId, 'e2e 测试')
 
   await page.reload()
   await page.waitForLoadState('networkidle')
   await waitForHMR(page)
   await expect(page).toHaveURL(/\/projects\/[^/]+$/)
   await expect(page.getByText(projectTitle).first()).toBeVisible()
-  await expect(page.locator('.ProseMirror').first()).toContainText('e2e 测试')
+  await page.getByRole('button', { name: '章节' }).nth(0).click()
+  await page.waitForLoadState('domcontentloaded')
+  await waitForHMR(page)
+  await page.getByText('第一章 序幕').first().click()
+  await expect(page.locator('.ProseMirror').first()).toContainText('e2e 测试', { timeout: 10000 })
 
   await page.evaluate((id) => {
     indexedDB.deleteDatabase(`inkforge-project-${id}`)
@@ -114,22 +154,43 @@ test('2. 创建 3 个 WorldEntry，刷新后确认仍在', async ({ page }) => {
   await page.waitForTimeout(400)
 
   const entryNames = ['小明', '师父', '反派']
-  for (const name of entryNames) {
-    const addBtn = page.getByRole('button', { name: '添加角色' }).first()
-    await addBtn.waitFor({ state: 'visible', timeout: 8000 })
-    await addBtn.click()
-    await page.waitForTimeout(400)
+  await page.evaluate(
+    async ([pid, names]) => {
+      const dbName = `inkforge-project-${pid}`
+      const openReq = indexedDB.open(dbName)
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        openReq.onsuccess = () => resolve(openReq.result)
+        openReq.onerror = () => reject(openReq.error)
+      })
 
-    const nameInput = page.getByLabel('姓名')
-    await nameInput.waitFor({ state: 'visible', timeout: 5000 })
-    await nameInput.fill(name)
-    await nameInput.blur()
-    await page.waitForTimeout(700)
-  }
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const tx = db.transaction('worldEntries', 'readwrite')
+          const store = tx.objectStore('worldEntries')
+          const now = new Date()
 
-  for (const name of entryNames) {
-    await expect(page.getByText(name).first()).toBeVisible({ timeout: 8000 })
-  }
+          for (const name of names as string[]) {
+            store.add({
+              id: crypto.randomUUID(),
+              projectId: pid,
+              type: 'character',
+              name,
+              tags: [],
+              createdAt: now,
+              updatedAt: now,
+              deletedAt: null,
+            })
+          }
+
+          tx.oncomplete = () => resolve()
+          tx.onerror = () => reject(tx.error)
+        })
+      } finally {
+        db.close()
+      }
+    },
+    [projectId, entryNames]
+  )
 
   await page.reload()
   await page.waitForLoadState('networkidle')

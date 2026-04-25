@@ -29,7 +29,6 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
-import type { WorldEntryType } from '@/lib/types'
 
 interface ChapterSidebarProps {
   projectId: string
@@ -43,7 +42,6 @@ interface ChapterSidebarProps {
   onSelectWorldEntry: (id: string) => void
   onEditWorldEntry: (id: string) => void
   onDeleteWorldEntry: (id: string) => void
-  onCreateWorldEntry: (type: WorldEntryType) => void
 }
 
 type RailItem = {
@@ -71,7 +69,6 @@ export function ChapterSidebar({
   onSelectWorldEntry,
   onEditWorldEntry,
   onDeleteWorldEntry,
-  onCreateWorldEntry,
 }: ChapterSidebarProps) {
   const {
     chapters,
@@ -235,7 +232,6 @@ export function ChapterSidebar({
               onSelectEntry={onSelectWorldEntry}
               onEditEntry={onEditWorldEntry}
               onDeleteEntry={onDeleteWorldEntry}
-              onCreateEntry={onCreateWorldEntry}
             />
           )}
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
 import { Plus, PenLine } from 'lucide-react'
 import { useProjects } from '@/lib/hooks/use-projects'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,7 @@ function getGreeting(): string {
 }
 
 export function ProjectDashboard() {
+  const router = useRouter()
   const { projects, createProject, softDeleteProject, updateProject } = useProjects()
   const [settingsProjectId, setSettingsProjectId] = useState<string | null>(null)
   const [createModalOpen, setCreateModalOpen] = useState(false)

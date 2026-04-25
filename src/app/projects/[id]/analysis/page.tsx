@@ -13,7 +13,7 @@ import { TimelineView } from '@/components/analysis/timeline-view'
 import { ContradictionDashboard } from '@/components/analysis/contradiction-dashboard'
 import { Button } from '@/components/ui/button'
 import { ThemeProvider } from '@/components/editor/theme-provider'
-import type { WorldEntry, WorldEntryType } from '@/lib/types/world-entry'
+import type { WorldEntry } from '@/lib/types/world-entry'
 
 type Tab = 'relations' | 'timeline' | 'contradictions'
 
@@ -36,12 +36,6 @@ export default function AnalysisPage() {
     // In analysis page, we could navigate to project with entry selected
     // For now, we'll use window.location to set hash
     window.location.href = `/projects/${params.id}#entry-${entry.id}`
-  }, [params.id])
-
-  // Handler for creating a new entry
-  const handleCreateEntry = useCallback((type: WorldEntryType) => {
-    // Navigate to project page to create entry
-    window.location.href = `/projects/${params.id}?newEntry=${type}`
   }, [params.id])
 
   // Handler for creating a relation
@@ -108,7 +102,6 @@ export default function AnalysisPage() {
                 entries={entries ?? []}
                 relations={relations}
                 onEditEntry={handleEditEntry}
-                onCreateEntry={handleCreateEntry}
                 onCreateRelation={handleCreateRelation}
               />
             )}

@@ -42,7 +42,7 @@ export default function ProjectPage() {
   const aiConfigDialog = useAIConfigDialog()
   const onboardingDialog = useAIOnboardingDialog()
   const tourDialog = useOnboardingTourDialog(params.id)
-  const draftDialog = useChapterDraftDialog({ onDraftAccepted: (c) => editorRef.current?.insertText(c) })
+  const draftDialog = useChapterDraftDialog()
 
   const handleInsertDraft = useCallback((content: string) => {
     editorRef.current?.insertText(content)

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { scanConsistency, type ConsistencyViolation } from './scan-consistency'
+import { scanConsistency } from './scan-consistency'
 import type { AIClientConfig } from './providers/types'
 
 // Mock fetch globally

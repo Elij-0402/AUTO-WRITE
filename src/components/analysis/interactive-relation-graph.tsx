@@ -3,7 +3,7 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import type { WorldEntry, WorldEntryType } from '@/lib/types/world-entry'
 import type { Relation } from '@/lib/types/relation'
-import type { GraphNode, GraphEdge } from '@/lib/analysis/force-layout'
+import type { GraphNode } from '@/lib/analysis/force-layout'
 import { layoutForceDirected } from '@/lib/analysis/force-layout'
 import { loadLayoutSnapshots, saveLayoutSnapshot } from '@/lib/db/layout-snapshots'
 import { getRelationRecommendations, type AIRecommendationTarget } from '@/lib/ai/relation-recommendation'
@@ -27,7 +27,6 @@ interface InteractiveRelationGraphProps {
   entries: WorldEntry[]
   relations: Relation[]
   onEditEntry: (entry: WorldEntry) => void
-  onCreateEntry: (type: WorldEntryType, position?: { x: number; y: number }) => void
   onCreateRelation: (sourceId: string, targetId: string, category: string, description: string) => Promise<void>
 }
 
@@ -43,7 +42,6 @@ export function InteractiveRelationGraph({
   entries,
   relations,
   onEditEntry,
-  onCreateEntry,
   onCreateRelation,
 }: InteractiveRelationGraphProps) {
   const activeEntries = useMemo(() => entries.filter(e => !e.deletedAt), [entries])
@@ -189,7 +187,7 @@ export function InteractiveRelationGraph({
   }, [entryById, layout, projectId, relations, activeEntries])
 
   // Handle node click - trigger AI analysis
-  const handleNodeClick = useCallback(async (nodeId: string, event: React.MouseEvent) => {
+  const handleNodeClick = useCallback(async (nodeId: string, _event: React.MouseEvent) => {
     if (dragState?.hasMoved) return
     await analyzeNode(nodeId)
   }, [dragState, analyzeNode])
@@ -227,8 +225,6 @@ export function InteractiveRelationGraph({
         const scaleY = HEIGHT / svgRect.height
 
         // Calculate new position based on drag delta
-        const centerX = WIDTH / 2
-        const centerY = HEIGHT / 2
 
         // Get original position to calculate offset
         const saved = savedPositions.get(dragState.nodeId)

@@ -2,6 +2,9 @@ import { updateSession } from '@/lib/supabase/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
+  // Refresh Supabase session cookies for already-logged-in users.
+  // Anonymous users are allowed everywhere — InkForge is offline-first
+  // and Supabase sync is opt-in (BYOK). See README.md / CLAUDE.md.
   const { supabaseResponse, user } = await updateSession(request)
 
   const pathname = request.nextUrl.pathname
@@ -9,12 +12,6 @@ export async function proxy(request: NextRequest) {
   // Let API routes and Next.js internals pass through so 404s work correctly
   if (pathname.startsWith('/api')) {
     return supabaseResponse
-  }
-
-  // D-49: Unauthenticated access to protected routes → redirect to /auth with return URL
-  if (!user && !pathname.startsWith('/auth')) {
-    const returnUrl = encodeURIComponent(pathname + request.nextUrl.search)
-    return NextResponse.redirect(new URL(`/auth?returnUrl=${returnUrl}`, request.url))
   }
 
   // D-50: After login → redirect to original requested page

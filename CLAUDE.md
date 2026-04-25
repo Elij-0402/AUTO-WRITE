@@ -90,6 +90,30 @@ Active changes live in `openspec/changes/`, archived changes in `openspec/change
 - Prompt caching enabled by default (1 hour TTL) for Anthropic provider
 - Structured suggestions via tool use, not regex parsing
 - Two-level database isolation: meta-level (projects) and project-level (content)
+- Soft delete: entities have `deletedAt: Date | null`, always filter `!deletedAt`
+- ID generation: `crypto.randomUUID()` or `nanoid`
+
+## Testing
+
+- Test files co-located with source (`*.test.ts` / `*.test.tsx`)
+- `src/test/setup.ts` provides fake-indexeddb/auto (Dexie) and Supabase mock
+- jsdom environment + `@testing-library/jest-dom` matchers
+- Run single test: `npx vitest run <file>`
+
+## Design Constraints
+
+- Read `DESIGN.md` before any visual or UI decision
+- Forbidden: shadow / border-radius > 8px / pulse/shimmer/glow animations
+- Fonts: LXGW WenKai (display), LXGW Neo XiHei (body), Noto Sans SC (UI)
+- All UI text in Chinese (`lang="zh-CN"`)
+
+## Pre-commit Checklist
+
+```bash
+pnpm lint && pnpm test
+```
+
+Commit format: `<type>(<scope>): <subject>` (Conventional Commits)
 
 ## GStack
 

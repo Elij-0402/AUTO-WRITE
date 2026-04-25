@@ -29,7 +29,7 @@ export function WizardOverlay({
   return (
     <div className="absolute inset-x-0 top-0 z-30 flex items-start justify-center pt-16 px-4">
       <div
-        className="w-full max-w-sm p-4 rounded-[var(--radius-lg)] border border-[hsl(var(--accent))]/30 bg-[hsl(var(--surface-1))]/95 backdrop-blur-sm shadow-[var(--shadow-lift-md)] animate-fade-up"
+        className="w-full max-w-sm p-4 rounded-[var(--radius-lg)] border border-[hsl(var(--accent))]/30 bg-[hsl(var(--surface-1))]/95 backdrop-blur-sm shadow-[var(--shadow-md)] animate-fade-up"
         role="dialog"
         aria-modal="true"
         aria-label="AI构思搭档"

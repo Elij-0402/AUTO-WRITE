@@ -3,17 +3,25 @@
 import { useParams } from 'next/navigation'
 import { useCallback } from 'react'
 import { useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { ArrowLeft, Network, Clock, AlertTriangle } from 'lucide-react'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useAllRelations } from '@/lib/hooks/use-all-relations'
 import { useRelations } from '@/lib/hooks/use-relations'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { InteractiveRelationGraph } from '@/components/analysis/interactive-relation-graph'
-import { TimelineView } from '@/components/analysis/timeline-view'
-import { ContradictionDashboard } from '@/components/analysis/contradiction-dashboard'
 import { Button } from '@/components/ui/button'
 import { ThemeProvider } from '@/components/editor/theme-provider'
 import type { WorldEntry } from '@/lib/types/world-entry'
+
+const TimelineView = dynamic(
+  () => import('@/components/analysis/timeline-view').then(m => ({ default: m.TimelineView })),
+  { ssr: false, loading: () => <div className="text-sm text-muted-foreground p-4">加载中...</div> }
+)
+const ContradictionDashboard = dynamic(
+  () => import('@/components/analysis/contradiction-dashboard').then(m => ({ default: m.ContradictionDashboard })),
+  { ssr: false, loading: () => <div className="text-sm text-muted-foreground p-4">加载中...</div> }
+)
 
 type Tab = 'relations' | 'timeline' | 'contradictions'
 

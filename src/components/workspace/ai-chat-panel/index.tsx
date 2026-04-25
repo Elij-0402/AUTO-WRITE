@@ -270,7 +270,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   return (
     <div className="h-full flex flex-col overflow-hidden surface-0 relative">
       {toastMessage && (
-        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 px-3 py-1.5 bg-foreground text-background text-[12px] rounded-[var(--radius-control)] shadow-[var(--shadow-lift-md)] animate-fade-up">
+        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 px-3 py-1.5 bg-foreground text-background text-[12px] rounded-[var(--radius-control)] shadow-[var(--shadow-sm)] animate-fade-up">
           {toastMessage}
         </div>
       )}
@@ -378,7 +378,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
       {/* ── Cache hint ───────────────────────────────────── */}
       {cacheHintVisible && cacheHint && (
-        <div className="absolute bottom-[88px] left-1/2 -translate-x-1/2 z-50 px-3 py-1.5 bg-foreground text-background text-[12px] rounded-[var(--radius-control)] shadow-[var(--shadow-lift-md)] animate-fade-up">
+        <div className="absolute bottom-[88px] left-1/2 -translate-x-1/2 z-50 px-3 py-1.5 bg-foreground text-background text-[12px] rounded-[var(--radius-control)] shadow-[var(--shadow-sm)] animate-fade-up">
           已节省约 {cacheHint.tokens.toLocaleString()} tokens（1小时缓存）
         </div>
       )}

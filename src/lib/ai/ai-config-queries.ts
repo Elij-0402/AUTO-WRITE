@@ -20,6 +20,7 @@ const DEFAULT_CONFIG: AIClientConfig = {
  * Returns AIClientConfig ready for use with streamChat().
  */
 export async function getProjectAIConfig(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _projectId: string
 ): Promise<AIClientConfig> {
   const globalConfig = await metaDb.aiConfig.get('config') as GlobalAIConfig | undefined

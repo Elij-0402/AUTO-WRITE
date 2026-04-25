@@ -99,7 +99,7 @@ export function TagInput({ tags, onTagsChange, allTags }: TagInputProps) {
       </div>
 
       {showDropdown && (filteredTags.length > 0 || showCreateOption) && (
-        <div className="absolute top-full left-0 right-0 mt-1 z-10 surface-1 film-edge rounded-[var(--radius-card)] shadow-[var(--shadow-lift-md)] py-1 max-h-48 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 z-10 surface-1 film-edge rounded-[var(--radius-card)] shadow-[var(--shadow-md)] py-1 max-h-48 overflow-y-auto">
           {filteredTags.map(tag => (
             <button
               key={tag}

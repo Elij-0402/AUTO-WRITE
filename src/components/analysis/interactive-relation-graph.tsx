@@ -187,6 +187,7 @@ export function InteractiveRelationGraph({
   }, [entryById, layout, projectId, relations, activeEntries])
 
   // Handle node click - trigger AI analysis
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleNodeClick = useCallback(async (nodeId: string, _event: React.MouseEvent) => {
     if (dragState?.hasMoved) return
     await analyzeNode(nodeId)

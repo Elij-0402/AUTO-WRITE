@@ -38,7 +38,7 @@ export function RelationForm({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="surface-2 border border-line-strong rounded-lg w-[360px] max-w-[90vw] shadow-xl">
+      <div className="surface-2 border border-line-strong rounded-lg w-[360px] max-w-[90vw] shadow-[var(--shadow-lg)]">
         <div className="p-4 border-b border-line">
           <h3 className="font-medium">确认关系</h3>
         </div>

@@ -9,8 +9,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react'
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const DOMPurify = require('dompurify')
+import DOMPurify from 'dompurify'
 import { useAIConfig } from './use-ai-config'
 import { useWorldEntries } from './use-world-entries'
 import {
@@ -220,7 +219,7 @@ export function useWizardMode({ projectId, conversationId, selectedText }: UseWi
         setState('error')
       }
     }
-  }, [config, projectId, conversationId, selectedText, getRelevantContext])
+  }, [config, conversationId, selectedText, getRelevantContext])
 
   const selectOption = useCallback(async (option: WizardOption) => {
     if (!conversationId || !config.apiKey) {
@@ -317,7 +316,7 @@ export function useWizardMode({ projectId, conversationId, selectedText }: UseWi
         setState('error')
       }
     }
-  }, [config, projectId, conversationId, selectedText, getRelevantContext])
+  }, [config, conversationId, selectedText, getRelevantContext])
 
   const cancel = useCallback(() => {
     abortControllerRef.current?.abort()

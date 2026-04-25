@@ -13,7 +13,7 @@ import { TimelineView } from '@/components/analysis/timeline-view'
 import { ContradictionDashboard } from '@/components/analysis/contradiction-dashboard'
 import { Button } from '@/components/ui/button'
 import { ThemeProvider } from '@/components/editor/theme-provider'
-import type { WorldEntryType } from '@/lib/types/world-entry'
+import type { WorldEntry, WorldEntryType } from '@/lib/types/world-entry'
 
 type Tab = 'relations' | 'timeline' | 'contradictions'
 
@@ -32,7 +32,7 @@ export default function AnalysisPage() {
   const { uiFlags } = useAIConfig()
 
   // Handler for editing an entry (opens entry in world-bible sidebar)
-  const handleEditEntry = useCallback((entry: { id: string }) => {
+  const handleEditEntry = useCallback((entry: WorldEntry) => {
     // In analysis page, we could navigate to project with entry selected
     // For now, we'll use window.location to set hash
     window.location.href = `/projects/${params.id}#entry-${entry.id}`

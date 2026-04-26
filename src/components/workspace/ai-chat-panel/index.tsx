@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useAIChat } from '@/lib/hooks/use-ai-chat'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { useConversations } from '@/lib/hooks/use-conversations'
+import { recordPreferenceMemory } from '@/lib/db/project-charter-queries'
 import { createProjectDB } from '@/lib/db/project-db'
 import { useDismissedSuggestions } from '@/lib/hooks/use-dismissed-suggestions'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
@@ -17,6 +18,7 @@ import { ConversationDrawer } from '../conversation-drawer'
 import { findEntryIdByName } from '@/lib/ai/find-entry-by-name'
 import type { WorldEntryType } from '@/lib/types'
 import type { NewEntrySuggestion } from '@/lib/ai/suggestion-parser'
+import type { AssistantPreferenceFeedbackInput } from '../message-bubble'
 
 interface AIChatPanelProps {
   projectId: string
@@ -141,7 +143,18 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     setTimeout(() => setToastMessage(null), 3000)
   }
 
-  const handlePreferenceRecorded = () => {
+  const handleRecordPreference = async ({
+    messageId,
+    category,
+    note,
+  }: AssistantPreferenceFeedbackInput) => {
+    await recordPreferenceMemory(projectId, {
+      source: 'chat',
+      messageId,
+      verdict: 'reject',
+      category,
+      note,
+    })
     showToast('已记录偏差')
   }
 
@@ -302,7 +315,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         visibleSuggestions={visibleSuggestions}
         onSendMessage={handleSend}
         onInsertDraft={handleInsertDraft}
-        onPreferenceRecorded={handlePreferenceRecorded}
+        onRecordPreference={handleRecordPreference}
         onAdoptRelationship={handleAdoptRelationship}
         onDismiss={handleDismiss}
         onAdoptNewEntry={handleAdoptNewEntry}

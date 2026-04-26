@@ -2,23 +2,29 @@
 
 import { useState } from 'react'
 import { ChatMessage } from '@/lib/hooks/use-ai-chat'
-import { recordPreferenceMemory } from '@/lib/db/project-charter-queries'
+import type { PreferenceMemoryCategory } from '@/lib/types'
 import { DraftCard } from './draft-card'
 import { PreferenceFeedbackDialog } from './preference-feedback-dialog'
 import { Feather, Check, Copy } from 'lucide-react'
+
+export interface AssistantPreferenceFeedbackInput {
+  messageId: string
+  category: PreferenceMemoryCategory
+  note: string
+}
 
 interface MessageBubbleProps {
   message: ChatMessage
   projectId: string
   onInsertDraft?: (draftId: string, content: string) => void
-  onPreferenceRecorded?: () => void
+  onRecordPreference?: (input: AssistantPreferenceFeedbackInput) => Promise<void> | void
 }
 
 export function MessageBubble({
   message,
   projectId,
   onInsertDraft,
-  onPreferenceRecorded,
+  onRecordPreference,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user'
   const [copied, setCopied] = useState(false)
@@ -41,19 +47,16 @@ export function MessageBubble({
     category,
     note,
   }: {
-    category: 'voice' | 'character' | 'plot' | 'worldbuilding' | 'other'
+    category: PreferenceMemoryCategory
     note: string
   }) => {
-    await recordPreferenceMemory(projectId, {
-      source: 'chat',
+    await onRecordPreference?.({
       messageId: message.id,
-      verdict: 'reject',
       category,
       note,
     })
     setFeedbackOpen(false)
     setFeedbackSaved(true)
-    onPreferenceRecorded?.()
     setTimeout(() => setFeedbackSaved(false), 2000)
   }
 

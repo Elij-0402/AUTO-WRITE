@@ -4,7 +4,7 @@ import type { RefObject } from 'react'
 import { Feather, ArrowDown, Lightbulb, AlertTriangle, Loader2 } from 'lucide-react'
 import type { ChatMessage, PartialContradiction } from '@/lib/hooks/use-ai-chat'
 import type { Suggestion } from '@/lib/ai/suggestion-parser'
-import { MessageBubble } from '../message-bubble'
+import { MessageBubble, type AssistantPreferenceFeedbackInput } from '../message-bubble'
 import { RelationshipSuggestionCard, NewEntrySuggestionCard } from '../suggestion-card'
 import { ConsistencyWarningCard } from '../consistency-warning-card'
 
@@ -25,7 +25,7 @@ interface MessageListProps {
   visibleSuggestions: Suggestion[]
   onSendMessage: (text: string) => void
   onInsertDraft: (draftId: string, content: string) => void
-  onPreferenceRecorded?: () => void
+  onRecordPreference?: (input: AssistantPreferenceFeedbackInput) => Promise<void> | void
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onAdoptRelationship: (suggestion: any) => void
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,7 +50,7 @@ export function MessageList({
   visibleSuggestions,
   onSendMessage,
   onInsertDraft,
-  onPreferenceRecorded,
+  onRecordPreference,
   onAdoptRelationship,
   onDismiss,
   onAdoptNewEntry,
@@ -79,7 +79,7 @@ export function MessageList({
               message={msg}
               projectId={projectId}
               onInsertDraft={onInsertDraft}
-              onPreferenceRecorded={onPreferenceRecorded}
+              onRecordPreference={onRecordPreference}
             />
           ))}
 

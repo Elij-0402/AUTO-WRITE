@@ -81,7 +81,7 @@ export function DraftCard({
         source: 'draft',
         messageId,
         verdict: 'reject',
-        category: 'other',
+        category: reason === 'conflict' ? 'worldbuilding' : 'other',
         note: detail ? `${reasonLabel}：${detail}` : reasonLabel,
       })
     } catch {

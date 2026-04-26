@@ -79,7 +79,7 @@ describe('DraftCard T1 adoption telemetry', () => {
     })
   })
 
-  it('reject flow: opens dialog, submits reason + note, patches aiUsage', async () => {
+  it('reject flow: opens dialog, submits reason + note, patches aiUsage and writes worldbuilding preference memory', async () => {
     const messageId = 'm-reject-1'
     const rowId = await seedChatUsage(messageId)
 
@@ -108,10 +108,23 @@ describe('DraftCard T1 adoption telemetry', () => {
     await waitFor(async () => {
       const db = createProjectDB(PROJECT_ID)
       const row = await db.aiUsage.get(rowId)
+      const memories = await db.preferenceMemories
+        .where('[projectId+createdAt]')
+        .between([PROJECT_ID, 0], [PROJECT_ID, Number.MAX_SAFE_INTEGER])
+        .toArray()
       expect(row?.draftOffered).toBe(true)
       expect(row?.draftAccepted).toBe(false)
       expect(row?.draftRejectedReason).toBe('conflict')
       expect(row?.draftRejectedNote).toBe('语气太冷')
+      expect(memories).toHaveLength(1)
+      expect(memories[0]).toMatchObject({
+        projectId: PROJECT_ID,
+        source: 'draft',
+        messageId,
+        verdict: 'reject',
+        category: 'worldbuilding',
+        note: '不符合设定：语气太冷',
+      })
     })
   })
 

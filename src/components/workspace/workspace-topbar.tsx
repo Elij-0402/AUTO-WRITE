@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, BarChart3, Bot, Maximize2, Minimize2, Moon, PenLine, Sun } from 'lucide-react'
+import { ArrowLeft, BarChart3, Bot, Maximize2, Minimize2, Moon, PenLine, ScrollText, Sun } from 'lucide-react'
 import { useTotalWordCount, useTodayWordCount } from '@/lib/hooks/use-word-count'
 import { useProjectMeta } from '@/lib/hooks/use-project-meta'
 import { useTheme } from '@/components/editor/theme-provider'
@@ -80,9 +80,16 @@ export function WorkspaceTopbar({
 
       <SyncStatusIcon />
 
-      <Button asChild variant="ghost" size="sm">
-        <Link href={`/projects/${projectId}/charter`}>作品宪章</Link>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button asChild variant="ghost" size="icon-sm">
+            <Link href={`/projects/${projectId}/charter`} aria-label="作品宪章">
+              <ScrollText />
+            </Link>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>作品宪章</TooltipContent>
+      </Tooltip>
 
       <Tooltip>
         <TooltipTrigger asChild>

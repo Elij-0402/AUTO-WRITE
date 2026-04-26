@@ -4,8 +4,16 @@ import { describe, expect, it, vi } from 'vitest'
 import { WorkspaceTopbar } from './workspace-topbar'
 
 vi.mock('next/link', () => ({
-  default: ({ href, children }: { href: string; children: ReactNode }) => (
-    <a href={href}>{children}</a>
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string
+    children: ReactNode
+    [key: string]: unknown
+  }) => (
+    <a href={href} {...props}>{children}</a>
   ),
 }))
 
@@ -32,7 +40,7 @@ vi.mock('@/components/editor/theme-provider', () => ({
 vi.mock('@/components/ui/tooltip', () => ({
   Tooltip: ({ children }: { children: ReactNode }) => <>{children}</>,
   TooltipTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,
-  TooltipContent: ({ children }: { children: ReactNode }) => <>{children}</>,
+  TooltipContent: () => null,
 }))
 
 vi.mock('@/components/sync/SyncStatusIcon', () => ({
@@ -51,9 +59,13 @@ describe('WorkspaceTopbar', () => {
       />
     )
 
-    expect(screen.getByRole('link', { name: '作品宪章' })).toHaveAttribute(
+    const charterLink = screen.getByRole('link', { name: '作品宪章' })
+
+    expect(charterLink).toHaveAttribute(
       'href',
       '/projects/p-1/charter'
     )
+    expect(screen.queryByText('作品宪章')).not.toBeInTheDocument()
+    expect(charterLink.querySelector('svg')).not.toBeNull()
   })
 })

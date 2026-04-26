@@ -11,6 +11,10 @@ export default function ProjectCharterPage() {
   const params = useParams<{ id: string }>()
   const { charter, loading, save } = useProjectCharter(params.id)
 
+  const handleSave = async (updates: Parameters<typeof save>[0]): Promise<void> => {
+    await save(updates)
+  }
+
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-background text-foreground">
@@ -47,7 +51,7 @@ export default function ProjectCharterPage() {
                 negativeReferences: charter.negativeReferences,
                 aiUnderstanding: charter.aiUnderstanding,
               }}
-              onSave={save}
+              onSave={handleSave}
             />
           )}
         </main>

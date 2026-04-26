@@ -7,6 +7,7 @@ import { createProjectDB } from '../db/project-db'
 import { enqueueChange } from '../sync/sync-queue'
 import { syncNewProject } from '../sync/sync-engine'
 import { createClient } from '../supabase/client'
+import { createDefaultProjectCharter } from '../types'
 import type { ProjectMeta, CreateProjectInput } from '../types'
 
 /**
@@ -46,8 +47,11 @@ export function useProjects() {
       deletedAt: null,
     }
 
+    const projectDb = createProjectDB(id)
+
     await metaDb.projectIndex.add(project)
-    await createProjectDB(id).projects.put(project)
+    await projectDb.projects.put(project)
+    await projectDb.projectCharter.put(createDefaultProjectCharter(id))
 
     // D-37: Immediate sync on new project creation
     const supabase = createClient()

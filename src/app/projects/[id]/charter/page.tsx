@@ -1,6 +1,7 @@
 'use client'
 
 import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ThemeProvider } from '@/components/editor/theme-provider'
 import { ProjectCharterForm } from '@/components/project-charter/project-charter-form'
@@ -21,9 +22,9 @@ export default function ProjectCharterPage() {
         <div className="border-b border-border">
           <div className="mx-auto flex max-w-4xl items-center gap-3 px-6 py-4">
             <Button asChild variant="ghost" size="icon" className="h-8 w-8">
-              <a href={`/projects/${params.id}`} aria-label="返回项目">
+              <Link href={`/projects/${params.id}`} aria-label="返回项目">
                 <ArrowLeft className="h-4 w-4" />
-              </a>
+              </Link>
             </Button>
             <div className="space-y-1">
               <h1 className="font-medium">作品宪章</h1>

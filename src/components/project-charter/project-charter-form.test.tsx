@@ -3,6 +3,19 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { ProjectCharterForm } from './project-charter-form'
 
+const emptyCharter = {
+  oneLinePremise: '',
+  storyPromise: '',
+  themes: [],
+  tone: '',
+  targetReader: '',
+  styleDos: [],
+  tabooList: [],
+  positiveReferences: [],
+  negativeReferences: [],
+  aiUnderstanding: '',
+}
+
 describe('ProjectCharterForm', () => {
   it('submits normalized arrays and saves the charter', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined)
@@ -10,18 +23,7 @@ describe('ProjectCharterForm', () => {
 
     render(
       <ProjectCharterForm
-        initialValue={{
-          oneLinePremise: '',
-          storyPromise: '',
-          themes: [],
-          tone: '',
-          targetReader: '',
-          styleDos: [],
-          tabooList: [],
-          positiveReferences: [],
-          negativeReferences: [],
-          aiUnderstanding: '',
-        }}
+        initialValue={emptyCharter}
         onSave={onSave}
       />
     )
@@ -40,5 +42,27 @@ describe('ProjectCharterForm', () => {
         })
       )
     })
+  })
+
+  it('does not wipe unsaved edits when rerendered with a new object of the same values', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    const { rerender } = render(
+      <ProjectCharterForm
+        initialValue={emptyCharter}
+        onSave={onSave}
+      />
+    )
+
+    await user.type(screen.getByLabelText('一句话设定'), '还没保存的设定')
+
+    rerender(
+      <ProjectCharterForm
+        initialValue={{ ...emptyCharter }}
+        onSave={onSave}
+      />
+    )
+
+    expect(screen.getByLabelText('一句话设定')).toHaveValue('还没保存的设定')
   })
 })

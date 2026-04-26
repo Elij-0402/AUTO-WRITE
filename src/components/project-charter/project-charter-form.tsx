@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -50,38 +50,54 @@ function normalizeList(value: string): string[] {
     .filter(Boolean)
 }
 
+function toFormValues(initialValue: CharterFormValue): CharterFormFields {
+  return {
+    oneLinePremise: initialValue.oneLinePremise,
+    storyPromise: initialValue.storyPromise,
+    themes: stringifyList(initialValue.themes),
+    tone: initialValue.tone,
+    targetReader: initialValue.targetReader,
+    styleDos: stringifyList(initialValue.styleDos),
+    tabooList: stringifyList(initialValue.tabooList),
+    positiveReferences: stringifyList(initialValue.positiveReferences),
+    negativeReferences: stringifyList(initialValue.negativeReferences),
+  }
+}
+
+function buildPersistedKey(initialValue: CharterFormValue): string {
+  return JSON.stringify({
+    oneLinePremise: initialValue.oneLinePremise,
+    storyPromise: initialValue.storyPromise,
+    themes: initialValue.themes,
+    tone: initialValue.tone,
+    targetReader: initialValue.targetReader,
+    styleDos: initialValue.styleDos,
+    tabooList: initialValue.tabooList,
+    positiveReferences: initialValue.positiveReferences,
+    negativeReferences: initialValue.negativeReferences,
+  })
+}
+
 export function ProjectCharterForm({
   initialValue,
   onSave,
 }: ProjectCharterFormProps) {
   const [isSaving, setIsSaving] = useState(false)
+  const formValues = useMemo(() => toFormValues(initialValue), [initialValue])
+  const persistedKey = useMemo(() => buildPersistedKey(initialValue), [initialValue])
+  const lastResetKeyRef = useRef(persistedKey)
   const { register, handleSubmit, reset } = useForm<CharterFormFields>({
-    defaultValues: {
-      oneLinePremise: initialValue.oneLinePremise,
-      storyPromise: initialValue.storyPromise,
-      themes: stringifyList(initialValue.themes),
-      tone: initialValue.tone,
-      targetReader: initialValue.targetReader,
-      styleDos: stringifyList(initialValue.styleDos),
-      tabooList: stringifyList(initialValue.tabooList),
-      positiveReferences: stringifyList(initialValue.positiveReferences),
-      negativeReferences: stringifyList(initialValue.negativeReferences),
-    },
+    defaultValues: formValues,
   })
 
   useEffect(() => {
-    reset({
-      oneLinePremise: initialValue.oneLinePremise,
-      storyPromise: initialValue.storyPromise,
-      themes: stringifyList(initialValue.themes),
-      tone: initialValue.tone,
-      targetReader: initialValue.targetReader,
-      styleDos: stringifyList(initialValue.styleDos),
-      tabooList: stringifyList(initialValue.tabooList),
-      positiveReferences: stringifyList(initialValue.positiveReferences),
-      negativeReferences: stringifyList(initialValue.negativeReferences),
-    })
-  }, [initialValue, reset])
+    if (persistedKey === lastResetKeyRef.current) {
+      return
+    }
+
+    lastResetKeyRef.current = persistedKey
+    reset(formValues)
+  }, [formValues, persistedKey, reset])
 
   const submit = async (data: CharterFormFields) => {
     setIsSaving(true)

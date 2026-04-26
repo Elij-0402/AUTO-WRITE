@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import Dexie from 'dexie'
-import { InkForgeProjectDB } from './project-db'
+import { __resetProjectDBCache } from './project-db'
+import { getProjectCharter } from './project-charter-queries'
 
 describe('project db v17 migration', () => {
   it('upgrades a v16 database with empty charter tables', async () => {
-    const dbName = 'inkforge-project-migration-v17'
+    const projectId = 'migration-v17'
+    const dbName = `inkforge-project-${projectId}`
+    __resetProjectDBCache()
     await Dexie.delete(dbName)
 
     const legacy = new Dexie(dbName)
@@ -27,14 +30,16 @@ describe('project db v17 migration', () => {
     await legacy.open()
     await legacy.close()
 
-    const upgraded = new InkForgeProjectDB('migration-v17')
-    ;(upgraded as unknown as { name: string }).name = dbName
-    await upgraded.open()
+    const charter = await getProjectCharter(projectId)
 
-    expect(upgraded.tables.some(table => table.name === 'projectCharter')).toBe(true)
-    expect(upgraded.tables.some(table => table.name === 'preferenceMemories')).toBe(true)
+    expect(charter.id).toBe('charter')
+    expect(charter.projectId).toBe(projectId)
+    expect(charter.themes).toEqual([])
+    expect(charter.styleDos).toEqual([])
+    expect(charter.tabooList).toEqual([])
+    expect(charter.createdAt).toBeTypeOf('number')
+    expect(charter.updatedAt).toBeTypeOf('number')
 
-    await upgraded.close()
     await Dexie.delete(dbName)
   })
 })

@@ -1,9 +1,11 @@
+import Dexie from 'dexie'
 import type {
   CreatePreferenceMemoryInput,
   PreferenceMemory,
   ProjectCharter,
   ProjectCharterUpdate,
 } from '../types'
+import { createDefaultProjectCharter } from '../types'
 import { createProjectDB } from './project-db'
 
 function buildAiUnderstanding(charter: ProjectCharter): string {
@@ -22,25 +24,14 @@ function buildAiUnderstanding(charter: ProjectCharter): string {
     .join('\n')
 }
 
-function createDefaultCharter(projectId: string): ProjectCharter {
-  const now = Date.now()
-  const charter: ProjectCharter = {
-    id: 'charter',
-    projectId,
-    oneLinePremise: '',
-    storyPromise: '',
-    themes: [],
-    tone: '',
-    targetReader: '',
-    styleDos: [],
-    tabooList: [],
-    positiveReferences: [],
-    negativeReferences: [],
-    aiUnderstanding: '',
-    createdAt: now,
-    updatedAt: now,
-  }
-  return charter
+async function getLatestPreferenceMemoryCreatedAt(projectId: string): Promise<number | null> {
+  const db = createProjectDB(projectId)
+  const latest = await db.preferenceMemories
+    .where('[projectId+createdAt]')
+    .between([projectId, Dexie.minKey], [projectId, Dexie.maxKey])
+    .reverse()
+    .first()
+  return latest?.createdAt ?? null
 }
 
 export async function getProjectCharter(projectId: string): Promise<ProjectCharter> {
@@ -50,7 +41,7 @@ export async function getProjectCharter(projectId: string): Promise<ProjectChart
     return existing
   }
 
-  const charter = createDefaultCharter(projectId)
+  const charter = createDefaultProjectCharter(projectId)
   await db.projectCharter.put(charter)
   return charter
 }
@@ -76,10 +67,12 @@ export async function recordPreferenceMemory(
   input: CreatePreferenceMemoryInput
 ): Promise<PreferenceMemory> {
   const db = createProjectDB(projectId)
+  const now = Date.now()
+  const latestCreatedAt = await getLatestPreferenceMemoryCreatedAt(projectId)
   const row: PreferenceMemory = {
     id: crypto.randomUUID(),
     projectId,
-    createdAt: Date.now(),
+    createdAt: latestCreatedAt === null ? now : Math.max(now, latestCreatedAt + 1),
     ...input,
   }
   await db.preferenceMemories.add(row)
@@ -88,6 +81,9 @@ export async function recordPreferenceMemory(
 
 export async function listPreferenceMemories(projectId: string): Promise<PreferenceMemory[]> {
   const db = createProjectDB(projectId)
-  const rows = await db.preferenceMemories.where('projectId').equals(projectId).toArray()
-  return rows.sort((a, b) => b.createdAt - a.createdAt)
+  return db.preferenceMemories
+    .where('[projectId+createdAt]')
+    .between([projectId, Dexie.minKey], [projectId, Dexie.maxKey])
+    .reverse()
+    .toArray()
 }

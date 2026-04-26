@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { __resetProjectDBCache } from './project-db'
 import {
   getProjectCharter,
@@ -13,6 +13,10 @@ describe('project charter queries', () => {
   beforeEach(async () => {
     __resetProjectDBCache()
     indexedDB.deleteDatabase(`inkforge-project-${projectId}`)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('seeds a default charter and persists updates', async () => {
@@ -76,6 +80,29 @@ describe('project charter queries', () => {
     expect(rows).toHaveLength(2)
     expect(rows[0].messageId).toBe('m-2')
     expect(rows[1].messageId).toBe('m-1')
+  })
+
+  it('orders preference memories newest-first even when Date.now repeats', async () => {
+    vi.spyOn(Date, 'now').mockReturnValue(1000)
+
+    await recordPreferenceMemory(projectId, {
+      source: 'draft',
+      messageId: 'm-1',
+      verdict: 'reject',
+      category: 'voice',
+      note: '第一条',
+    })
+    await recordPreferenceMemory(projectId, {
+      source: 'chat',
+      messageId: 'm-2',
+      verdict: 'reject',
+      category: 'plot',
+      note: '第二条',
+    })
+
+    const rows = await listPreferenceMemories(projectId)
+    expect(rows.map(row => row.messageId)).toEqual(['m-2', 'm-1'])
+    expect(rows.map(row => row.createdAt)).toEqual([1001, 1000])
   })
 
   it('accepts the exact preference memory category contract', async () => {

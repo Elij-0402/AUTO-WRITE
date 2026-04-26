@@ -56,3 +56,25 @@ export interface CreatePreferenceMemoryInput {
   category: PreferenceMemoryCategory
   note: string
 }
+
+export function createDefaultProjectCharter(
+  projectId: string,
+  now: number = Date.now()
+): ProjectCharter {
+  return {
+    id: 'charter',
+    projectId,
+    oneLinePremise: '',
+    storyPromise: '',
+    themes: [],
+    tone: '',
+    targetReader: '',
+    styleDos: [],
+    tabooList: [],
+    positiveReferences: [],
+    negativeReferences: [],
+    aiUnderstanding: '',
+    createdAt: now,
+    updatedAt: now,
+  }
+}

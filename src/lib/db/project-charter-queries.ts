@@ -6,22 +6,36 @@ import type {
 } from '../types'
 import { createProjectDB } from './project-db'
 
-function buildAiUnderstanding(charter: Pick<ProjectCharter, 'oneLinePremise' | 'storyPromise' | 'tone'>): string {
+function buildAiUnderstanding(charter: ProjectCharter): string {
   return [
     `一句话 premise：${charter.oneLinePremise}`.trim(),
     `故事承诺：${charter.storyPromise}`.trim(),
+    `主题关键词：${charter.themes.join('、')}`.trim(),
     `整体语气：${charter.tone}`.trim(),
-  ].join('\n')
+    `目标读者：${charter.targetReader}`.trim(),
+    `风格要做：${charter.styleDos.join('；')}`.trim(),
+    `明确禁区：${charter.tabooList.join('；')}`.trim(),
+    `正向参考：${charter.positiveReferences.join('；')}`.trim(),
+    `反向参考：${charter.negativeReferences.join('；')}`.trim(),
+  ]
+    .filter(line => !line.endsWith('：'))
+    .join('\n')
 }
 
 function createDefaultCharter(projectId: string): ProjectCharter {
-  const now = new Date()
+  const now = Date.now()
   const charter: ProjectCharter = {
     id: 'charter',
     projectId,
     oneLinePremise: '',
     storyPromise: '',
+    themes: [],
     tone: '',
+    targetReader: '',
+    styleDos: [],
+    tabooList: [],
+    positiveReferences: [],
+    negativeReferences: [],
     aiUnderstanding: '',
     createdAt: now,
     updatedAt: now,
@@ -50,7 +64,7 @@ export async function saveProjectCharter(
   const next: ProjectCharter = {
     ...current,
     ...updates,
-    updatedAt: new Date(),
+    updatedAt: Date.now(),
   }
   next.aiUnderstanding = buildAiUnderstanding(next)
   await db.projectCharter.put(next)

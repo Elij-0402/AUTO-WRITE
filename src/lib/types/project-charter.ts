@@ -4,10 +4,9 @@ export type PreferenceMemoryVerdict = 'accept' | 'reject'
 
 export type PreferenceMemoryCategory =
   | 'voice'
+  | 'worldbuilding'
   | 'plot'
   | 'character'
-  | 'world'
-  | 'pacing'
   | 'other'
 
 export interface ProjectCharter {
@@ -15,16 +14,28 @@ export interface ProjectCharter {
   projectId: string
   oneLinePremise: string
   storyPromise: string
+  themes: string[]
   tone: string
+  targetReader: string
+  styleDos: string[]
+  tabooList: string[]
+  positiveReferences: string[]
+  negativeReferences: string[]
   aiUnderstanding: string
-  createdAt: Date
-  updatedAt: Date
+  createdAt: number
+  updatedAt: number
 }
 
 export interface ProjectCharterUpdate {
   oneLinePremise?: string
   storyPromise?: string
+  themes?: string[]
   tone?: string
+  targetReader?: string
+  styleDos?: string[]
+  tabooList?: string[]
+  positiveReferences?: string[]
+  negativeReferences?: string[]
 }
 
 export interface PreferenceMemory {

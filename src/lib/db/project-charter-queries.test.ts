@@ -20,18 +20,40 @@ describe('project charter queries', () => {
     expect(initial.id).toBe('charter')
     expect(initial.projectId).toBe(projectId)
     expect(initial.storyPromise).toBe('')
+    expect(initial.themes).toEqual([])
+    expect(initial.targetReader).toBe('')
+    expect(initial.styleDos).toEqual([])
+    expect(initial.tabooList).toEqual([])
+    expect(initial.positiveReferences).toEqual([])
+    expect(initial.negativeReferences).toEqual([])
+    expect(typeof initial.createdAt).toBe('number')
+    expect(typeof initial.updatedAt).toBe('number')
 
     await saveProjectCharter(projectId, {
       oneLinePremise: '一个废柴皇子在边荒收拾旧山河',
       storyPromise: '高压权谋与热血复国并行',
+      themes: ['失国', '复国', '权谋'],
       tone: '苍凉、克制、带锋刃',
+      targetReader: '偏爱权谋成长线的长篇读者',
+      styleDos: ['冲突落地到人物选择', '关键场景保留冷峻留白'],
+      tabooList: ['油腻抒情', '套路打脸爽文腔'],
+      positiveReferences: ['琅琊榜式布局感'],
+      negativeReferences: ['短视频文案腔'],
     })
 
     const updated = await getProjectCharter(projectId)
     expect(updated.oneLinePremise).toContain('废柴皇子')
     expect(updated.storyPromise).toContain('复国')
+    expect(updated.themes).toEqual(['失国', '复国', '权谋'])
     expect(updated.tone).toContain('锋刃')
+    expect(updated.targetReader).toContain('权谋成长线')
+    expect(updated.styleDos).toContain('冲突落地到人物选择')
+    expect(updated.tabooList).toContain('油腻抒情')
+    expect(updated.positiveReferences).toContain('琅琊榜式布局感')
+    expect(updated.negativeReferences).toContain('短视频文案腔')
     expect(updated.aiUnderstanding).toContain('高压权谋')
+    expect(updated.aiUnderstanding).toContain('失国')
+    expect(updated.aiUnderstanding).toContain('长篇读者')
   })
 
   it('records preference memories newest-first', async () => {
@@ -54,5 +76,18 @@ describe('project charter queries', () => {
     expect(rows).toHaveLength(2)
     expect(rows[0].messageId).toBe('m-2')
     expect(rows[1].messageId).toBe('m-1')
+  })
+
+  it('accepts the exact preference memory category contract', async () => {
+    await recordPreferenceMemory(projectId, {
+      source: 'chat',
+      messageId: 'm-3',
+      verdict: 'reject',
+      category: 'worldbuilding',
+      note: '设定解释方式太硬，像资料卡',
+    })
+
+    const rows = await listPreferenceMemories(projectId)
+    expect(rows[0].category).toBe('worldbuilding')
   })
 })

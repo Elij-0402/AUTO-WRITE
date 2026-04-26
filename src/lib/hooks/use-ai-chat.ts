@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { createProjectDB } from '../db/project-db'
+import { getProjectCharter } from '../db/project-charter-queries'
 import { useAIConfig } from './use-ai-config'
 import { useWorldEntries } from './use-world-entries'
 import { useConsistencyExemptions } from './use-consistency-exemptions'
@@ -130,8 +131,10 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     const conversation = await db.table('conversations').get(conversationId) as
       | { rollingSummary?: string; summarizedUpTo?: number; messageCount: number }
       | undefined
+    const projectCharter = await getProjectCharter(projectId)
 
     const segmentedSystem = buildSegmentedSystemPrompt({
+      projectCharter,
       worldEntries: trimmedEntries,
       selectedText: options?.selectedText,
       rollingSummary: conversation?.rollingSummary,

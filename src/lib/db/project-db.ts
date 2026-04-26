@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import type { Chapter, ProjectMeta, WorldEntry, Relation, WorldEntryType } from '../types'
+import type { PreferenceMemory, ProjectCharter } from '../types'
 import type { UiExperimentFlags } from '../ai/ui-flags'
 
 /**
@@ -251,6 +252,8 @@ export class InkForgeProjectDB extends Dexie {
   aiUsage!: Table<AIUsageEvent, string>
   contradictions!: Table<Contradiction, string>
   layoutSnapshots!: Table<LayoutSnapshot, string>
+  projectCharter!: Table<ProjectCharter, string>
+  preferenceMemories!: Table<PreferenceMemory, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -550,6 +553,27 @@ export class InkForgeProjectDB extends Dexie {
         'id, projectId, messageId, entryName, exempted, createdAt, ' +
         '[projectId+entryName], [projectId+createdAt]',
       layoutSnapshots: 'id, projectId, [projectId+layoutId], [projectId+nodeId], nodeId',
+    })
+    // v17: Phase 1 charter storage and preference-memory capture.
+    this.version(17).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+      aiConfig: 'id',
+      messages: 'id, projectId, conversationId, role, timestamp',
+      consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+      revisions: 'id, projectId, chapterId, createdAt',
+      analyses: 'id, kind, invalidationKey, createdAt',
+      conversations: 'id, projectId, updatedAt',
+      aiUsage: 'id, projectId, conversationId, createdAt, model',
+      contradictions:
+        'id, projectId, messageId, entryName, exempted, createdAt, ' +
+        '[projectId+entryName], [projectId+createdAt]',
+      layoutSnapshots: 'id, projectId, [projectId+layoutId], [projectId+nodeId], nodeId',
+      projectCharter: 'id, projectId, updatedAt',
+      preferenceMemories: 'id, projectId, messageId, createdAt, [projectId+createdAt]',
     })
   }
 }

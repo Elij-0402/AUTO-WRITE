@@ -25,6 +25,7 @@ interface MessageListProps {
   visibleSuggestions: Suggestion[]
   onSendMessage: (text: string) => void
   onInsertDraft: (draftId: string, content: string) => void
+  onPreferenceRecorded?: () => void
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onAdoptRelationship: (suggestion: any) => void
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,6 +50,7 @@ export function MessageList({
   visibleSuggestions,
   onSendMessage,
   onInsertDraft,
+  onPreferenceRecorded,
   onAdoptRelationship,
   onDismiss,
   onAdoptNewEntry,
@@ -77,6 +79,7 @@ export function MessageList({
               message={msg}
               projectId={projectId}
               onInsertDraft={onInsertDraft}
+              onPreferenceRecorded={onPreferenceRecorded}
             />
           ))}
 

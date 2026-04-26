@@ -11,12 +11,14 @@ interface MessageBubbleProps {
   message: ChatMessage
   projectId: string
   onInsertDraft?: (draftId: string, content: string) => void
+  onPreferenceRecorded?: () => void
 }
 
 export function MessageBubble({
   message,
   projectId,
   onInsertDraft,
+  onPreferenceRecorded,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user'
   const [copied, setCopied] = useState(false)
@@ -51,6 +53,7 @@ export function MessageBubble({
     })
     setFeedbackOpen(false)
     setFeedbackSaved(true)
+    onPreferenceRecorded?.()
     setTimeout(() => setFeedbackSaved(false), 2000)
   }
 

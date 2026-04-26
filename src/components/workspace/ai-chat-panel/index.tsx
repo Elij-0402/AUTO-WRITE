@@ -141,6 +141,10 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     setTimeout(() => setToastMessage(null), 3000)
   }
 
+  const handlePreferenceRecorded = () => {
+    showToast('已记录偏差')
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAdoptRelationship = async (suggestion: any) => {
     const entry1Id = findEntryIdByName(entriesByType, suggestion.entry1Name)
@@ -298,6 +302,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         visibleSuggestions={visibleSuggestions}
         onSendMessage={handleSend}
         onInsertDraft={handleInsertDraft}
+        onPreferenceRecorded={handlePreferenceRecorded}
         onAdoptRelationship={handleAdoptRelationship}
         onDismiss={handleDismiss}
         onAdoptNewEntry={handleAdoptNewEntry}

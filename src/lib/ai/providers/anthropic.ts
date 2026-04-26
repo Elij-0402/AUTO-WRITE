@@ -118,7 +118,7 @@ export async function* streamAnthropic(
   }
 }
 
-function buildSystemBlocks(
+export function buildSystemBlocks(
   segments: SegmentedSystemPrompt
 ): Anthropic.TextBlockParam[] {
   const blocks: Anthropic.TextBlockParam[] = [
@@ -128,6 +128,13 @@ function buildSystemBlocks(
       cache_control: { type: 'ephemeral' },
     },
   ]
+  if (segments.projectCharterContext) {
+    blocks.push({
+      type: 'text',
+      text: segments.projectCharterContext,
+      cache_control: { type: 'ephemeral' },
+    })
+  }
   if (segments.worldBibleContext) {
     blocks.push({
       type: 'text',

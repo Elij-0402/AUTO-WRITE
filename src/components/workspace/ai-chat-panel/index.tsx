@@ -2,20 +2,16 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useAIChat } from '@/lib/hooks/use-ai-chat'
-import { useWizardMode } from '@/lib/hooks/use-wizard-mode'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { useConversations } from '@/lib/hooks/use-conversations'
 import { createProjectDB } from '@/lib/db/project-db'
 import { useDismissedSuggestions } from '@/lib/hooks/use-dismissed-suggestions'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
-import { History, Wand } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { History } from 'lucide-react'
 import { Quote } from 'lucide-react'
 import { MessageList } from './message-list'
 import { ChatInput } from './chat-input'
-import { WizardOverlay } from './wizard-overlay'
 import { NewEntryDialog, type NewEntryPrefillData } from '../new-entry-dialog'
 import { ConversationDrawer } from '../conversation-drawer'
 import { findEntryIdByName } from '@/lib/ai/find-entry-by-name'
@@ -28,12 +24,9 @@ interface AIChatPanelProps {
   selectedText?: string | null
   onDiscussComplete?: () => void
   onSwitchToWorldTab?: () => void
-  wizardModeActive?: boolean
-  onWizardModeComplete?: () => void
-  onTriggerWizardMode?: () => void
 }
 
-export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete, onSwitchToWorldTab, wizardModeActive, onWizardModeComplete, onTriggerWizardMode }: AIChatPanelProps) {
+export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete, onSwitchToWorldTab }: AIChatPanelProps) {
   // ── Conversation management ──────────────────────────────────────
   const { conversations, loading: conversationsLoading, remove: removeConversation } = useConversations(projectId)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -59,25 +52,6 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
     contradictions, isCheckingConsistency, addExemption,
     clearContradiction, cacheHint,
   } = useAIChat(projectId, activeConversationId, { selectedText: selectedText || undefined })
-
-  // ── Wizard mode ───────────────────────────────────────────────────
-  const {
-    state: wizardState, options: wizardOptions, result: wizardResult,
-    error: wizardError, triggerWizardMode, selectOption,
-    reset: resetWizard,
-  } = useWizardMode({ projectId, conversationId: activeConversationId, selectedText })
-
-  useEffect(() => {
-    if (wizardModeActive && wizardState === 'idle') {
-      void triggerWizardMode()
-    }
-  }, [wizardModeActive, wizardState, triggerWizardMode])
-
-  useEffect(() => {
-    if ((wizardState === 'done' || wizardState === 'error') && wizardModeActive) {
-      onWizardModeComplete?.()
-    }
-  }, [wizardState, wizardModeActive, onWizardModeComplete])
 
   // ── Entry management ──────────────────────────────────────────────
   const { entriesByType, addEntry, updateEntryFields } = useWorldEntries(projectId)
@@ -265,8 +239,6 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
   const handleDismissError = () => setChatError(null)
 
-  const handleWizardSelectOption = (option: Parameters<typeof selectOption>[0]) => void selectOption(option)
-
   return (
     <div className="h-full flex flex-col overflow-hidden surface-0 relative">
       {toastMessage && (
@@ -293,20 +265,6 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={onTriggerWizardMode}
-                aria-label="构思搭档"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Wand className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>构思搭档 (Ctrl+Shift+W)</TooltipContent>
-          </Tooltip>
           <span className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
             <span
               className={loading
@@ -349,17 +307,6 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         scrollToBottom={scrollToBottom}
         messagesContainerRef={messagesContainerRef}
         onScroll={handleScroll}
-      />
-
-      {/* ── Wizard overlay ────────────────────────────────── */}
-      <WizardOverlay
-        wizardState={wizardState}
-        wizardOptions={wizardOptions}
-        wizardResult={wizardResult}
-        wizardError={wizardError}
-        onSelectOption={handleWizardSelectOption}
-        onInsertDraft={(content) => { onInsertDraft?.(content); resetWizard() }}
-        onClose={() => { resetWizard(); onWizardModeComplete?.() }}
       />
 
       {/* ── Chat input ───────────────────────────────────── */}

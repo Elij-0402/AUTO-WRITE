@@ -149,9 +149,6 @@ export default function ProjectPage() {
                   projectId={params.id}
                   selectedText={selectedText}
                   onDiscussComplete={() => setSelectedText(null)}
-                  wizardModeActive={layout.wizardModeActive}
-                  onWizardModeComplete={() => layout.setWizardModeActive(false)}
-                  onTriggerWizardMode={() => layout.setWizardModeActive(true)}
                   onInsertDraft={handleInsertDraft}
                 />
               </NormalLayout>

@@ -19,7 +19,6 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
   const [activeOutlineId, setActiveOutlineId] = useState<string | null>(null)
   const [activeWorldEntryId, setActiveWorldEntryId] = useState<string | null>(null)
-  const [wizardModeActive, setWizardModeActive] = useState(false)
 
   // ── Derived data ─────────────────────────────────────────────────
   const { chapters } = useChapters(projectId)
@@ -132,10 +131,6 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
         else if (e.key === '3') { e.preventDefault(); handleTabChange('world') }
       }
 
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'w') {
-        e.preventDefault()
-        setWizardModeActive(true)
-      }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
@@ -156,7 +151,6 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
     activeChapterId, setActiveChapterId,
     activeOutlineId, setActiveOutlineId,
     activeWorldEntryId, setActiveWorldEntryId,
-    wizardModeActive, setWizardModeActive,
     activeTab,
     // Derived
     sortedChapters,

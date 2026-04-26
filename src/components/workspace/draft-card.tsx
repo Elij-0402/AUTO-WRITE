@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { createProjectDB } from '@/lib/db/project-db'
+import { recordPreferenceMemory } from '@/lib/db/project-charter-queries'
 
 type RejectReason = 'conflict' | 'other'
 
@@ -71,6 +72,20 @@ export function DraftCard({
       })
     } catch {
       /* telemetry best-effort */
+    }
+
+    try {
+      const detail = note?.trim()
+      const reasonLabel = reason === 'conflict' ? '不符合设定' : '其他'
+      await recordPreferenceMemory(projectId, {
+        source: 'draft',
+        messageId,
+        verdict: 'reject',
+        category: 'other',
+        note: detail ? `${reasonLabel}：${detail}` : reasonLabel,
+      })
+    } catch {
+      /* preference memory best-effort */
     }
   }
 

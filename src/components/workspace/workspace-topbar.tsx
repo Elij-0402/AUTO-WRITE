@@ -80,6 +80,10 @@ export function WorkspaceTopbar({
 
       <SyncStatusIcon />
 
+      <Button asChild variant="ghost" size="sm">
+        <Link href={`/projects/${projectId}/charter`}>作品宪章</Link>
+      </Button>
+
       <Tooltip>
         <TooltipTrigger asChild>
           <Button asChild variant="ghost" size="icon-sm">

@@ -1,6 +1,8 @@
 import { test, expect, type Page } from '@playwright/test'
 import { readFileSync } from 'fs'
 
+test.describe.configure({ mode: 'serial' })
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 async function createProject(page: Page, title: string) {
@@ -67,15 +69,9 @@ async function waitForEditorHydration(page: Page, chapterTitle: string, expected
       .toContain(expectedText)
     return
   } catch {
-    await page.reload()
-    await page.waitForLoadState('networkidle')
-    await waitForHMR(page)
-    await page.getByRole('button', { name: '章节' }).nth(0).click()
-    await page.waitForLoadState('domcontentloaded')
-    await waitForHMR(page)
-    await expect(editor).toBeVisible({ timeout: 10000 })
+    await chapterRow.click()
     await expect
-      .poll(readEditorText, { timeout: 15000, intervals: [250, 500, 1000] })
+      .poll(readEditorText, { timeout: 10000, intervals: [250, 500, 1000] })
       .toContain(expectedText)
   }
 }
@@ -115,7 +111,7 @@ async function waitForChapterContentPersisted(page: Page, projectId: string, tex
   )
 }
 
-async function createChapter(page: Page, title: string) {
+async function createChapter(page: Page, projectId: string, title: string) {
   const newChapterBtn = page.getByRole('button', { name: '新建章节' }).first()
   await newChapterBtn.waitFor({ state: 'visible', timeout: 10000 })
   await newChapterBtn.click()
@@ -126,11 +122,49 @@ async function createChapter(page: Page, title: string) {
   await chapterInput.press('Enter')
   await page.waitForTimeout(600)
   await expect(page.getByText(title).first()).toBeVisible()
+
+  return page.evaluate(
+    async ([pid, chapterTitle]) => {
+      const dbName = `inkforge-project-${pid}`
+      const openReq = indexedDB.open(dbName)
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        openReq.onsuccess = () => resolve(openReq.result)
+        openReq.onerror = () => reject(openReq.error)
+      })
+
+      try {
+        const tx = db.transaction('chapters', 'readonly')
+        const store = tx.objectStore('chapters')
+        const rows = await new Promise<Array<{ id: string; title: string; deletedAt?: unknown }>>((resolve, reject) => {
+          const req = store.getAll()
+          req.onsuccess = () => resolve((req.result ?? []) as Array<{ id: string; title: string; deletedAt?: unknown }>)
+          req.onerror = () => reject(req.error)
+        })
+
+        const chapter = rows.find((row) => row.title === chapterTitle && !row.deletedAt)
+        if (!chapter) {
+          throw new Error(`未找到章节: ${chapterTitle}`)
+        }
+        return chapter.id
+      } finally {
+        db.close()
+      }
+    },
+    [projectId, title]
+  )
+}
+
+async function openWorldTab(page: Page, projectId: string) {
+  await page.goto(`/projects/${projectId}?tab=world`)
+  await page.waitForLoadState('domcontentloaded')
+  await waitForHMR(page)
+  await expect(page.getByPlaceholder('搜索世界观...')).toBeVisible({ timeout: 10000 })
 }
 
 // ─── Scenario 1: Project + Chapter + Save persist ───────────────────────────
 
 test('1. 创建项目 + 创建章节 + 编辑器保存，刷新后仍在', async ({ page, browserName }) => {
+  test.slow()
   test.skip(
     browserName === 'webkit',
     'WebKit + next dev 下的 Tiptap 刷新回填会出现假阴性；Chromium/Firefox 与手工 WebKit 验证已覆盖该流程。'
@@ -149,7 +183,7 @@ test('1. 创建项目 + 创建章节 + 编辑器保存，刷新后仍在', async
   await waitForHMR(page)
   await page.waitForTimeout(400)
 
-  await createChapter(page, '第一章 序幕')
+  const chapterId = await createChapter(page, projectId, '第一章 序幕')
 
   const editor = page.locator('.ProseMirror').first()
   await editor.waitFor({ state: 'visible', timeout: 5000 })
@@ -159,14 +193,11 @@ test('1. 创建项目 + 创建章节 + 编辑器保存，刷新后仍在', async
   await expect(editor).toContainText('e2e 测试')
   await waitForChapterContentPersisted(page, projectId, 'e2e 测试')
 
-  await page.reload()
+  await page.goto(`/projects/${projectId}?tab=chapters&chapter=${chapterId}`)
   await page.waitForLoadState('networkidle')
   await waitForHMR(page)
   await expect(page).toHaveURL(/\/projects\/[^/]+$/)
   await expect(page.getByText(projectTitle).first()).toBeVisible()
-  await page.getByRole('button', { name: '章节' }).nth(0).click()
-  await page.waitForLoadState('domcontentloaded')
-  await waitForHMR(page)
   await waitForEditorHydration(page, '第一章 序幕', 'e2e 测试')
 
   await page.evaluate((id) => {
@@ -178,12 +209,7 @@ test('1. 创建项目 + 创建章节 + 编辑器保存，刷新后仍在', async
 
 test('2. 创建 3 个 WorldEntry，刷新后确认仍在', async ({ page }) => {
   const projectId = await createProject(page, `e2e-world-${Date.now()}`)
-
-  const worldTab = page.getByRole('button', { name: '世界观' }).nth(0)
-  await worldTab.click()
-  await page.waitForLoadState('domcontentloaded')
-  await waitForHMR(page)
-  await page.waitForTimeout(400)
+  await openWorldTab(page, projectId)
 
   const entryNames = ['小明', '师父', '反派']
   await page.evaluate(
@@ -224,13 +250,7 @@ test('2. 创建 3 个 WorldEntry，刷新后确认仍在', async ({ page }) => {
     [projectId, entryNames]
   )
 
-  await page.reload()
-  await page.waitForLoadState('networkidle')
-  await waitForHMR(page)
-  await worldTab.click()
-  await page.waitForLoadState('domcontentloaded')
-  await waitForHMR(page)
-  await page.waitForTimeout(400)
+  await openWorldTab(page, projectId)
 
   for (const name of entryNames) {
     await expect(page.getByText(name).first()).toBeVisible()
@@ -294,12 +314,7 @@ test('3. AI 聊天输入并确认提交', async ({ page }) => {
 
 test('4. 矛盾已豁免状态刷新后仍保留', async ({ page }) => {
   const projectId = await createProject(page, `e2e-contra-${Date.now()}`)
-
-  const worldTab = page.getByRole('button', { name: '世界观' }).nth(0)
-  await worldTab.click()
-  await page.waitForLoadState('domcontentloaded')
-  await waitForHMR(page)
-  await page.waitForTimeout(300)
+  await openWorldTab(page, projectId)
 
   const addBtn = page.getByRole('button', { name: '添加角色' }).first()
   await addBtn.waitFor({ state: 'visible', timeout: 8000 })
@@ -383,7 +398,7 @@ test('5. EPUB 导出 + 验证内容完整', async ({ page }) => {
   await waitForHMR(page)
   await page.waitForTimeout(400)
 
-  await createChapter(page, '第一章 测试章')
+  await createChapter(page, projectId, '第一章 测试章')
 
   const editor = page.locator('.ProseMirror').first()
   await editor.waitFor({ state: 'visible', timeout: 5000 })

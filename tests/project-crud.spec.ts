@@ -13,7 +13,7 @@ test('create project from empty dashboard and land on workspace', async ({ page 
 
   await page.waitForURL(/\/projects\/[^/]+\/charter$/)
   await expect(page.getByRole('heading', { name: '作品宪章' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '保存宪章' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '保存这版方向' })).toBeVisible()
 
   await page.getByRole('link', { name: '返回项目' }).click()
   await page.waitForURL(/\/projects\/[^/]+$/)

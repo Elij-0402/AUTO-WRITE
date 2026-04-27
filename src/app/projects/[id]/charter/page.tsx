@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { ThemeProvider } from '@/components/editor/theme-provider'
 import { ProjectCharterForm } from '@/components/project-charter/project-charter-form'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { useProjectCharter } from '@/lib/hooks/use-project-charter'
 
 export default function ProjectCharterPage() {
   const params = useParams<{ id: string }>()
+  const router = useRouter()
   const { charter, loading, save } = useProjectCharter(params.id)
 
   const handleSave = async (updates: Parameters<typeof save>[0]): Promise<void> => {
@@ -20,23 +21,30 @@ export default function ProjectCharterPage() {
     <ThemeProvider>
       <div className="flex h-full min-h-0 flex-col bg-background text-foreground">
         <div className="border-b border-border">
-          <div className="mx-auto flex max-w-4xl items-center gap-3 px-6 py-4">
+          <div className="mx-auto flex max-w-3xl items-center gap-3 px-6 py-4">
             <Button asChild variant="ghost" size="icon" className="h-8 w-8">
-              <Link href={`/projects/${params.id}`} aria-label="返回项目">
+              <Link
+                href={`/projects/${params.id}`}
+                aria-label="返回项目"
+                onClick={(event) => {
+                  event.preventDefault()
+                  router.push(`/projects/${params.id}`)
+                }}
+              >
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
             <div className="space-y-1">
               <h1 className="font-medium">作品宪章</h1>
               <p className="text-sm text-muted-foreground">
-                固定这部作品的承诺、边界与写法。
+                先定这部作品要成为什么，其余边界可以慢慢补。
               </p>
             </div>
           </div>
         </div>
 
         <main className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-4xl px-6 py-8">
+          <div className="mx-auto max-w-3xl px-6 py-8">
           {loading || !charter ? (
             <div className="text-sm text-muted-foreground">加载作品宪章中...</div>
           ) : (

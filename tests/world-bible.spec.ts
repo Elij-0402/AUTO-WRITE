@@ -11,16 +11,17 @@ async function createProject(page: import('@playwright/test').Page, title: strin
   if (!projectId) throw new Error('未能从宪章页 URL 解析项目 ID')
   await page.goto(`/projects/${projectId}`)
   await page.waitForURL(/\/projects\/[^/]+$/)
+  return projectId
 }
 
 test('add character entry via world bible tab', async ({ page }) => {
-  await createProject(page, '世界观测试项目')
+  const projectId = await createProject(page, '世界观测试项目')
 
-  await page.getByRole('button', { name: '世界观' }).first().click()
-
-  await page.getByRole('button', { name: '还没有角色，点击添加' }).click()
+  await page.goto(`/projects/${projectId}?tab=world`)
+  await page.waitForLoadState('domcontentloaded')
 
   await expect(page.getByPlaceholder('搜索世界观...')).toBeVisible()
+  await page.getByRole('button', { name: '添加角色' }).click()
   const characterHeader = page.getByText('角色', { exact: true }).first()
   await expect(characterHeader).toBeVisible()
 })

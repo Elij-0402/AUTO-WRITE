@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { CreateProjectModal } from './create-project-modal'
 
 const pushMock = vi.fn()
@@ -35,19 +35,8 @@ vi.mock('@/components/ui/select', () => ({
 }))
 
 describe('CreateProjectModal', () => {
-  const originalRequestAnimationFrame = globalThis.requestAnimationFrame
-
   beforeEach(() => {
     pushMock.mockReset()
-    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
-      callback(0)
-      return 0
-    })
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    globalThis.requestAnimationFrame = originalRequestAnimationFrame
   })
 
   it('routes new projects to the charter page after a successful create', async () => {

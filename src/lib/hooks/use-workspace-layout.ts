@@ -64,7 +64,7 @@ function writeWorkspaceUrlState(partial: WorkspaceUrlState): void {
 export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
   const urlState = useMemo(() => readWorkspaceUrlState(), [])
   const {
-    activeTab,
+    activeTab: persistedActiveTab,
     activeChapterId: persistedActiveChapterId,
     activeOutlineId: persistedActiveOutlineId,
     activeWorldEntryId: persistedActiveWorldEntryId,
@@ -84,6 +84,7 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
   const { chapters, loading: chaptersLoading } = useChapters(projectId)
   const idle = useIdleMode()
   const { entries, entriesByType, addEntry } = useWorldEntries(projectId)
+  const activeTab = urlState.activeTab ?? persistedActiveTab
 
   useEffect(() => {
     setActiveChapterIdState(urlState.activeChapterId ?? persistedActiveChapterId)

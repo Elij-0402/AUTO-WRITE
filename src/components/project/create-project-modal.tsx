@@ -72,10 +72,8 @@ export function CreateProjectModal({
     try {
       const id = await onSubmit(data)
       reset()
+      router.push(`/projects/${id}/charter`)
       onOpenChange(false)
-      requestAnimationFrame(() => {
-        router.push(`/projects/${id}/charter`)
-      })
     } finally {
       setIsSubmitting(false)
     }

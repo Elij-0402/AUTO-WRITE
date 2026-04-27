@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef, type RefObject } from 'react'
+import { useState, useCallback, useRef, type RefObject } from 'react'
 import { useParams } from 'next/navigation'
 import { ThemeProvider } from '@/components/editor/theme-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -35,7 +35,6 @@ export default function ProjectPage() {
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
-  const [toolbarReady, setToolbarReady] = useState(false)
 
   const layout = useWorkspaceLayout({ projectId: params.id })
   const { config } = useAIConfig()
@@ -51,11 +50,6 @@ export default function ProjectPage() {
 
   const handleDiscuss = useCallback((text: string) => {
     setSelectedText(text)
-  }, [])
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setToolbarReady(true), 2000)
-    return () => window.clearTimeout(timer)
   }, [])
 
   const mainContent = layout.activeTab === 'outline' && layout.activeOutlineId ? (
@@ -110,14 +104,8 @@ export default function ProjectPage() {
             projectId={params.id}
             focusMode={layout.focusMode}
             onToggleFocusMode={() => layout.setFocusMode(!layout.focusMode)}
-            onOpenAIConfig={() => {
-              if (!toolbarReady) return
-              aiConfigDialog.onOpen()
-            }}
-            onOpenDraftDialog={() => {
-              if (!toolbarReady) return
-              draftDialog.onOpenChange(true)
-            }}
+            onOpenAIConfig={aiConfigDialog.onOpen}
+            onOpenDraftDialog={() => draftDialog.onOpenChange(true)}
             idle={layout.idle}
           />
 
@@ -149,6 +137,9 @@ export default function ProjectPage() {
                   projectId={params.id}
                   selectedText={selectedText}
                   onDiscussComplete={() => setSelectedText(null)}
+                  wizardModeActive={layout.wizardModeActive}
+                  onWizardModeComplete={() => layout.setWizardModeActive(false)}
+                  onTriggerWizardMode={() => layout.setWizardModeActive(true)}
                   onInsertDraft={handleInsertDraft}
                 />
               </NormalLayout>

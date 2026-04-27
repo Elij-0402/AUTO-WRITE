@@ -18,7 +18,7 @@ export default function ProjectCharterPage() {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-background text-foreground">
+      <div className="flex h-full min-h-0 flex-col bg-background text-foreground">
         <div className="border-b border-border">
           <div className="mx-auto flex max-w-4xl items-center gap-3 px-6 py-4">
             <Button asChild variant="ghost" size="icon" className="h-8 w-8">
@@ -35,7 +35,8 @@ export default function ProjectCharterPage() {
           </div>
         </div>
 
-        <main className="mx-auto max-w-4xl px-6 py-8">
+        <main className="min-h-0 flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-4xl px-6 py-8">
           {loading || !charter ? (
             <div className="text-sm text-muted-foreground">加载作品宪章中...</div>
           ) : (
@@ -55,6 +56,7 @@ export default function ProjectCharterPage() {
               onSave={handleSave}
             />
           )}
+          </div>
         </main>
       </div>
     </ThemeProvider>

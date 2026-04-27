@@ -9,6 +9,7 @@ import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useAllRelations } from '@/lib/hooks/use-all-relations'
 import { useRelations } from '@/lib/hooks/use-relations'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
+import { useStoryTrackers } from '@/lib/hooks/use-story-trackers'
 import { InteractiveRelationGraph } from '@/components/analysis/interactive-relation-graph'
 import { Button } from '@/components/ui/button'
 import { ThemeProvider } from '@/components/editor/theme-provider'
@@ -38,6 +39,7 @@ export default function AnalysisPage() {
   const relations = useAllRelations(params.id)
   const { addRelation } = useRelations(params.id)
   const { uiFlags } = useAIConfig()
+  const { trackers } = useStoryTrackers(params.id)
 
   // Handler for editing an entry (opens entry in world-bible sidebar)
   const handleEditEntry = useCallback((entry: WorldEntry) => {
@@ -65,6 +67,13 @@ export default function AnalysisPage() {
   }, [uiFlags.showTimelineView])
 
   const activeTab: Tab = tabs.some(t => t.id === tab) ? tab : 'relations'
+  const trackerCountsByEntryId = useMemo(() => {
+    return trackers.reduce<Record<string, number>>((counts, tracker) => {
+      if (tracker.status !== 'active' || !tracker.linkedTimelineEntryId) return counts
+      counts[tracker.linkedTimelineEntryId] = (counts[tracker.linkedTimelineEntryId] ?? 0) + 1
+      return counts
+    }, {})
+  }, [trackers])
 
   return (
     <ThemeProvider>
@@ -114,7 +123,10 @@ export default function AnalysisPage() {
               />
             )}
             {activeTab === 'timeline' && uiFlags.showTimelineView && (
-              <TimelineView entries={entries ?? []} />
+              <TimelineView
+                entries={entries ?? []}
+                trackerCountsByEntryId={trackerCountsByEntryId}
+              />
             )}
             {activeTab === 'contradictions' && (
               <ContradictionDashboard projectId={params.id} />

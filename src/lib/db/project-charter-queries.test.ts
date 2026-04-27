@@ -2,10 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { __resetProjectDBCache } from './project-db'
 import {
   getProjectCharter,
+  getProjectCharterSnapshot,
   saveProjectCharter,
   recordPreferenceMemory,
   listPreferenceMemories,
 } from './project-charter-queries'
+import { createProjectDB } from './project-db'
 
 describe('project charter queries', () => {
   const projectId = 'phase1-charter'
@@ -58,6 +60,18 @@ describe('project charter queries', () => {
     expect(updated.aiUnderstanding).toContain('高压权谋')
     expect(updated.aiUnderstanding).toContain('失国')
     expect(updated.aiUnderstanding).toContain('长篇读者')
+  })
+
+  it('reads a default charter snapshot without writing to IndexedDB', async () => {
+    const db = createProjectDB(projectId)
+    const putSpy = vi.spyOn(db.projectCharter, 'put')
+
+    const initial = await getProjectCharterSnapshot(projectId)
+
+    expect(initial.id).toBe('charter')
+    expect(initial.projectId).toBe(projectId)
+    expect(putSpy).not.toHaveBeenCalled()
+    expect(await db.projectCharter.count()).toBe(0)
   })
 
   it('records preference memories newest-first', async () => {

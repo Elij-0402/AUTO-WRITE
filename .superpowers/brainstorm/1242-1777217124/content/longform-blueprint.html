@@ -1,0 +1,85 @@
+<h2>InkForge · 可写长篇版本蓝图</h2>
+<p class="subtitle">先对齐产品骨架，再拆实现计划。请选择最像你要的系统重心，或直接在终端说哪里不对。</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">四层产品骨架</div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+        <div style="border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:16px;">
+          <div class="label">Layer 1</div>
+          <h3>作者意图层</h3>
+          <p>作品宪章、母题、情绪基调、禁忌、人物张力、风格边界、像什么/不像什么。</p>
+        </div>
+        <div style="border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:16px;">
+          <div class="label">Layer 2</div>
+          <h3>世界与故事模型层</h3>
+          <p>世界规则、势力、人物状态、时间线、秘密、资源、伏笔、事件后果。</p>
+        </div>
+        <div style="border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:16px;">
+          <div class="label">Layer 3</div>
+          <h3>写作流水线层</h3>
+          <p>灵感采集、卷纲、章纲、场景卡、草稿生成、合章、修订、导出。</p>
+        </div>
+        <div style="border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:16px;">
+          <div class="label">Layer 4</div>
+          <h3>长篇控制层</h3>
+          <p>一致性扫描、人物弧光、节奏预警、伏笔回收、偏航报警、阶段复盘。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">核心开发顺序</div>
+      <div class="mockup-body">
+        <ol style="margin:0;padding-left:20px;display:grid;gap:10px;">
+          <li>把项目升级成“作品操作台”，不是资料库 + 聊天面板</li>
+          <li>先建立作者意图层与作品宪章</li>
+          <li>再把世界模型和规划链路接起来</li>
+          <li>然后做场景级生成与章节合成</li>
+          <li>最后补长篇控制与复盘系统</li>
+        </ol>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">阶段目标</div>
+      <div class="mockup-body">
+        <ol style="margin:0;padding-left:20px;display:grid;gap:10px;">
+          <li><strong>阶段 1</strong>：让 AI 先学会“你想写什么”</li>
+          <li><strong>阶段 2</strong>：让 AI 能规划，不只会续写</li>
+          <li><strong>阶段 3</strong>：让 AI 稳定产出可改章节</li>
+          <li><strong>阶段 4</strong>：让长篇写久了也不跑偏</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>你觉得系统的主心骨更该落在哪？</h3>
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>作者意图优先</h3>
+      <p>先让它更懂你，再扩展生成链路。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>规划链路优先</h3>
+      <p>先把卷纲、章纲、场景卡这条主线做完整。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>长篇控制优先</h3>
+      <p>先做时间线、人物状态、伏笔和偏航预警。</p>
+    </div>
+  </div>
+</div>

@@ -15,12 +15,14 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import { BookOpen, ListTree, Globe2 } from 'lucide-react'
+import { BookOpen, ListTree, Globe2, Map } from 'lucide-react'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { ChapterRow } from './chapter-row'
 import { CreateChapterInput } from './create-chapter-input'
 import { DeleteChapterDialog } from './delete-chapter-dialog'
 import { OutlineTab } from '@/components/outline/outline-tab'
+import { PlanningSidebarTab } from '@/components/planning/planning-sidebar-tab'
+import type { PlanningSelection } from '@/components/planning/planning-workbench'
 import { WorldBibleTab } from '@/components/world-bible/world-bible-tab'
 import {
   Tooltip,
@@ -42,6 +44,8 @@ interface ChapterSidebarProps {
   onSelectWorldEntry: (id: string) => void
   onEditWorldEntry: (id: string) => void
   onDeleteWorldEntry: (id: string) => void
+  activePlanningSelection: PlanningSelection | null
+  onSelectPlanningItem: (selection: PlanningSelection) => void
 }
 
 type RailItem = {
@@ -55,6 +59,7 @@ const RAIL_ITEMS: RailItem[] = [
   { value: 'chapters', label: '章节', shortcut: 'Ctrl+1', icon: BookOpen },
   { value: 'outline', label: '大纲', shortcut: 'Ctrl+2', icon: ListTree },
   { value: 'world', label: '世界观', shortcut: 'Ctrl+3', icon: Globe2 },
+  { value: 'planning', label: '规划', shortcut: 'Ctrl+4', icon: Map },
 ]
 
 export function ChapterSidebar({
@@ -69,6 +74,8 @@ export function ChapterSidebar({
   onSelectWorldEntry,
   onEditWorldEntry,
   onDeleteWorldEntry,
+  activePlanningSelection,
+  onSelectPlanningItem,
 }: ChapterSidebarProps) {
   const {
     chapters,
@@ -232,6 +239,14 @@ export function ChapterSidebar({
               onSelectEntry={onSelectWorldEntry}
               onEditEntry={onEditWorldEntry}
               onDeleteEntry={onDeleteWorldEntry}
+            />
+          )}
+
+          {activeTab === 'planning' && (
+            <PlanningSidebarTab
+              projectId={projectId}
+              activeSelection={activePlanningSelection}
+              onSelectItem={onSelectPlanningItem}
             />
           )}
         </div>

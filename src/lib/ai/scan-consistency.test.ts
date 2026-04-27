@@ -25,8 +25,8 @@ describe('scanConsistency', () => {
       name: '张三',
       content: '男，30岁，剑客',
       tags: [],
-      createdAt: 0,
-      updatedAt: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
       deletedAt: null,
     },
   ]

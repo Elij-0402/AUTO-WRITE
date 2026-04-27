@@ -182,6 +182,7 @@ function SuggestionsSection({
             entry2Name={suggestion.entry2Name}
             relationshipType={suggestion.relationshipType}
             bidirectionalDescription={suggestion.bidirectionalDescription}
+            sourceLabel="来自对话建议"
             onAdopt={() => onAdoptRelationship(suggestion)}
             onDismiss={() => onDismiss(suggestion)}
           />
@@ -191,6 +192,7 @@ function SuggestionsSection({
             entryType={suggestion.entryType}
             suggestedName={suggestion.suggestedName}
             description={suggestion.description}
+            sourceLabel="来自对话建议"
             onAdopt={() => onAdoptNewEntry(suggestion)}
             onDismiss={() => onDismiss(suggestion)}
           />

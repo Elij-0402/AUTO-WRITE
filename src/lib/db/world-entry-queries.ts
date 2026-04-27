@@ -4,15 +4,39 @@ import type { InkForgeProjectDB } from './project-db'
 /** Default names per entry type per D-15 */
 const DEFAULT_NAMES: Record<WorldEntryType, string> = {
   character: '未命名角色',
+  faction: '未命名势力',
   location: '未命名地点',
   rule: '未命名规则',
+  secret: '未命名秘密',
+  event: '未命名事件',
   timeline: '未命名时间线',
+}
+
+function compareWorldEntries(a: WorldEntry, b: WorldEntry): number {
+  const isChronologicalType = a.type === b.type && (a.type === 'event' || a.type === 'timeline')
+
+  if (isChronologicalType) {
+    const aHasTimeOrder = a.timeOrder != null
+    const bHasTimeOrder = b.timeOrder != null
+
+    if (aHasTimeOrder && bHasTimeOrder && a.timeOrder !== b.timeOrder) {
+      const aTimeOrder = a.timeOrder ?? Number.MAX_SAFE_INTEGER
+      const bTimeOrder = b.timeOrder ?? Number.MAX_SAFE_INTEGER
+      return aTimeOrder - bTimeOrder
+    }
+
+    if (aHasTimeOrder !== bHasTimeOrder) {
+      return aHasTimeOrder ? -1 : 1
+    }
+  }
+
+  return a.name.localeCompare(b.name, 'zh-CN')
 }
 
 /**
  * Get all non-deleted world entries for a project, optionally filtered by type.
  * Per D-10: sorted alphabetically by name (localeCompare for Chinese pinyin).
- * Per D-12: timeline entries sort same as other types — by name.
+ * Event/timeline entries sort by timeOrder first, then fallback to name.
  */
 export async function getWorldEntries(
   db: InkForgeProjectDB,
@@ -27,7 +51,7 @@ export async function getWorldEntries(
     )
     .toArray()
 
-  return entries.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
+  return entries.sort(compareWorldEntries)
 }
 
 /**
@@ -137,7 +161,7 @@ export async function searchWorldEntries(
     )
     .toArray()
 
-  return entries.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
+  return entries.sort(compareWorldEntries)
 }
 
 /**
@@ -187,10 +211,31 @@ export async function queryEntriesByKeyword(
           entry.features?.toLowerCase().includes(lowerKeyword)
         )
       }
+      if (entry.type === 'faction') {
+        return Boolean(
+          entry.factionRole?.toLowerCase().includes(lowerKeyword) ||
+          entry.factionGoal?.toLowerCase().includes(lowerKeyword) ||
+          entry.factionStyle?.toLowerCase().includes(lowerKeyword)
+        )
+      }
       if (entry.type === 'rule') {
         return Boolean(
           entry.content?.toLowerCase().includes(lowerKeyword) ||
           entry.scope?.toLowerCase().includes(lowerKeyword)
+        )
+      }
+      if (entry.type === 'secret') {
+        return Boolean(
+          entry.secretContent?.toLowerCase().includes(lowerKeyword) ||
+          entry.secretScope?.toLowerCase().includes(lowerKeyword) ||
+          entry.revealCondition?.toLowerCase().includes(lowerKeyword)
+        )
+      }
+      if (entry.type === 'event') {
+        return Boolean(
+          entry.eventDescription?.toLowerCase().includes(lowerKeyword) ||
+          entry.eventImpact?.toLowerCase().includes(lowerKeyword) ||
+          entry.timePoint?.toLowerCase().includes(lowerKeyword)
         )
       }
       if (entry.type === 'timeline') {
@@ -203,7 +248,7 @@ export async function queryEntriesByKeyword(
     })
     .toArray()
 
-  return entries.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
+  return entries.sort(compareWorldEntries)
 }
 
 /**
@@ -215,8 +260,11 @@ export async function getEntriesByTypeForContext(
   projectId: string
 ): Promise<{
   character: WorldEntry[]
+  faction: WorldEntry[]
   location: WorldEntry[]
   rule: WorldEntry[]
+  secret: WorldEntry[]
+  event: WorldEntry[]
   timeline: WorldEntry[]
 }> {
   const entries = await db.worldEntries
@@ -224,9 +272,12 @@ export async function getEntriesByTypeForContext(
     .toArray()
 
   return {
-    character: entries.filter(e => e.type === 'character'),
-    location: entries.filter(e => e.type === 'location'),
-    rule: entries.filter(e => e.type === 'rule'),
-    timeline: entries.filter(e => e.type === 'timeline'),
+    character: entries.filter(e => e.type === 'character').sort(compareWorldEntries),
+    faction: entries.filter(e => e.type === 'faction').sort(compareWorldEntries),
+    location: entries.filter(e => e.type === 'location').sort(compareWorldEntries),
+    rule: entries.filter(e => e.type === 'rule').sort(compareWorldEntries),
+    secret: entries.filter(e => e.type === 'secret').sort(compareWorldEntries),
+    event: entries.filter(e => e.type === 'event').sort(compareWorldEntries),
+    timeline: entries.filter(e => e.type === 'timeline').sort(compareWorldEntries),
   }
 }

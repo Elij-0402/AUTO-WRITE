@@ -102,8 +102,11 @@ describe('extractKeywords', () => {
 describe('findRelevantEntries', () => {
   const entriesByType: EntriesByType = {
     character: [makeCharacter({ id: 'c1', name: '云归', personality: '沉默寡言' })],
+    faction: [],
     location: [makeLocation({ id: 'l1', name: '仙门大殿' })],
     rule: [makeRule({ id: 'r1', name: '灵气修炼法则' })],
+    secret: [],
+    event: [],
     timeline: [makeTimeline({ id: 't1', name: '仙门大比' })],
   }
 
@@ -126,10 +129,13 @@ describe('findRelevantEntries', () => {
       character: [
         makeCharacter({ id: 'c2', name: '云归的师父', personality: '严厉' }),
       ],
+      faction: [],
       location: [
         makeLocation({ id: 'l2', name: '云归修炼的地方', description: '灵气充沛' }),
       ],
       rule: [],
+      secret: [],
+      event: [],
       timeline: [],
     }
     // '云归' matches both name (c2) AND location name (l2), but name gets +10 vs description +5

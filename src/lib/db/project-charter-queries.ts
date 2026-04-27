@@ -46,6 +46,16 @@ export async function getProjectCharter(projectId: string): Promise<ProjectChart
   return charter
 }
 
+export async function getProjectCharterSnapshot(projectId: string): Promise<ProjectCharter> {
+  const db = createProjectDB(projectId)
+  const existing = await db.projectCharter.get('charter')
+  if (existing) {
+    return existing
+  }
+
+  return createDefaultProjectCharter(projectId)
+}
+
 export async function saveProjectCharter(
   projectId: string,
   updates: ProjectCharterUpdate

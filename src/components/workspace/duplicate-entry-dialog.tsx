@@ -7,8 +7,11 @@ import type { WorldEntry, WorldEntryType } from '@/lib/types'
 
 const TYPE_LABELS: Record<WorldEntryType, string> = {
   character: '角色',
+  faction: '势力',
   location: '地点',
   rule: '规则',
+  secret: '秘密',
+  event: '事件',
   timeline: '时间线'
 }
 

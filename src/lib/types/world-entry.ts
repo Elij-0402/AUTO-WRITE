@@ -1,5 +1,12 @@
 /** World entry entity type per D-01 */
-export type WorldEntryType = 'character' | 'location' | 'rule' | 'timeline'
+export type WorldEntryType =
+  | 'character'
+  | 'faction'
+  | 'location'
+  | 'rule'
+  | 'secret'
+  | 'event'
+  | 'timeline'
 
 /**
  * AI-inferred 口吻 / style profile for a character or location entry, added
@@ -23,6 +30,12 @@ export interface WorldEntry {
   projectId: string
   type: WorldEntryType
   name: string
+  /** Faction only: 势力在世界格局中的角色定位 */
+  factionRole?: string
+  /** Faction only: 势力核心目标 */
+  factionGoal?: string
+  /** Faction only: 势力风格/行事方式 */
+  factionStyle?: string
   /** Character only per D-02: 别名 */
   alias?: string
   /** Character only per D-02: 外貌 */
@@ -39,10 +52,22 @@ export interface WorldEntry {
   content?: string
   /** Rule only per D-04: 适用范围 */
   scope?: string
+  /** Secret only: 秘密内容 */
+  secretContent?: string
+  /** Secret only: 影响范围 */
+  secretScope?: string
+  /** Secret only: 揭露条件 */
+  revealCondition?: string
   /** Timeline only per D-05: 时间点 (free text, e.g. "第三年春") */
   timePoint?: string
-  /** Timeline only per D-05: 事件描述 */
+  /** Timeline and event: 事件描述 */
   eventDescription?: string
+  /** Event only: 事件影响 */
+  eventImpact?: string
+  /** Timeline and event: stable numeric ordering when free-text timePoint is insufficient */
+  timeOrder?: number | null
+  /** Timeline and event: prerequisite entries that must occur first */
+  dependencyEntryIds?: string[]
   /**
    * v13: AI-inferred voice/style profile. Populated only for character +
    * location entries. Used by the consistency-check flow to compare

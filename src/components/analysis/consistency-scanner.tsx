@@ -18,8 +18,11 @@ import type { WorldEntryType } from '@/lib/types'
 
 const TYPE_LABEL: Record<WorldEntryType, string> = {
   character: '角色',
+  faction: '势力',
   location: '地点',
   rule: '规则',
+  secret: '秘密',
+  event: '事件',
   timeline: '时间线',
 }
 
@@ -44,7 +47,7 @@ export function ConsistencyScanner({
 }: ConsistencyScannerProps) {
   const [selectedChapterId, setSelectedChapterId] = useState<string>('all')
 
-  const { state, results, progress, error, startScan, exemptResult, cancelScan, clearResults } =
+  const { state, results, summary, progress, error, startScan, exemptResult, cancelScan, clearResults } =
     useConsistencyScan({
       projectId,
       config,
@@ -53,7 +56,10 @@ export function ConsistencyScanner({
 
   const isScanning = state === 'scanning'
   const hasResults = state === 'results_ready' && results.length > 0
-  const noViolations = state === 'results_ready' && results.length === 0
+  const noViolations = state === 'results_ready' && results.length === 0 && summary?.status === 'clean'
+  const hasCoverageWarning =
+    state === 'results_ready' &&
+    (summary?.status === 'missing_world_bible' || summary?.status === 'coverage_warning')
 
   // Group results by entry
   const groupedResults = useMemo(() => {
@@ -183,9 +189,19 @@ export function ConsistencyScanner({
       {noViolations && (
         <div className="text-center py-12 rounded-[var(--radius-card)] surface-2">
           <ShieldCheck className="h-10 w-10 mx-auto mb-3 text-[hsl(var(--success))] opacity-40" />
-          <p className="text-[14px] font-medium text-foreground">未发现矛盾</p>
+          <p className="text-[14px] font-medium text-foreground">{summary?.title ?? '未发现矛盾'}</p>
           <p className="text-[12px] text-muted-foreground mt-1">
-            章节内容与世界观百科保持一致
+            {summary?.description ?? '章节内容与世界观百科保持一致'}
+          </p>
+        </div>
+      )}
+
+      {hasCoverageWarning && (
+        <div className="text-center py-12 rounded-[var(--radius-card)] surface-2">
+          <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-[hsl(var(--warning))] opacity-60" />
+          <p className="text-[14px] font-medium text-foreground">{summary?.title}</p>
+          <p className="text-[12px] text-muted-foreground mt-1">
+            {summary?.description}
           </p>
         </div>
       )}
@@ -259,7 +275,7 @@ export function ConsistencyScanner({
       )}
 
       {/* Idle state - no scan yet */}
-      {state === 'idle' && !hasResults && !noViolations && (
+      {state === 'idle' && !hasResults && !noViolations && !hasCoverageWarning && (
         <div className="text-center py-12 text-muted-foreground">
           <ShieldCheck className="h-10 w-10 mx-auto mb-3 opacity-20" />
           <p className="text-[13px]">

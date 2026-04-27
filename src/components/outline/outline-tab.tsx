@@ -18,6 +18,7 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, ListTree } from 'lucide-react'
 import { useChapters } from '@/lib/hooks/use-chapters'
+import { usePlanning } from '@/lib/hooks/use-planning'
 import { cn } from '@/lib/utils'
 import type { Chapter, OutlineStatus } from '@/lib/types'
 
@@ -36,11 +37,12 @@ function getStatusDotColor(status: OutlineStatus): string {
 
 interface OutlineRowProps {
   chapter: Chapter
+  chapterPlanSummary?: string
   isActive: boolean
   onSelect: () => void
 }
 
-function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
+function OutlineRow({ chapter, chapterPlanSummary, isActive, onSelect }: OutlineRowProps) {
   const {
     attributes,
     listeners,
@@ -55,8 +57,10 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
     transition,
   }
 
+  const effectiveSummary = chapterPlanSummary || chapter.outlineSummary
+
   const isEmptyOutline =
-    !chapter.outlineSummary && chapter.outlineStatus === 'not_started'
+    !effectiveSummary && chapter.outlineStatus === 'not_started'
 
   return (
     <div
@@ -109,9 +113,16 @@ function OutlineRow({ chapter, isActive, onSelect }: OutlineRowProps) {
             </button>
           </div>
         ) : (
-          <span className="block truncate text-[13px]">
-            {chapter.title}
-          </span>
+          <div className="min-w-0">
+            <span className="block truncate text-[13px]">
+              {chapter.title}
+            </span>
+            {effectiveSummary ? (
+              <span className="block truncate text-[11px] text-muted-foreground/70">
+                {effectiveSummary}
+              </span>
+            ) : null}
+          </div>
         )}
       </div>
 
@@ -136,6 +147,13 @@ export function OutlineTab({
   activeOutlineId,
 }: OutlineTabProps) {
   const { chapters, loading, reorderChapters } = useChapters(projectId)
+  const { snapshot } = usePlanning(projectId)
+
+  const chapterPlanByChapterId = new Map(
+    snapshot.chapterPlans
+      .filter((plan) => plan.linkedChapterId)
+      .map((plan) => [plan.linkedChapterId!, plan])
+  )
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -193,6 +211,7 @@ export function OutlineTab({
             <OutlineRow
               key={chapter.id}
               chapter={chapter}
+              chapterPlanSummary={chapterPlanByChapterId.get(chapter.id)?.summary}
               isActive={activeOutlineId === chapter.id}
               onSelect={() => onSelectOutline(chapter.id)}
             />

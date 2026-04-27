@@ -2,12 +2,15 @@
 
 import { useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { getProjectCharter, saveProjectCharter } from '../db/project-charter-queries'
+import {
+  getProjectCharterSnapshot,
+  saveProjectCharter,
+} from '../db/project-charter-queries'
 import type { ProjectCharter, ProjectCharterUpdate } from '../types'
 
 export function useProjectCharter(projectId: string) {
   const charter = useLiveQuery(
-    async (): Promise<ProjectCharter> => getProjectCharter(projectId),
+    async (): Promise<ProjectCharter> => getProjectCharterSnapshot(projectId),
     [projectId]
   )
 

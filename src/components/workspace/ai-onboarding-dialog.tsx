@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { XCircle, ExternalLink, ChevronDown } from 'lucide-react'
+import { XCircle, ExternalLink } from 'lucide-react'
 
 interface AIOnboardingDialogProps {
   open: boolean
@@ -235,16 +235,15 @@ export function AIOnboardingDialog({ open, onSkip, onSaveComplete }: AIOnboardin
           {apiKey && (
             <div className="space-y-1.5">
               <Label htmlFor="onboard-model">模型</Label>
-              <div className="relative">
-                <input
+              <div>
+                <Input
                   id="onboard-model"
                   type="text"
                   value={model}
                   onChange={e => setModel(e.target.value)}
                   placeholder={preset.defaultModel}
-                  className="w-full h-9 px-3 rounded-[var(--radius-control)] bg-[hsl(var(--surface-2))] border border-[hsl(var(--border))] text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(var(--accent))] transition-colors"
+                  className="bg-[hsl(var(--surface-2))] focus-visible:border-[hsl(var(--accent))]"
                 />
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
             </div>
           )}

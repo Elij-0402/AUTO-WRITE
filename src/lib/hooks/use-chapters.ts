@@ -34,7 +34,7 @@ export function useChapters(projectId: string) {
   const chapters = useLiveQuery(
     () => getChapters(db),
     [db],
-    [] // default to empty array while loading
+    undefined
   )
 
   // Helper to get userId for sync
@@ -199,7 +199,7 @@ export function useChapters(projectId: string) {
 
   return {
     db,
-    chapters,
+    chapters: chapters ?? [],
     loading: chapters === undefined,
     addChapter,
     reorderChapters,

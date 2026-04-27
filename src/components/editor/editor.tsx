@@ -67,6 +67,17 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(({ content, onChange
       if (!editor) return
       editor.commands.insertContentAt(position ?? editor.state.selection.head, text)
     },
+    appendText: (text: string) => {
+      if (!editor) return
+      const currentText = editor.getText().trim()
+      const contentToInsert = currentText ? `\n\n${text}` : text
+      editor.chain().focus('end').insertContent(contentToInsert).run()
+    },
+    replaceText: (text: string) => {
+      if (!editor) return
+      editor.commands.clearContent()
+      editor.commands.insertContent(text)
+    },
     setContent: (nextContent: object) => {
       if (!editor) return
       editor.commands.setContent(nextContent)

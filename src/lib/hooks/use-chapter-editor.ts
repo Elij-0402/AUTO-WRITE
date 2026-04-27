@@ -28,6 +28,7 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
   
   // Track the previous chapterId to detect chapter switches
   const prevChapterIdRef = useRef<string | null>(null)
+  const hydratedChapterIdRef = useRef<string | null>(null)
   // Track previous word count for delta computation (today's word count tracking)
   const prevWordCountRef = useRef<number>(0)
   
@@ -44,16 +45,22 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
   // Sync content from chapter to local state ONLY when chapterId changes (chapter switch)
   // Don't sync on every content change (e.g., autosave updates) to avoid editor resets
   useEffect(() => {
+    const chapterMatchesSelection =
+      chapterId !== null &&
+      (
+        chapter?.id === chapterId ||
+        (!!chapter && (chapter as { id?: string }).id === undefined)
+      )
     const chapterSwitched = chapterId !== prevChapterIdRef.current
     const chapterLoadedAfterSelection =
-      chapterId !== null &&
+      chapterMatchesSelection &&
       chapterId === prevChapterIdRef.current &&
-      content === null &&
+      hydratedChapterIdRef.current !== chapterId &&
       chapter?.content !== undefined
 
     if (!chapterSwitched && !chapterLoadedAfterSelection) return
 
-    if (chapter?.content !== undefined) {
+    if (chapterMatchesSelection && chapter?.content !== undefined) {
       setContent(chapter.content)
       // Initialize previous word count for delta tracking
       prevWordCountRef.current = chapter.wordCount || 0
@@ -62,6 +69,7 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
       prevWordCountRef.current = 0
     }
     prevChapterIdRef.current = chapterId
+    hydratedChapterIdRef.current = chapterMatchesSelection && chapter?.content !== undefined ? chapterId : null
   }, [chapterId, chapter?.content, chapter?.wordCount, content])
   
   const persistContent = useCallback(async (nextContent: object) => {
@@ -72,8 +80,11 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
   // Editor changes should update local state immediately; persistence is
   // handled by the debounced autosave effect below.
   const updateContent = useCallback((newContent: object) => {
+    if (chapterId && hydratedChapterIdRef.current !== chapterId) {
+      return
+    }
     setContent(newContent)
-  }, [])
+  }, [chapterId])
   
   // Autosave hook with 500ms debounce
   // Wrap updateContent to capture current content from closure

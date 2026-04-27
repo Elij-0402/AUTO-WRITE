@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Plus, X, ArrowRight, ArrowLeft } from 'lucide-react'
 import { useRelations } from '@/lib/hooks/use-relations'
 import { Button } from '@/components/ui/button'
@@ -29,6 +29,10 @@ const CATEGORY_LABELS: Record<RelationCategory, string> = {
   general: '通用关联',
 }
 
+function getDefaultCategory(entryType: WorldEntry['type']): RelationCategory {
+  return entryType === 'character' ? 'character_relation' : 'general'
+}
+
 interface RelationshipSectionProps {
   projectId: string
   sourceEntry: WorldEntry
@@ -55,15 +59,24 @@ export function RelationshipSection({
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [targetId, setTargetId] = useState('')
-  const [category, setCategory] = useState<RelationCategory>('character_relation')
+  const [category, setCategory] = useState<RelationCategory>(getDefaultCategory(sourceEntry.type))
   const [description, setDescription] = useState('')
   const [sourceToTargetLabel, setSourceToTargetLabel] = useState('')
+  const selectedTarget = allEntries.find(entry => entry.id === targetId)
+  const allowCharacterRelation =
+    sourceEntry.type === 'character' &&
+    (!selectedTarget || selectedTarget.type === 'character')
+
+  const effectiveCategory =
+    allowCharacterRelation || category === 'general'
+      ? category
+      : 'general'
 
   const handleAddRelation = async () => {
     if (!targetId) return
-    await addRelation(targetId, sourceEntry.id, category, description, sourceToTargetLabel)
+    await addRelation(sourceEntry.id, targetId, effectiveCategory, description, sourceToTargetLabel)
     setTargetId('')
-    setCategory('character_relation')
+    setCategory(getDefaultCategory(sourceEntry.type))
     setDescription('')
     setSourceToTargetLabel('')
     setDialogOpen(false)
@@ -170,12 +183,14 @@ export function RelationshipSection({
 
               <div className="space-y-2">
                 <Label>关系类别</Label>
-                <Select value={category} onValueChange={(v) => setCategory(v as RelationCategory)}>
+                <Select value={effectiveCategory} onValueChange={(v) => setCategory(v as RelationCategory)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="character_relation">角色关系</SelectItem>
+                    {allowCharacterRelation && (
+                      <SelectItem value="character_relation">角色关系</SelectItem>
+                    )}
                     <SelectItem value="general">通用关联</SelectItem>
                   </SelectContent>
                 </Select>

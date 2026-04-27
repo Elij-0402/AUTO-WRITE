@@ -1,17 +1,19 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import 'fake-indexeddb/auto'
-import { createProjectDB, __resetProjectDBCache } from './project-db'
+import { createProjectDB, InkForgeProjectDB, __resetProjectDBCache } from './project-db'
 
 describe('project-db v14 migration', () => {
   beforeEach(() => {
     __resetProjectDBCache()
   })
 
-  it('opens at version 17 successfully', async () => {
+  it('opens at the current schema version successfully', async () => {
     const db = createProjectDB('test-migration-v14')
+    const referenceDb = new InkForgeProjectDB('test-migration-v14-reference')
     await db.open()
-    expect(db.verno).toBe(17)
+    expect(db.verno).toBe(referenceDb.verno)
     db.close()
+    referenceDb.close()
   })
 
   it('does not have an embeddings table', async () => {

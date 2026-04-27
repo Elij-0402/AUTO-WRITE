@@ -62,6 +62,7 @@ export async function getRelationRecommendations(
   const events = streamChat(clientConfig, {
     segmentedSystem: {
       baseInstruction: SYSTEM_PROMPT,
+      projectCharterContext: '',
       worldBibleContext: '',
       runtimeContext: '',
     },
@@ -85,7 +86,7 @@ const SYSTEM_PROMPT = `你是一个小说世界观关系分析助手。当用户
 2. 考虑已有的关系，避免推荐重复关系
 3. 优先推荐已存在的条目，其次推荐可能需要创建的新条目
 4. 为每个推荐给出关系类型和描述建议，以及置信度（0-1）
-5. **必须**为每个推荐返回有效的 type 字段（包括新创建的条目），type 只能是 character|location|rule|timeline 之一
+5. **必须**为每个推荐返回有效的 type 字段（包括新创建的条目），type 只能是 character|faction|location|rule|secret|event|timeline 之一
 
 输出格式（严格遵循 JSON）：
 {
@@ -93,7 +94,7 @@ const SYSTEM_PROMPT = `你是一个小说世界观关系分析助手。当用户
     {
       "targetNode": {
         "name": "条目名称",
-        "type": "character|location|rule|timeline",
+        "type": "character|faction|location|rule|secret|event|timeline",
         "isNew": false
       },
       "suggestedRelation": {

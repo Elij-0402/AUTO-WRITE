@@ -3,6 +3,13 @@
 import { useState } from 'react'
 import { Send, Square, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import type { AIConfig } from '@/lib/hooks/use-ai-config'
 
@@ -36,6 +43,7 @@ export function ChatInput({
   const [inputFocused, setInputFocused] = useState(false)
   const charCount = input.length
   const overLimit = charCount > CHAR_LIMIT
+  const showCharCount = charCount >= CHAR_LIMIT * 0.8 || overLimit
 
   return (
     <div className="p-3 space-y-2 border-t border-border">
@@ -67,31 +75,43 @@ export function ChatInput({
             placeholder="与墨客聊聊你的故事…"
             disabled={loading}
             rows={1}
-            className="resize-none min-h-[56px] max-h-[140px] text-[14px] leading-relaxed !bg-transparent hover:!bg-transparent focus-visible:!bg-transparent px-3 py-2.5 pr-12 border-0 shadow-none focus-visible:outline-none focus-visible:ring-0"
+            className="resize-none min-h-[64px] max-h-[140px] text-[15px] leading-[1.75] font-medium !bg-transparent hover:!bg-transparent focus-visible:!bg-transparent px-3 py-3 border-0 shadow-none focus-visible:outline-none focus-visible:ring-0 placeholder:text-muted-foreground/85"
           />
 
-          <div className="flex items-center justify-between px-3 pb-2">
+          <div className="flex items-end justify-between gap-3 px-3 pb-3 pt-1">
             {aiConfig.availableModels && aiConfig.availableModels.length > 0 ? (
-              <select
-                value={aiConfig.model || ''}
-                onChange={(e) => { void onSaveModel(e.target.value) }}
-                className="max-w-[180px] truncate bg-transparent text-[12px] text-muted-foreground hover:text-foreground focus:outline-none cursor-pointer"
-                aria-label="选择模型"
-                title={aiConfig.model || '选择模型'}
-              >
-                {aiConfig.availableModels.map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
+              <Select value={aiConfig.model || ''} onValueChange={(value) => { void onSaveModel(value) }}>
+                <SelectTrigger
+                  aria-label="选择模型"
+                  className="h-8 max-w-[210px] bg-transparent border-0 px-0 py-0 text-[13px] font-medium text-foreground/88 hover:bg-transparent hover:border-transparent focus:border-transparent"
+                >
+                  <SelectValue placeholder="选择模型" />
+                </SelectTrigger>
+                <SelectContent>
+                  {aiConfig.availableModels.map(m => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             ) : (
-              <span className="text-[12px] text-muted-foreground/70 truncate max-w-[180px]" title={aiConfig.model || ''}>
+              <span className="max-w-[210px] truncate text-[13px] font-medium text-foreground/72" title={aiConfig.model || ''}>
                 {aiConfig.model || '未设置模型'}
               </span>
             )}
-            <div className="flex items-center gap-2">
-              {charCount > 0 && (
-                <span className={`tabular-nums text-[11px] ${overLimit ? 'text-destructive' : charCount > CHAR_LIMIT * 0.8 ? 'text-primary/80' : 'text-muted-foreground'}`}>
-                  {charCount}{overLimit && ` / ${CHAR_LIMIT}`}
+            <div className="flex items-center gap-3">
+              {showCharCount && (
+                <span
+                  className={`tabular-nums text-[12px] font-medium ${
+                    overLimit
+                      ? 'text-destructive'
+                      : charCount > CHAR_LIMIT * 0.8
+                        ? 'text-primary/90'
+                        : 'text-foreground/68'
+                  }`}
+                  aria-label={`当前输入 ${charCount} 字`}
+                  title={`当前输入 ${charCount} 字${overLimit ? `，上限 ${CHAR_LIMIT} 字` : ''}`}
+                >
+                  {charCount} 字{overLimit && ` / ${CHAR_LIMIT}`}
                 </span>
               )}
               <Button
@@ -100,7 +120,7 @@ export function ChatInput({
                 size="icon-sm"
                 variant={loading ? 'subtle' : 'default'}
                 aria-label={loading ? '停止生成' : '发送'}
-                className="disabled:opacity-30 disabled:cursor-not-allowed"
+                className="shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <Square className="fill-current" strokeWidth={0} />

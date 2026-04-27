@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { createProjectDB } from '../db/project-db'
 import { getProjectCharter } from '../db/project-charter-queries'
+import { listPlanningSnapshot } from '../db/planning-queries'
+import { listStoryTrackers } from '../db/story-tracker-queries'
 import { useAIConfig } from './use-ai-config'
 import { useWorldEntries } from './use-world-entries'
 import { useConsistencyExemptions } from './use-consistency-exemptions'
@@ -131,11 +133,17 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
     const conversation = await db.table('conversations').get(conversationId) as
       | { rollingSummary?: string; summarizedUpTo?: number; messageCount: number }
       | undefined
-    const projectCharter = await getProjectCharter(projectId)
+    const [projectCharter, storyTrackers, planningSnapshot] = await Promise.all([
+      getProjectCharter(projectId),
+      listStoryTrackers(projectId),
+      listPlanningSnapshot(db, projectId),
+    ])
 
     const segmentedSystem = buildSegmentedSystemPrompt({
       projectCharter,
       worldEntries: trimmedEntries,
+      storyTrackers,
+      planningSnapshot,
       selectedText: options?.selectedText,
       rollingSummary: conversation?.rollingSummary,
     })

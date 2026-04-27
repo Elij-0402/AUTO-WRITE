@@ -31,13 +31,20 @@ import {
 } from '@/components/ui/select'
 import { useChapterDraftGeneration } from '@/lib/hooks/use-chapter-draft-generation'
 import { useConsistencyScan } from '@/lib/hooks/use-consistency-scan'
+import { usePlanning } from '@/lib/hooks/use-planning'
 import type { AIClientConfig } from '@/lib/ai/client'
 import type { WorldEntry } from '@/lib/types/world-entry'
 import type { Chapter } from '@/lib/types/chapter'
 import type { WorldEntryType } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import {
+  buildDraftGenerationSourceSummary,
+  buildDraftOutlineFromPlanning,
+  normalizeDraftForInsertion,
+} from './chapter-draft-context'
 
 type DialogTab = 'draft' | 'scan'
+type DraftApplyMode = 'insert' | 'replace' | 'append'
 
 interface WordCountPreset {
   label: string
@@ -52,8 +59,11 @@ const WORD_COUNT_PRESETS: WordCountPreset[] = [
 
 const TYPE_LABEL: Record<WorldEntryType, string> = {
   character: '角色',
+  faction: '势力',
   location: '地点',
   rule: '规则',
+  secret: '秘密',
+  event: '事件',
   timeline: '时间线',
 }
 
@@ -67,16 +77,18 @@ interface ChapterDraftDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
+  activeChapterId: string | null
   config: AIClientConfig
   worldEntries: WorldEntry[]
   chapters: Chapter[]
-  onDraftAccepted: (draft: string) => void
+  onDraftAccepted: (draft: string, mode: DraftApplyMode) => void
 }
 
 export function ChapterDraftDialog({
   open,
   onOpenChange,
   projectId,
+  activeChapterId,
   config,
   worldEntries,
   chapters,
@@ -89,8 +101,8 @@ export function ChapterDraftDialog({
   }, [onOpenChange])
 
   const handleAcceptAndClose = useCallback(
-    (draft: string) => {
-      onDraftAccepted(draft)
+    (draft: string, mode: DraftApplyMode) => {
+      onDraftAccepted(draft, mode)
       onOpenChange(false)
     },
     [onDraftAccepted, onOpenChange]
@@ -150,8 +162,8 @@ export function ChapterDraftDialog({
 
         {activeTab === 'draft' ? (
           <DraftForm
-            key={`draft-${open}`}
             projectId={projectId}
+            activeChapterId={activeChapterId}
             config={config}
             worldEntries={worldEntries}
             onAcceptAndClose={handleAcceptAndClose}
@@ -159,7 +171,6 @@ export function ChapterDraftDialog({
           />
         ) : (
           <ConsistencyScanTab
-            key={`scan-${open}`}
             projectId={projectId}
             config={config}
             worldEntries={worldEntries}
@@ -173,23 +184,71 @@ export function ChapterDraftDialog({
 
 interface DraftFormProps {
   projectId: string
+  activeChapterId: string | null
   config: AIClientConfig
   worldEntries: WorldEntry[]
-  onAcceptAndClose: (draft: string) => void
+  onAcceptAndClose: (draft: string, mode: DraftApplyMode) => void
   onCancel: () => void
 }
 
 function DraftForm({
   projectId,
+  activeChapterId,
   config,
   worldEntries,
   onAcceptAndClose,
   onCancel,
 }: DraftFormProps) {
+  const { snapshot } = usePlanning(projectId)
   const [outline, setOutline] = useState('')
   const [chapterTitle, setChapterTitle] = useState('')
   const [selectedPreset, setSelectedPreset] = useState<number | null>(0)
   const [customWordCount, setCustomWordCount] = useState('')
+  const [appliedPlanningPrefillKey, setAppliedPlanningPrefillKey] = useState<string | null>(null)
+  const [applyMode, setApplyMode] = useState<DraftApplyMode>('insert')
+
+  const linkedChapterPlan = useMemo(
+    () => snapshot.chapterPlans.find((plan) => plan.linkedChapterId === activeChapterId) ?? null,
+    [activeChapterId, snapshot.chapterPlans]
+  )
+  const linkedSceneCards = useMemo(
+    () => linkedChapterPlan
+      ? snapshot.sceneCards.filter((scene) => scene.chapterPlanId === linkedChapterPlan.id)
+      : [],
+    [linkedChapterPlan, snapshot.sceneCards]
+  )
+  const sourceSummary = useMemo(
+    () => linkedChapterPlan
+      ? buildDraftGenerationSourceSummary(linkedChapterPlan, linkedSceneCards)
+      : null,
+    [linkedChapterPlan, linkedSceneCards]
+  )
+
+  const planningPrefillKey = linkedChapterPlan
+    ? `${linkedChapterPlan.id}:${linkedChapterPlan.updatedAt}:${linkedSceneCards.length}`
+    : null
+
+  if (linkedChapterPlan && planningPrefillKey && planningPrefillKey !== appliedPlanningPrefillKey) {
+    setAppliedPlanningPrefillKey(planningPrefillKey)
+    setChapterTitle((current) => current || linkedChapterPlan.title)
+    setOutline((current) => current || buildDraftOutlineFromPlanning(linkedChapterPlan, linkedSceneCards))
+
+    const targetWordCount = linkedChapterPlan.targetWordCount
+    if (targetWordCount) {
+      const matchedPreset = WORD_COUNT_PRESETS.findIndex(
+        (preset) =>
+          targetWordCount >= preset.value[0] &&
+          targetWordCount <= preset.value[1]
+      )
+
+      if (matchedPreset >= 0) {
+        setSelectedPreset(matchedPreset)
+      } else {
+        setSelectedPreset(null)
+        setCustomWordCount((current) => current || `${targetWordCount}-${targetWordCount}`)
+      }
+    }
+  }
 
   const {
     state,
@@ -230,7 +289,7 @@ function DraftForm({
   const handleAccept = () => {
     if (draft) {
       acceptDraft()
-      onAcceptAndClose(draft)
+      onAcceptAndClose(normalizeDraftForInsertion(draft), applyMode)
     }
   }
 
@@ -247,6 +306,9 @@ function DraftForm({
   const isGenerating = state === 'generating'
   const isDraftReady = state === 'draft_ready'
   const hasError = !!error
+  const normalizedDraft = draft ? normalizeDraftForInsertion(draft) : ''
+  const displayCount = draft?.trim().length ?? 0
+  const insertionCount = normalizedDraft.length
 
   return (
     <>
@@ -266,6 +328,18 @@ function DraftForm({
         {/* Outline */}
         <div className="space-y-1.5">
           <Label htmlFor="outline">章节大纲</Label>
+          {linkedChapterPlan ? (
+            <div className="space-y-1">
+              <p className="text-[12px] text-muted-foreground">
+                已根据当前章纲和场景卡预填，可继续改写后再生成。
+              </p>
+              {sourceSummary ? (
+                <div className="rounded-sm border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] px-3 py-2 text-[12px] text-muted-foreground">
+                  {sourceSummary}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           <Textarea
             id="outline"
             placeholder="描述本章的主要情节、转折点、关键场景..."
@@ -323,9 +397,33 @@ function DraftForm({
 
         {/* Progress */}
         {isGenerating && (
-          <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>{progress || '生成中...'}</span>
+          <div className="rounded-sm border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] px-3 py-2 text-[13px] text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>{progress || '生成中...'}</span>
+            </div>
+          </div>
+        )}
+
+        {isDraftReady && draft && (
+          <div className="space-y-2 rounded-sm border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] p-3">
+            <div className="flex items-center justify-between gap-3">
+              <Label className="text-[12px]">插入策略</Label>
+              <Select value={applyMode} onValueChange={(value) => setApplyMode(value as DraftApplyMode)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="insert">插入到光标处</SelectItem>
+                  <SelectItem value="replace">覆盖当前正文</SelectItem>
+                  <SelectItem value="append">追加为后续内容</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-[12px] text-muted-foreground">
+              预览字数 {displayCount} 字，插入正文后 {insertionCount} 字。
+              {displayCount !== insertionCount ? ' 插入时会清理首尾空行。' : ''}
+            </p>
           </div>
         )}
 
@@ -342,7 +440,7 @@ function DraftForm({
             <div className="flex items-center justify-between">
               <Label>生成的草稿预览</Label>
               <span className="text-[11px] text-muted-foreground">
-                {draft.length} 字
+                {displayCount} 字
               </span>
             </div>
             <div className="rounded-sm border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] p-3 max-h-[300px] overflow-y-auto">
@@ -419,6 +517,7 @@ function ConsistencyScanTab({
   const {
     state,
     results,
+    summary,
     progress,
     error,
     startScan,
@@ -433,7 +532,10 @@ function ConsistencyScanTab({
 
   const isScanning = state === 'scanning'
   const hasResults = state === 'results_ready' && results.length > 0
-  const noViolations = state === 'results_ready' && results.length === 0
+  const noViolations = state === 'results_ready' && results.length === 0 && summary?.status === 'clean'
+  const hasCoverageWarning =
+    state === 'results_ready' &&
+    (summary?.status === 'missing_world_bible' || summary?.status === 'coverage_warning')
 
   const groupedResults = useMemo(() => {
     const map = new Map<string, { entryType: WorldEntryType; items: typeof results }>()
@@ -552,9 +654,19 @@ function ConsistencyScanTab({
       {noViolations && (
         <div className="text-center py-10 rounded-sm surface-2">
           <ShieldCheck className="h-8 w-8 mx-auto mb-2 text-[hsl(var(--success))] opacity-40" />
-          <p className="text-[14px] font-medium text-foreground">未发现矛盾</p>
+          <p className="text-[14px] font-medium text-foreground">{summary?.title ?? '未发现矛盾'}</p>
           <p className="text-[12px] text-muted-foreground mt-1">
-            章节内容与世界观百科保持一致
+            {summary?.description ?? '章节内容与世界观百科保持一致'}
+          </p>
+        </div>
+      )}
+
+      {hasCoverageWarning && (
+        <div className="text-center py-10 rounded-sm surface-2">
+          <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-[hsl(var(--warning))] opacity-60" />
+          <p className="text-[14px] font-medium text-foreground">{summary?.title}</p>
+          <p className="text-[12px] text-muted-foreground mt-1">
+            {summary?.description}
           </p>
         </div>
       )}
@@ -627,7 +739,7 @@ function ConsistencyScanTab({
       )}
 
       {/* Idle state */}
-      {state === 'idle' && !hasResults && !noViolations && (
+      {state === 'idle' && !hasResults && !noViolations && !hasCoverageWarning && (
         <div className="text-center py-8 text-muted-foreground">
           <ShieldCheck className="h-8 w-8 mx-auto mb-2 opacity-20" />
           <p className="text-[13px]">

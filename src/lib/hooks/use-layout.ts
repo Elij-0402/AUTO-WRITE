@@ -3,15 +3,63 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { createProjectDB } from '../db/project-db'
 import { useMemo, useCallback } from 'react'
+import type { PlanningSelection } from '../types'
 
 /**
  * Active sidebar tab type per D-13, D-14, D-08.
- * 'chapters' = chapter list, 'outline' = outline list, 'world' = world bible
+ * 'chapters' = chapter list, 'outline' = outline list, 'world' = world bible,
+ * 'planning' = planning chain
  */
-export type ActiveTab = 'chapters' | 'outline' | 'world'
+export type ActiveTab = 'chapters' | 'outline' | 'world' | 'planning'
 
 /** Default chat panel width in pixels per D-09 */
 const DEFAULT_CHAT_PANEL_WIDTH = 320
+const DEFAULT_SIDEBAR_WIDTH = 280
+
+export interface WorkspaceContextSnapshot {
+  activeChapterId?: string | null
+  activeOutlineId?: string | null
+  activeWorldEntryId?: string | null
+  activePlanningSelection?: PlanningSelection | null
+  lastWorkspaceContext?: 'chapter' | 'outline' | 'world' | 'planning'
+}
+
+const DEFAULT_LAYOUT = {
+  id: 'default',
+  sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+  activeTab: 'chapters' as ActiveTab,
+  chatPanelWidth: DEFAULT_CHAT_PANEL_WIDTH,
+  activeChapterId: null,
+  activeOutlineId: null,
+  activeWorldEntryId: null,
+  activePlanningSelection: null,
+  lastWorkspaceContext: 'chapter' as const,
+}
+
+function getLayoutStorageKey(projectId: string): string {
+  return `inkforge:layout:${projectId}`
+}
+
+function readLocalLayout(projectId: string): Partial<typeof DEFAULT_LAYOUT> | null {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const raw = window.localStorage.getItem(getLayoutStorageKey(projectId))
+    return raw ? JSON.parse(raw) as Partial<typeof DEFAULT_LAYOUT> : null
+  } catch {
+    return null
+  }
+}
+
+function writeLocalLayout(projectId: string, layout: Partial<typeof DEFAULT_LAYOUT>): void {
+  if (typeof window === 'undefined') return
+
+  try {
+    window.localStorage.setItem(getLayoutStorageKey(projectId), JSON.stringify(layout))
+  } catch {
+    // Ignore quota or serialization issues; IndexedDB remains the durable store.
+  }
+}
 
 /**
  * Hook for per-project layout persistence per D-24, D-25, D-26.
@@ -23,50 +71,64 @@ const DEFAULT_CHAT_PANEL_WIDTH = 320
  */
 export function useLayout(projectId: string) {
   const db = useMemo(() => createProjectDB(projectId), [projectId])
+  const localLayout = useMemo(() => readLocalLayout(projectId), [projectId])
 
   // Load layout settings reactively per D-24
   const layout = useLiveQuery(
     () => db.layoutSettings.get('default'),
     [db],
-    { id: 'default', sidebarWidth: 280, activeTab: 'chapters' as ActiveTab, chatPanelWidth: DEFAULT_CHAT_PANEL_WIDTH }
+    {
+      ...DEFAULT_LAYOUT,
+      ...localLayout,
+    }
   )
+  const effectiveLayout = useMemo(() => ({
+    ...DEFAULT_LAYOUT,
+    ...layout,
+    ...localLayout,
+  }), [layout, localLayout])
+
+  const persistLayout = useCallback(async (partial: Partial<typeof DEFAULT_LAYOUT>) => {
+    const nextLayout = {
+      ...effectiveLayout,
+      ...partial,
+    }
+
+    writeLocalLayout(projectId, nextLayout)
+    await db.layoutSettings.put(nextLayout)
+  }, [db, effectiveLayout, projectId])
 
   // Auto-save sidebar width on change per D-25
   const saveSidebarWidth = useCallback(async (width: number) => {
-    await db.layoutSettings.put({
-      id: 'default',
-      sidebarWidth: width,
-      activeTab: layout?.activeTab ?? 'chapters',
-      chatPanelWidth: layout?.chatPanelWidth ?? DEFAULT_CHAT_PANEL_WIDTH,
-    })
-  }, [db, layout])
+    await persistLayout({ sidebarWidth: width })
+  }, [persistLayout])
 
   // Auto-save active tab on change per D-14
   const saveActiveTab = useCallback(async (tab: ActiveTab) => {
-    await db.layoutSettings.put({
-      id: 'default',
-      sidebarWidth: layout?.sidebarWidth ?? 280,
-      activeTab: tab,
-      chatPanelWidth: layout?.chatPanelWidth ?? DEFAULT_CHAT_PANEL_WIDTH,
-    })
-  }, [db, layout])
+    await persistLayout({ activeTab: tab })
+  }, [persistLayout])
 
   // Auto-save chat panel width on change per D-12
   const saveChatPanelWidth = useCallback(async (width: number) => {
-    await db.layoutSettings.put({
-      id: 'default',
-      sidebarWidth: layout?.sidebarWidth ?? 280,
-      activeTab: layout?.activeTab ?? 'chapters',
-      chatPanelWidth: width,
-    })
-  }, [db, layout])
+    await persistLayout({ chatPanelWidth: width })
+  }, [persistLayout])
+
+  const saveWorkspaceContext = useCallback(async (snapshot: WorkspaceContextSnapshot) => {
+    await persistLayout(snapshot)
+  }, [persistLayout])
 
   return {
-    sidebarWidth: layout?.sidebarWidth ?? 280,
-    activeTab: (layout?.activeTab ?? 'chapters') as ActiveTab,
-    chatPanelWidth: layout?.chatPanelWidth ?? DEFAULT_CHAT_PANEL_WIDTH,
+    sidebarWidth: effectiveLayout.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH,
+    activeTab: (effectiveLayout.activeTab ?? 'chapters') as ActiveTab,
+    chatPanelWidth: effectiveLayout.chatPanelWidth ?? DEFAULT_CHAT_PANEL_WIDTH,
+    activeChapterId: effectiveLayout.activeChapterId ?? null,
+    activeOutlineId: effectiveLayout.activeOutlineId ?? null,
+    activeWorldEntryId: effectiveLayout.activeWorldEntryId ?? null,
+    activePlanningSelection: effectiveLayout.activePlanningSelection ?? null,
+    lastWorkspaceContext: effectiveLayout.lastWorkspaceContext ?? 'chapter',
     saveSidebarWidth,
     saveActiveTab,
     saveChatPanelWidth,
+    saveWorkspaceContext,
   }
 }

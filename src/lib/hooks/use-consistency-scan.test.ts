@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useConsistencyScan } from './use-consistency-scan'
 import type { AIClientConfig } from '../ai/providers/types'
+import { scanConsistency } from '../ai/scan-consistency'
 
 const mockAdd = vi.fn()
 const mockUpdate = vi.fn()
@@ -84,8 +85,8 @@ describe('useConsistencyScan', () => {
       name: '张三',
       content: '男，30岁',
       tags: [],
-      createdAt: 0,
-      updatedAt: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
       deletedAt: null,
     },
   ]
@@ -115,6 +116,24 @@ describe('useConsistencyScan', () => {
       await act(async () => { await result.current.startScan([]) })
       expect(result.current.error).toBe('还没填写接口地址')
       expect(result.current.state).toBe('error')
+    })
+
+    it('returns coverage warning instead of passing when world bible is empty', async () => {
+      const { result } = renderHook(() =>
+        useConsistencyScan({
+          projectId: 'p1',
+          config,
+          worldEntries: [],
+        })
+      )
+
+      await act(async () => {
+        await result.current.startScan([])
+      })
+
+      expect(scanConsistency).not.toHaveBeenCalled()
+      expect(result.current.state).toBe('results_ready')
+      expect(result.current.summary?.status).toBe('missing_world_bible')
     })
   })
 
@@ -154,11 +173,15 @@ describe('useConsistencyScan', () => {
     it('updates matching contradictions as exempted', async () => {
       // Override the mock for this specific test
       mockContradictionsWhereResult.mockImplementation(() => ({
-        equals: () => ({
+        equals: vi.fn(() => ({
+          and: vi.fn(() => ({
+            toArray: vi.fn().mockResolvedValue([]),
+            first: vi.fn().mockResolvedValue(undefined),
+          })),
           toArray: vi.fn().mockResolvedValue([
             { id: 'c1', projectId: 'p1', entryName: '张三', entryType: 'character', description: '年龄不符', exempted: false },
           ]),
-        }),
+        })),
       }))
       const { result } = renderHook(() =>
         useConsistencyScan({ projectId: 'p1', config, worldEntries })

@@ -12,8 +12,11 @@ import type { WorldEntry, WorldEntryType } from '@/lib/types'
 
 const TYPE_LABELS: Record<WorldEntryType, string> = {
   character: '角色',
+  faction: '势力',
   location: '地点',
   rule: '规则',
+  secret: '秘密',
+  event: '事件',
   timeline: '时间线'
 }
 
@@ -25,6 +28,13 @@ export interface NewEntryPrefillData {
   features?: string
   content?: string
   scope?: string
+  factionRole?: string
+  factionGoal?: string
+  factionStyle?: string
+  secretContent?: string
+  secretScope?: string
+  revealCondition?: string
+  eventImpact?: string
   timePoint?: string
   eventDescription?: string
 }
@@ -59,8 +69,15 @@ export function NewEntryDialog({
   const [features, setFeatures] = useState('')
   const [content, setContent] = useState('')
   const [scope, setScope] = useState('')
+  const [factionRole, setFactionRole] = useState('')
+  const [factionGoal, setFactionGoal] = useState('')
+  const [factionStyle, setFactionStyle] = useState('')
+  const [secretContent, setSecretContent] = useState('')
+  const [secretScope, setSecretScope] = useState('')
+  const [revealCondition, setRevealCondition] = useState('')
   const [timePoint, setTimePoint] = useState('')
   const [eventDescription, setEventDescription] = useState('')
+  const [eventImpact, setEventImpact] = useState('')
 
   const [saving, setSaving] = useState(false)
   const [duplicateEntry, setDuplicateEntry] = useState<WorldEntry | null>(null)
@@ -81,8 +98,15 @@ export function NewEntryDialog({
       setFeatures(prefillData.features || '')
       setContent(prefillData.content || '')
       setScope(prefillData.scope || '')
+      setFactionRole(prefillData.factionRole || '')
+      setFactionGoal(prefillData.factionGoal || '')
+      setFactionStyle(prefillData.factionStyle || '')
+      setSecretContent(prefillData.secretContent || '')
+      setSecretScope(prefillData.secretScope || '')
+      setRevealCondition(prefillData.revealCondition || '')
       setTimePoint(prefillData.timePoint || '')
       setEventDescription(prefillData.eventDescription || '')
+      setEventImpact(prefillData.eventImpact || '')
       setDuplicateEntry(null)
       setSaving(false)
     }
@@ -110,11 +134,32 @@ export function NewEntryDialog({
           description: description.trim() || undefined,
           features: features.trim() || undefined,
         }
+      case 'faction':
+        return {
+          ...base,
+          factionRole: factionRole.trim() || undefined,
+          factionGoal: factionGoal.trim() || undefined,
+          factionStyle: factionStyle.trim() || undefined,
+        }
       case 'rule':
         return {
           ...base,
           content: content.trim() || undefined,
           scope: scope.trim() || undefined,
+        }
+      case 'secret':
+        return {
+          ...base,
+          secretContent: secretContent.trim() || undefined,
+          secretScope: secretScope.trim() || undefined,
+          revealCondition: revealCondition.trim() || undefined,
+        }
+      case 'event':
+        return {
+          ...base,
+          timePoint: timePoint.trim() || undefined,
+          eventDescription: eventDescription.trim() || undefined,
+          eventImpact: eventImpact.trim() || undefined,
         }
       case 'timeline':
         return {
@@ -122,6 +167,8 @@ export function NewEntryDialog({
           timePoint: timePoint.trim() || undefined,
           eventDescription: eventDescription.trim() || undefined,
         }
+      default:
+        return base
     }
   }
 
@@ -201,6 +248,27 @@ export function NewEntryDialog({
             </div>
           </>
         )
+      case 'faction':
+        return (
+          <>
+            <div className="space-y-2">
+              <Label>名称 <span className="text-destructive">*</span></Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="势力名称" />
+            </div>
+            <div className="space-y-2">
+              <Label>阵营定位</Label>
+              <Textarea value={factionRole} onChange={(e) => setFactionRole(e.target.value)} rows={3} placeholder="这个势力在世界中的位置..." className="resize-none" />
+            </div>
+            <div className="space-y-2">
+              <Label>核心目标</Label>
+              <Textarea value={factionGoal} onChange={(e) => setFactionGoal(e.target.value)} rows={3} placeholder="它想达成什么..." className="resize-none" />
+            </div>
+            <div className="space-y-2">
+              <Label>行事风格</Label>
+              <Textarea value={factionStyle} onChange={(e) => setFactionStyle(e.target.value)} rows={3} placeholder="它惯常用什么手段..." className="resize-none" />
+            </div>
+          </>
+        )
       case 'rule':
         return (
           <>
@@ -215,6 +283,48 @@ export function NewEntryDialog({
             <div className="space-y-2">
               <Label>适用范围</Label>
               <Input value={scope} onChange={(e) => setScope(e.target.value)} placeholder="这个规则适用于哪些场景或角色" />
+            </div>
+          </>
+        )
+      case 'secret':
+        return (
+          <>
+            <div className="space-y-2">
+              <Label>名称 <span className="text-destructive">*</span></Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="秘密名称" />
+            </div>
+            <div className="space-y-2">
+              <Label>秘密内容</Label>
+              <Textarea value={secretContent} onChange={(e) => setSecretContent(e.target.value)} rows={3} placeholder="这条秘密到底是什么..." className="resize-none" />
+            </div>
+            <div className="space-y-2">
+              <Label>影响范围</Label>
+              <Input value={secretScope} onChange={(e) => setSecretScope(e.target.value)} placeholder="牵涉哪些人或势力" />
+            </div>
+            <div className="space-y-2">
+              <Label>揭露条件</Label>
+              <Textarea value={revealCondition} onChange={(e) => setRevealCondition(e.target.value)} rows={3} placeholder="会在什么条件下暴露..." className="resize-none" />
+            </div>
+          </>
+        )
+      case 'event':
+        return (
+          <>
+            <div className="space-y-2">
+              <Label>名称 <span className="text-destructive">*</span></Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="事件名称" />
+            </div>
+            <div className="space-y-2">
+              <Label>时间点</Label>
+              <Input value={timePoint} onChange={(e) => setTimePoint(e.target.value)} placeholder="例如：第一卷末" />
+            </div>
+            <div className="space-y-2">
+              <Label>事件描述</Label>
+              <Textarea value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} rows={3} placeholder="描述事件经过..." className="resize-none" />
+            </div>
+            <div className="space-y-2">
+              <Label>事件影响</Label>
+              <Textarea value={eventImpact} onChange={(e) => setEventImpact(e.target.value)} rows={3} placeholder="这件事改变了什么..." className="resize-none" />
             </div>
           </>
         )
@@ -235,6 +345,8 @@ export function NewEntryDialog({
             </div>
           </>
         )
+      default:
+        return null
     }
   }
 

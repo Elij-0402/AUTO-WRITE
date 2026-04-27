@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, type RefObject } from 'react'
+import { useState, useCallback, useEffect, useRef, type RefObject } from 'react'
 import { useParams } from 'next/navigation'
 import { ThemeProvider } from '@/components/editor/theme-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -27,14 +27,18 @@ import { Button } from '@/components/ui/button'
 import { Clock, BookOpen, ListTree, Globe2 } from 'lucide-react'
 import type { Chapter } from '@/lib/types'
 import { OutlineEditForm } from '@/components/outline/outline-edit-form'
+import { PlanningWorkbench } from '@/components/planning/planning-workbench'
 import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
 import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
+
+type DraftApplyMode = 'insert' | 'replace' | 'append'
 
 export default function ProjectPage() {
   const params = useParams<{ id: string }>()
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
+  const [toolbarReady, setToolbarReady] = useState(false)
 
   const layout = useWorkspaceLayout({ projectId: params.id })
   const { config } = useAIConfig()
@@ -48,8 +52,27 @@ export default function ProjectPage() {
     editorRef.current?.insertText(content)
   }, [])
 
+  const handleApplyDraft = useCallback((content: string, mode: DraftApplyMode) => {
+    if (mode === 'replace') {
+      editorRef.current?.replaceText(content)
+      return
+    }
+
+    if (mode === 'append') {
+      editorRef.current?.appendText(content)
+      return
+    }
+
+    editorRef.current?.insertText(content)
+  }, [])
+
   const handleDiscuss = useCallback((text: string) => {
     setSelectedText(text)
+  }, [])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setToolbarReady(true), 2000)
+    return () => window.clearTimeout(timer)
   }, [])
 
   const mainContent = layout.activeTab === 'outline' && layout.activeOutlineId ? (
@@ -71,6 +94,17 @@ export default function ProjectPage() {
       hasNext={layout.hasWorldNext}
       onSelectEntry={layout.handleSelectWorldEntry}
       allEntries={layout.entries || []}
+    />
+  ) : layout.activeTab === 'planning' ? (
+    <PlanningWorkbench
+      projectId={params.id}
+      selection={layout.activePlanningItem}
+      onSelectItem={layout.setActivePlanningItem}
+      onOpenLinkedChapter={(chapterId) => {
+        layout.handleTabChange('chapters')
+        layout.setActivePlanningItem(null)
+        layout.setActiveChapterId(chapterId)
+      }}
     />
   ) : layout.activeChapterId ? (
     <EditorWithStatus
@@ -98,14 +132,20 @@ export default function ProjectPage() {
           <AIConfigDialog open={aiConfigDialog.open} onClose={aiConfigDialog.onClose} />
           <AIOnboardingDialog open={onboardingDialog.open} onSkip={onboardingDialog.onSkip} onSaveComplete={onboardingDialog.onSaveComplete} />
           <OnboardingTourDialog projectId={params.id} open={tourDialog.open} onComplete={tourDialog.onComplete} />
-          <ChapterDraftDialog open={draftDialog.open} onOpenChange={draftDialog.onOpenChange} projectId={params.id} config={config} worldEntries={layout.entries || []} chapters={layout.sortedChapters || []} onDraftAccepted={handleInsertDraft} />
+          <ChapterDraftDialog open={draftDialog.open} onOpenChange={draftDialog.onOpenChange} projectId={params.id} activeChapterId={layout.activeChapterId} config={config} worldEntries={layout.entries || []} chapters={layout.sortedChapters || []} onDraftAccepted={handleApplyDraft} />
 
           <WorkspaceTopbar
             projectId={params.id}
             focusMode={layout.focusMode}
             onToggleFocusMode={() => layout.setFocusMode(!layout.focusMode)}
-            onOpenAIConfig={aiConfigDialog.onOpen}
-            onOpenDraftDialog={() => draftDialog.onOpenChange(true)}
+            onOpenAIConfig={() => {
+              if (!toolbarReady) return
+              aiConfigDialog.onOpen()
+            }}
+            onOpenDraftDialog={() => {
+              if (!toolbarReady) return
+              draftDialog.onOpenChange(true)
+            }}
             idle={layout.idle}
           />
 
@@ -123,6 +163,7 @@ export default function ProjectPage() {
                 activeTab={layout.activeTab}
                 activeOutlineId={layout.activeOutlineId}
                 activeWorldEntryId={layout.activeWorldEntryId}
+                activePlanningSelection={layout.activePlanningItem}
                 mainContent={<PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>}
                 handleSidebarDoubleClickReset={layout.handleSidebarDoubleClickReset}
                 handleChatPanelDoubleClickReset={layout.handleChatPanelDoubleClickReset}
@@ -132,14 +173,12 @@ export default function ProjectPage() {
                 onSelectWorldEntry={layout.handleSelectWorldEntry}
                 onEditWorldEntry={layout.handleEditWorldEntry}
                 onDeleteWorldEntry={layout.handleDeleteWorldEntry}
+                onSelectPlanningItem={layout.setActivePlanningItem}
               >
                 <AIChatPanel
                   projectId={params.id}
                   selectedText={selectedText}
                   onDiscussComplete={() => setSelectedText(null)}
-                  wizardModeActive={layout.wizardModeActive}
-                  onWizardModeComplete={() => layout.setWizardModeActive(false)}
-                  onTriggerWizardMode={() => layout.setWizardModeActive(true)}
                   onInsertDraft={handleInsertDraft}
                 />
               </NormalLayout>

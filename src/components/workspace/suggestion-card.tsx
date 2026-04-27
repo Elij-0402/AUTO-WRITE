@@ -9,15 +9,21 @@ import type { WorldEntryType } from '@/lib/types'
 
 const TYPE_LABELS: Record<WorldEntryType, string> = {
   character: '角色',
+  faction: '势力',
   location: '地点',
   rule: '规则',
+  secret: '秘密',
+  event: '事件',
   timeline: '时间线',
 }
 
 const TYPE_VARIANT: Record<WorldEntryType, 'amber' | 'jade' | 'violet' | 'secondary'> = {
   character: 'amber',
+  faction: 'jade',
   location: 'jade',
   rule: 'violet',
+  secret: 'violet',
+  event: 'amber',
   timeline: 'secondary',
 }
 
@@ -26,6 +32,7 @@ export interface RelationshipSuggestionCardProps {
   entry2Name: string
   relationshipType: string
   bidirectionalDescription: string
+  sourceLabel?: string
   onAdopt: () => void
   onDismiss: () => void
 }
@@ -35,6 +42,7 @@ export function RelationshipSuggestionCard({
   entry2Name,
   relationshipType,
   bidirectionalDescription,
+  sourceLabel,
   onAdopt,
   onDismiss,
 }: RelationshipSuggestionCardProps) {
@@ -73,6 +81,9 @@ export function RelationshipSuggestionCard({
         <Badge variant="violet">{relationshipType}</Badge>
         <span className="font-medium text-foreground">{entry2Name}</span>
       </div>
+      {sourceLabel ? (
+        <p className="mb-2 text-[11px] text-muted-foreground">{sourceLabel}</p>
+      ) : null}
       <p className="text-[12.5px] leading-[1.7] text-muted-foreground mb-2.5">
         {bidirectionalDescription}
       </p>
@@ -92,6 +103,7 @@ export interface NewEntrySuggestionCardProps {
   entryType: WorldEntryType
   suggestedName: string
   description: string
+  sourceLabel?: string
   onAdopt: () => void
   onDismiss: () => void
 }
@@ -100,6 +112,7 @@ export function NewEntrySuggestionCard({
   entryType,
   suggestedName,
   description,
+  sourceLabel,
   onAdopt,
   onDismiss,
 }: NewEntrySuggestionCardProps) {
@@ -137,6 +150,9 @@ export function NewEntrySuggestionCard({
         <Badge variant={TYPE_VARIANT[entryType]}>{TYPE_LABELS[entryType]}</Badge>
         <span className="font-medium text-[13px] text-foreground">{suggestedName}</span>
       </div>
+      {sourceLabel ? (
+        <p className="mb-2 text-[11px] text-muted-foreground">{sourceLabel}</p>
+      ) : null}
       <p className="text-[12.5px] leading-[1.7] text-muted-foreground mb-2.5">
         {description}
       </p>

@@ -1,5 +1,17 @@
 import Dexie, { type Table } from 'dexie'
-import type { Chapter, ProjectMeta, WorldEntry, Relation, WorldEntryType } from '../types'
+import type {
+  Chapter,
+  ProjectMeta,
+  WorldEntry,
+  Relation,
+  WorldEntryType,
+  StoryTracker,
+  IdeaNote,
+  StoryArc,
+  ChapterPlan,
+  SceneCard,
+  PlanningSelection,
+} from '../types'
 import type { PreferenceMemory, ProjectCharter } from '../types'
 import type { UiExperimentFlags } from '../ai/ui-flags'
 
@@ -220,14 +232,19 @@ export interface LayoutSnapshot {
 /**
  * Layout settings stored per-project in IndexedDB per D-24.
  * sidebarWidth: persisted sidebar width in pixels per D-25
- * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world') per D-08, D-14
+ * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world' | 'planning') per D-08, D-14
  * chatPanelWidth: persisted right chat panel width in pixels per D-12 (320 default)
  */
 export interface LayoutSettings {
   id: string // 'default' for per-project default layout
   sidebarWidth: number
-  activeTab: 'chapters' | 'outline' | 'world'
+  activeTab: 'chapters' | 'outline' | 'world' | 'planning'
   chatPanelWidth?: number // default 320, made optional for existing projects
+  activeChapterId?: string | null
+  activeOutlineId?: string | null
+  activeWorldEntryId?: string | null
+  activePlanningSelection?: PlanningSelection | null
+  lastWorkspaceContext?: 'chapter' | 'outline' | 'world' | 'planning'
 }
 
 /**
@@ -254,6 +271,11 @@ export class InkForgeProjectDB extends Dexie {
   layoutSnapshots!: Table<LayoutSnapshot, string>
   projectCharter!: Table<ProjectCharter, string>
   preferenceMemories!: Table<PreferenceMemory, string>
+  storyTrackers!: Table<StoryTracker, string>
+  ideaNotes!: Table<IdeaNote, string>
+  storyArcs!: Table<StoryArc, string>
+  chapterPlans!: Table<ChapterPlan, string>
+  sceneCards!: Table<SceneCard, string>
 
   constructor(projectId: string) {
     super(`inkforge-project-${projectId}`)
@@ -574,6 +596,61 @@ export class InkForgeProjectDB extends Dexie {
       layoutSnapshots: 'id, projectId, [projectId+layoutId], [projectId+nodeId], nodeId',
       projectCharter: 'id, projectId, updatedAt',
       preferenceMemories: 'id, projectId, messageId, createdAt, [projectId+createdAt]',
+    })
+    // v18: Phase 2 story-bible tracker storage.
+    this.version(18).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+      aiConfig: 'id',
+      messages: 'id, projectId, conversationId, role, timestamp',
+      consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+      revisions: 'id, projectId, chapterId, createdAt',
+      analyses: 'id, kind, invalidationKey, createdAt',
+      conversations: 'id, projectId, updatedAt',
+      aiUsage: 'id, projectId, conversationId, createdAt, model',
+      contradictions:
+        'id, projectId, messageId, entryName, exempted, createdAt, ' +
+        '[projectId+entryName], [projectId+createdAt]',
+      layoutSnapshots: 'id, projectId, [projectId+layoutId], [projectId+nodeId], nodeId',
+      projectCharter: 'id, projectId, updatedAt',
+      preferenceMemories: 'id, projectId, messageId, createdAt, [projectId+createdAt]',
+      storyTrackers:
+        'id, projectId, kind, status, createdAt, updatedAt, ' +
+        '[projectId+kind], [projectId+status]',
+    })
+    // v19: Phase 3 planning-chain storage.
+    this.version(19).stores({
+      projects: 'id, updatedAt, deletedAt',
+      chapters: 'id, projectId, order, deletedAt',
+      layoutSettings: 'id',
+      worldEntries: 'id, projectId, type, name, deletedAt',
+      relations: 'id, projectId, sourceEntryId, targetEntryId, deletedAt',
+      aiConfig: 'id',
+      messages: 'id, projectId, conversationId, role, timestamp',
+      consistencyExemptions: 'id, projectId, exemptionKey, createdAt',
+      revisions: 'id, projectId, chapterId, createdAt',
+      analyses: 'id, kind, invalidationKey, createdAt',
+      conversations: 'id, projectId, updatedAt',
+      aiUsage: 'id, projectId, conversationId, createdAt, model',
+      contradictions:
+        'id, projectId, messageId, entryName, exempted, createdAt, ' +
+        '[projectId+entryName], [projectId+createdAt]',
+      layoutSnapshots: 'id, projectId, [projectId+layoutId], [projectId+nodeId], nodeId',
+      projectCharter: 'id, projectId, updatedAt',
+      preferenceMemories: 'id, projectId, messageId, createdAt, [projectId+createdAt]',
+      storyTrackers:
+        'id, projectId, kind, status, createdAt, updatedAt, ' +
+        '[projectId+kind], [projectId+status]',
+      ideaNotes: 'id, projectId, status, updatedAt, deletedAt',
+      storyArcs: 'id, projectId, order, status, updatedAt, deletedAt',
+      chapterPlans:
+        'id, projectId, arcId, linkedChapterId, order, status, updatedAt, deletedAt',
+      sceneCards:
+        'id, projectId, chapterPlanId, order, status, updatedAt, deletedAt, ' +
+        '[projectId+chapterPlanId]',
     })
   }
 }

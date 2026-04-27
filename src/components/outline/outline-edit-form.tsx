@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { useAutoSave } from '@/lib/hooks/use-autosave'
+import { usePlanning } from '@/lib/hooks/use-planning'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -83,7 +84,9 @@ export function OutlineEditForm({
   hasNext,
 }: OutlineEditFormProps) {
   const { chapters, renameChapter, updateOutlineFields } = useChapters(projectId)
+  const { snapshot } = usePlanning(projectId)
   const chapter = chapters.find((c) => c.id === chapterId)
+  const linkedPlan = snapshot.chapterPlans.find((plan) => plan.linkedChapterId === chapterId)
 
   const [localSummary, setLocalSummary] = useState('')
   const [localTargetWordCount, setLocalTargetWordCount] = useState<string>('')
@@ -159,6 +162,12 @@ export function OutlineEditForm({
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        {linkedPlan ? (
+          <div className="px-3 py-2 divider-hair text-[12px] text-muted-foreground">
+            <p>{linkedPlan.summary || '该章已关联章纲，建议优先在规划台维护结构信息。'}</p>
+          </div>
+        ) : null}
+
         <div className="space-y-2">
           <Label htmlFor="title">标题</Label>
           <Input

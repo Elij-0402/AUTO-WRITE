@@ -75,7 +75,7 @@ export function useChapterDraftGeneration({
     setState('generating')
     setDraft(null)
     setError(null)
-    setProgress('正在构建上下文...')
+    setProgress('排队中：正在整理章纲、世界观与字数目标...')
 
     abortControllerRef.current = new AbortController()
 
@@ -91,7 +91,7 @@ export function useChapterDraftGeneration({
 
       const messages = [{ role: 'user' as const, content: userMessage }]
 
-      setProgress('正在生成草稿...')
+      setProgress('生成中：模型正在起草正文...')
 
       const events = streamChat(
         {
@@ -113,9 +113,9 @@ export function useChapterDraftGeneration({
       for await (const event of events) {
         if (event.type === 'text_delta') {
           fullContent += event.delta
-          // Estimate progress based on content length
-          const estimated = Math.min(fullContent.length / 10, 90)
-          setProgress(`正在生成... ${Math.round(estimated)}%`)
+          if (fullContent.length > 400) {
+            setProgress('生成中：正在扩写正文段落...')
+          }
         } else if (event.type === 'tool_call') {
           if (event.name === 'chapter_draft') {
             // The chapter_draft tool schema doesn't include a draft content field,
@@ -124,7 +124,7 @@ export function useChapterDraftGeneration({
             if (extracted) {
               draftFromTool = extracted
             }
-            setProgress('草稿生成完成，正在处理...')
+            setProgress('已完成：正在整理草稿格式...')
           }
         } else if (event.type === 'error') {
           throw new Error(event.message)

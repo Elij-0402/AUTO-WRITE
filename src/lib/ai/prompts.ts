@@ -14,6 +14,8 @@
  */
 
 import type { ProjectCharter } from '../types'
+import type { PlanningSnapshot } from '../types'
+import type { StoryTracker } from '../types'
 import type { WorldEntry } from '../types/world-entry'
 import { formatEntryForContext } from '../hooks/use-context-injection'
 
@@ -32,6 +34,8 @@ export const BASE_INSTRUCTION = `你是 InkForge 的中文网文写作助手，�
 export interface BuildSystemPromptParams {
   projectCharter?: ProjectCharter | null
   worldEntries: WorldEntry[]
+  storyTrackers?: StoryTracker[]
+  planningSnapshot?: PlanningSnapshot
   /** Optional selected text the user is discussing. */
   selectedText?: string
   /** Optional rolling summary of prior turns beyond the sliding window. */
@@ -52,6 +56,8 @@ export interface SegmentedSystemPrompt {
   projectCharterContext: string
   /** Stable across a session as long as world entries don't change. */
   worldBibleContext: string
+  /** Stable across a session as long as planning objects don't change. */
+  planningContext?: string
   /** Per-message preamble describing current discussion context. */
   runtimeContext: string
   /** Chapter draft generation context — only set when generating a draft. */
@@ -62,8 +68,15 @@ export function buildSegmentedSystemPrompt(
   params: BuildSystemPromptParams
 ): SegmentedSystemPrompt {
   const projectCharterContext = buildProjectCharterBlock(params.projectCharter)
-  const worldBibleContext = buildWorldBibleBlock(params.worldEntries)
+  const worldBibleContext = buildWorldBibleBlock(
+    params.worldEntries,
+    params.storyTrackers ?? []
+  )
+  const planningContext = buildPlanningDigestBlock(params.planningSnapshot)
   const parts: string[] = []
+  if (planningContext) {
+    parts.push(planningContext)
+  }
   if (params.rollingSummary && params.rollingSummary.trim()) {
     parts.push(`【此前对话摘要】\n${params.rollingSummary.trim()}`)
   }
@@ -76,12 +89,57 @@ export function buildSegmentedSystemPrompt(
     baseInstruction: BASE_INSTRUCTION,
     projectCharterContext,
     worldBibleContext,
+    planningContext,
     runtimeContext,
     chapterDraftContext: params.chapterDraftInstruction,
   }
 }
 
-function buildProjectCharterBlock(projectCharter?: ProjectCharter | null): string {
+export function buildPlanningDigestBlock(planningSnapshot?: PlanningSnapshot): string {
+  if (!planningSnapshot) {
+    return ''
+  }
+
+  const { storyArcs, chapterPlans, sceneCards } = planningSnapshot
+  if (storyArcs.length === 0 && chapterPlans.length === 0 && sceneCards.length === 0) {
+    return ''
+  }
+
+  const arcLines = storyArcs.slice(0, 3).map((arc) => {
+    const statusLabel =
+      arc.status === 'completed' ? '已完成' : arc.status === 'active' ? '活跃' : '草稿'
+    return `${arc.title}｜${statusLabel}`
+  })
+
+  const chapterLines = chapterPlans.slice(0, 6).map((plan) => {
+    const sceneCount = sceneCards.filter((scene) => scene.chapterPlanId === plan.id).length
+    const linkedLabel = plan.linkedChapterId ? '已绑定章节' : '未绑定章节'
+    return `${plan.title}｜${linkedLabel}｜已拆 ${sceneCount}/${sceneCount} 场景`
+  })
+
+  const pendingChapterCount = chapterPlans.filter((plan) => !plan.linkedChapterId).length
+  const pendingSceneCount = chapterPlans.filter((plan) => (
+    sceneCards.every((scene) => scene.chapterPlanId !== plan.id)
+  )).length
+
+  const sections = ['【当前规划】']
+  if (arcLines.length > 0) {
+    sections.push('【当前卷纲】', ...arcLines)
+  }
+  if (chapterLines.length > 0) {
+    sections.push('', '【当前章纲】', ...chapterLines)
+  }
+  sections.push(
+    '',
+    '【待推进】',
+    `待写章节：${pendingChapterCount}`,
+    `待拆场景章纲：${pendingSceneCount}`
+  )
+
+  return sections.join('\n')
+}
+
+export function buildProjectCharterBlock(projectCharter?: ProjectCharter | null): string {
   if (!projectCharter) {
     return ''
   }
@@ -108,12 +166,121 @@ function buildProjectCharterBlock(projectCharter?: ProjectCharter | null): strin
   return `【作品宪章】\n${parts.join('\n')}`
 }
 
-export function buildWorldBibleBlock(entries: WorldEntry[]): string {
-  if (entries.length === 0) {
+export function buildWorldBibleBlock(
+  entries: WorldEntry[],
+  storyTrackers: StoryTracker[] = []
+): string {
+  if (entries.length === 0 && storyTrackers.length === 0) {
     return '【世界观百科】\n(暂无相关世界观条目)'
   }
-  const body = entries.map(formatEntryForContext).join('\n')
-  return `【世界观百科】\n${body}`
+
+  const sections: string[] = []
+  const coreEntries = entries.filter(
+    entry =>
+      entry.type === 'character' || entry.type === 'location' || entry.type === 'rule'
+  )
+  if (coreEntries.length > 0) {
+    sections.push(coreEntries.map(formatEntryForContext).join('\n'))
+  }
+
+  const factions = entries.filter(entry => entry.type === 'faction')
+  if (factions.length > 0) {
+    sections.push(
+      ['【势力】', ...factions.map(formatFactionForContext)].join('\n')
+    )
+  }
+
+  const secrets = entries.filter(entry => entry.type === 'secret')
+  if (secrets.length > 0) {
+    sections.push(
+      ['【秘密】', ...secrets.map(formatSecretForContext)].join('\n')
+    )
+  }
+
+  const chronology = entries
+    .filter(entry => entry.type === 'timeline' || entry.type === 'event')
+    .sort(compareChronologyEntries)
+  if (chronology.length > 0) {
+    sections.push(
+      ['【事件与时间线】', ...chronology.map(formatChronologyForContext)].join('\n')
+    )
+  }
+
+  const unresolvedTrackers = storyTrackers
+    .filter(tracker => tracker.status === 'active' && tracker.deletedAt === null)
+    .slice(0, 6)
+  if (unresolvedTrackers.length > 0) {
+    sections.push(
+      ['【未解决追踪】', ...unresolvedTrackers.map(formatTrackerForContext)].join('\n')
+    )
+  }
+
+  return `【世界观百科】\n${sections.join('\n\n')}`
+}
+
+function formatFactionForContext(entry: WorldEntry): string {
+  const parts = [
+    entry.factionRole && `角色=${entry.factionRole.trim()}`,
+    entry.factionGoal && `目标=${entry.factionGoal.trim()}`,
+    entry.factionStyle && `风格=${entry.factionStyle.trim()}`,
+  ].filter(Boolean)
+
+  return parts.length > 0 ? `${entry.name}：${parts.join('；')}` : entry.name
+}
+
+function formatSecretForContext(entry: WorldEntry): string {
+  const parts = [
+    entry.secretContent && `内容=${entry.secretContent.trim()}`,
+    entry.secretScope && `影响范围=${entry.secretScope.trim()}`,
+    entry.revealCondition && `揭露条件=${entry.revealCondition.trim()}`,
+  ].filter(Boolean)
+
+  return parts.length > 0 ? `${entry.name}：${parts.join('；')}` : entry.name
+}
+
+function compareChronologyEntries(a: WorldEntry, b: WorldEntry): number {
+  const aOrder = a.timeOrder ?? Number.MAX_SAFE_INTEGER
+  const bOrder = b.timeOrder ?? Number.MAX_SAFE_INTEGER
+  if (aOrder !== bOrder) {
+    return aOrder - bOrder
+  }
+  return a.name.localeCompare(b.name, 'zh-CN')
+}
+
+function formatChronologyForContext(entry: WorldEntry): string {
+  const parts = [entry.eventDescription?.trim()].filter(Boolean) as string[]
+  if (entry.type === 'event' && entry.eventImpact?.trim()) {
+    parts.push(`影响=${entry.eventImpact.trim()}`)
+  }
+
+  const head = entry.timePoint?.trim()
+    ? `${entry.timePoint.trim()}｜${entry.name}`
+    : entry.name
+
+  return parts.length > 0 ? `${head}：${parts.join('；')}` : head
+}
+
+function formatTrackerForContext(tracker: StoryTracker): string {
+  return `${labelTrackerKind(tracker.kind)}｜${tracker.title}：${tracker.summary.trim()}`
+}
+
+function labelTrackerKind(kind: StoryTracker['kind']): string {
+  switch (kind) {
+    case 'open_promise':
+      return '承诺'
+    case 'foreshadow':
+      return '伏笔'
+    case 'consequence':
+      return '后果'
+    case 'character_state':
+      return '角色状态'
+    case 'relationship_state':
+      return '关系状态'
+    case 'world_state':
+      return '世界状态'
+    default:
+      return '追踪'
+  }
 }
 
 export const CHAPTER_DRAFT_INSTRUCTION = `【章节草稿生成任务】
@@ -139,6 +306,7 @@ export function flattenSystemPrompt(segments: SegmentedSystemPrompt): string {
     segments.baseInstruction,
     segments.projectCharterContext,
     segments.worldBibleContext,
+    segments.planningContext,
     segments.runtimeContext,
   ]
   if (segments.chapterDraftContext) {

@@ -23,9 +23,22 @@ export interface ScanProgress {
   currentChapterTitle: string | null
 }
 
+export type ConsistencyScanSummaryStatus =
+  | 'missing_world_bible'
+  | 'coverage_warning'
+  | 'clean'
+  | 'conflicts_found'
+
+export interface ConsistencyScanSummary {
+  status: ConsistencyScanSummaryStatus
+  title: string
+  description: string
+}
+
 export interface UseConsistencyScanReturn {
   state: ConsistencyScanState
   results: ConsistencyViolation[]
+  summary: ConsistencyScanSummary | null
   progress: ScanProgress | null
   error: string | null
   startScan: (chapterIds: string[]) => Promise<void>
@@ -47,6 +60,7 @@ export function useConsistencyScan({
 }: UseConsistencyScanOptions): UseConsistencyScanReturn {
   const [state, setState] = useState<ConsistencyScanState>('idle')
   const [results, setResults] = useState<ConsistencyViolation[]>([])
+  const [summary, setSummary] = useState<ConsistencyScanSummary | null>(null)
   const [progress, setProgress] = useState<ScanProgress | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -77,6 +91,7 @@ export function useConsistencyScan({
 
   const clearResults = useCallback(() => {
     setResults([])
+    setSummary(null)
     setState('idle')
     setError(null)
     setProgress(null)
@@ -146,8 +161,9 @@ export function useConsistencyScan({
 
       // Load existing contradictions for dedup (batch query once per chapter)
       const existingContradictions = await db.contradictions
-        .where('[projectId+entryName]')
-        .equals([projectId, chapter.id])
+        .where('projectId')
+        .equals(projectId)
+        .and((row) => row.chapterId === chapter.id)
         .toArray()
 
       // Build dedup set for this chapter
@@ -220,6 +236,19 @@ export function useConsistencyScan({
           ? chapters.filter((c) => chapterIds.includes(c.id))
           : chapters
 
+      if (worldEntries.length === 0) {
+        setError(null)
+        setResults([])
+        setSummary({
+          status: 'missing_world_bible',
+          title: '无百科，无法有效审计',
+          description: '当前项目还没有世界观条目，先补角色、地点、规则或时间线后再扫描。',
+        })
+        setState('results_ready')
+        isScanningRef.current = false
+        return
+      }
+
       if (chaptersToScan.length === 0) {
         setError('没有可扫描的章节')
         setState('error')
@@ -230,6 +259,7 @@ export function useConsistencyScan({
       // Reset state
       setError(null)
       setResults([])
+      setSummary(null)
       setState('scanning')
       setProgress({ current: 0, total: chaptersToScan.length, currentChapterTitle: null })
 
@@ -279,6 +309,22 @@ export function useConsistencyScan({
         }
 
         setResults(allViolations)
+        setSummary(
+          allViolations.length > 0
+            ? {
+                status: 'conflicts_found',
+                title: '发现冲突，建议先修设定',
+                description: `本次扫描识别到 ${allViolations.length} 条需要处理的设定冲突。`,
+              }
+            : {
+                status: worldEntries.length < 3 ? 'coverage_warning' : 'clean',
+                title: worldEntries.length < 3 ? '覆盖不足，建议补全设定' : '已扫描，未发现冲突',
+                description:
+                  worldEntries.length < 3
+                    ? '当前世界观条目较少，扫描覆盖面有限，建议补充主要角色、固定地点、规则机制或关键时间线。'
+                    : '章节内容与现有世界观条目之间未发现明显冲突。',
+              }
+        )
         setState('results_ready')
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
@@ -299,6 +345,7 @@ export function useConsistencyScan({
   return {
     state,
     results,
+    summary,
     progress,
     error,
     startScan,

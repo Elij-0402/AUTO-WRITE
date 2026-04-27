@@ -6,37 +6,152 @@ import { useChapters } from './use-chapters'
 import { useWorldEntries } from './use-world-entries'
 import { useIdleMode } from './use-idle-mode'
 import type { ActiveTab } from './use-layout'
+import type { PlanningSelection, WorldEntry } from '../types'
 
 interface UseWorkspaceLayoutOptions {
   projectId: string
 }
 
+interface WorkspaceUrlState {
+  activeTab?: ActiveTab
+  activeChapterId?: string | null
+  activeOutlineId?: string | null
+  activeWorldEntryId?: string | null
+  activePlanningItem?: PlanningSelection | null
+}
+
+function readWorkspaceUrlState(): WorkspaceUrlState {
+  if (typeof window === 'undefined') return {}
+
+  const params = new URLSearchParams(window.location.search)
+  const activePlanningKind = params.get('planningKind')
+  const activePlanningId = params.get('planningId')
+
+  return {
+    activeTab: (params.get('tab') as ActiveTab | null) ?? undefined,
+    activeChapterId: params.get('chapter'),
+    activeOutlineId: params.get('outline'),
+    activeWorldEntryId: params.get('entry'),
+    activePlanningItem:
+      activePlanningKind && activePlanningId
+        ? { kind: activePlanningKind as PlanningSelection['kind'], id: activePlanningId }
+        : null,
+  }
+}
+
+function writeWorkspaceUrlState(partial: WorkspaceUrlState): void {
+  if (typeof window === 'undefined') return
+
+  const url = new URL(window.location.href)
+
+  const assignParam = (key: string, value?: string | null) => {
+    if (value) url.searchParams.set(key, value)
+    else url.searchParams.delete(key)
+  }
+
+  if ('activeTab' in partial) assignParam('tab', partial.activeTab)
+  if ('activeChapterId' in partial) assignParam('chapter', partial.activeChapterId)
+  if ('activeOutlineId' in partial) assignParam('outline', partial.activeOutlineId)
+  if ('activeWorldEntryId' in partial) assignParam('entry', partial.activeWorldEntryId)
+  if ('activePlanningItem' in partial) {
+    assignParam('planningKind', partial.activePlanningItem?.kind)
+    assignParam('planningId', partial.activePlanningItem?.id)
+  }
+
+  window.history.replaceState(window.history.state, '', url.toString())
+}
+
 export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
-  const { activeTab, saveSidebarWidth, saveActiveTab, saveChatPanelWidth } = useLayout(projectId)
+  const urlState = useMemo(() => readWorkspaceUrlState(), [])
+  const {
+    activeTab,
+    activeChapterId: persistedActiveChapterId,
+    activeOutlineId: persistedActiveOutlineId,
+    activeWorldEntryId: persistedActiveWorldEntryId,
+    activePlanningSelection: persistedActivePlanningSelection,
+    saveSidebarWidth,
+    saveActiveTab,
+    saveChatPanelWidth,
+    saveWorkspaceContext,
+  } = useLayout(projectId)
 
-  // ── Selection state ──────────────────────────────────────────────
   const [focusMode, setFocusMode] = useState(false)
-  const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
-  const [activeOutlineId, setActiveOutlineId] = useState<string | null>(null)
-  const [activeWorldEntryId, setActiveWorldEntryId] = useState<string | null>(null)
+  const [activeChapterIdState, setActiveChapterIdState] = useState<string | null>(urlState.activeChapterId ?? persistedActiveChapterId)
+  const [activeOutlineIdState, setActiveOutlineIdState] = useState<string | null>(urlState.activeOutlineId ?? persistedActiveOutlineId)
+  const [activeWorldEntryIdState, setActiveWorldEntryIdState] = useState<string | null>(urlState.activeWorldEntryId ?? persistedActiveWorldEntryId)
+  const [activePlanningItemState, setActivePlanningItemState] = useState<PlanningSelection | null>(urlState.activePlanningItem ?? persistedActivePlanningSelection)
 
-  // ── Derived data ─────────────────────────────────────────────────
-  const { chapters } = useChapters(projectId)
+  const { chapters, loading: chaptersLoading } = useChapters(projectId)
   const idle = useIdleMode()
   const { entries, entriesByType, addEntry } = useWorldEntries(projectId)
 
-  const sortedChapters = chapters.filter(c => !c.deletedAt)
-  const currentChapter = activeChapterId ? sortedChapters.find(c => c.id === activeChapterId) : undefined
-  const currentChapterNumber = activeChapterId ? sortedChapters.findIndex(c => c.id === activeChapterId) + 1 : 0
-  const currentOutlineIndex = sortedChapters.findIndex(c => c.id === activeOutlineId)
+  useEffect(() => {
+    setActiveChapterIdState(urlState.activeChapterId ?? persistedActiveChapterId)
+  }, [persistedActiveChapterId, projectId, urlState.activeChapterId])
 
-  const currentWorldEntry = entries?.find(e => e.id === activeWorldEntryId)
+  useEffect(() => {
+    setActiveOutlineIdState(urlState.activeOutlineId ?? persistedActiveOutlineId)
+  }, [persistedActiveOutlineId, projectId, urlState.activeOutlineId])
+
+  useEffect(() => {
+    setActiveWorldEntryIdState(urlState.activeWorldEntryId ?? persistedActiveWorldEntryId)
+  }, [persistedActiveWorldEntryId, projectId, urlState.activeWorldEntryId])
+
+  useEffect(() => {
+    setActivePlanningItemState(urlState.activePlanningItem ?? persistedActivePlanningSelection)
+  }, [persistedActivePlanningSelection, projectId, urlState.activePlanningItem])
+
+  const setActiveChapterId = useCallback((id: string | null) => {
+    const nextId = id || null
+    setActiveChapterIdState(nextId)
+    writeWorkspaceUrlState({ activeChapterId: nextId, activeTab: 'chapters' })
+    void saveWorkspaceContext({
+      activeChapterId: nextId,
+      lastWorkspaceContext: nextId ? 'chapter' : undefined,
+    })
+  }, [saveWorkspaceContext])
+
+  const setActiveOutlineId = useCallback((id: string | null) => {
+    const nextId = id || null
+    setActiveOutlineIdState(nextId)
+    writeWorkspaceUrlState({ activeOutlineId: nextId, activeTab: 'outline' })
+    void saveWorkspaceContext({
+      activeOutlineId: nextId,
+      lastWorkspaceContext: nextId ? 'outline' : undefined,
+    })
+  }, [saveWorkspaceContext])
+
+  const setActiveWorldEntryId = useCallback((id: string | null) => {
+    const nextId = id || null
+    setActiveWorldEntryIdState(nextId)
+    writeWorkspaceUrlState({ activeWorldEntryId: nextId, activeTab: 'world' })
+    void saveWorkspaceContext({
+      activeWorldEntryId: nextId,
+      lastWorkspaceContext: nextId ? 'world' : undefined,
+    })
+  }, [saveWorkspaceContext])
+
+  const setActivePlanningItem = useCallback((selection: PlanningSelection | null) => {
+    setActivePlanningItemState(selection)
+    writeWorkspaceUrlState({ activePlanningItem: selection, activeTab: 'planning' })
+    void saveWorkspaceContext({
+      activePlanningSelection: selection,
+      lastWorkspaceContext: selection ? 'planning' : undefined,
+    })
+  }, [saveWorkspaceContext])
+
+  const sortedChapters = chapters.filter(c => !c.deletedAt)
+  const currentChapter = activeChapterIdState ? sortedChapters.find(c => c.id === activeChapterIdState) : undefined
+  const currentChapterNumber = activeChapterIdState ? sortedChapters.findIndex(c => c.id === activeChapterIdState) + 1 : 0
+  const currentOutlineIndex = sortedChapters.findIndex(c => c.id === activeOutlineIdState)
+
+  const currentWorldEntry = entries?.find(e => e.id === activeWorldEntryIdState)
   const currentEntryType = currentWorldEntry?.type
   const sameTypeEntries = useMemo(
-    () => currentEntryType ? (entriesByType[currentEntryType] || []) : [],
+    (): WorldEntry[] => currentEntryType ? (entriesByType[currentEntryType] || []) : [],
     [currentEntryType, entriesByType]
   )
-  const currentWorldIndex = sameTypeEntries.findIndex(e => e.id === activeWorldEntryId)
+  const currentWorldIndex = sameTypeEntries.findIndex(e => e.id === activeWorldEntryIdState)
 
   const hasWorldPrevious = currentWorldIndex > 0
   const hasWorldNext = currentWorldIndex < sameTypeEntries.length - 1
@@ -44,81 +159,87 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
   const hasNext = currentOutlineIndex < sortedChapters.length - 1 && currentOutlineIndex !== -1
 
   const isEditorMain =
-    Boolean(activeChapterId) &&
-    !(activeTab === 'outline' && activeOutlineId) &&
-    !(activeTab === 'world' && activeWorldEntryId)
+    Boolean(activeChapterIdState) &&
+    !(activeTab === 'outline' && activeOutlineIdState) &&
+    !(activeTab === 'world' && activeWorldEntryIdState)
 
-  // ── Navigation handlers ───────────────────────────────────────────
   const handleTabChange = useCallback((tab: ActiveTab) => {
-    saveActiveTab(tab)
+    writeWorkspaceUrlState({ activeTab: tab })
+    void saveActiveTab(tab)
     if (tab === 'chapters') setActiveOutlineId(null)
     else if (tab === 'outline') setActiveWorldEntryId(null)
     else if (tab === 'world') setActiveOutlineId(null)
-  }, [saveActiveTab])
+    else if (tab === 'planning') {
+      setActiveOutlineId(null)
+      setActiveWorldEntryId(null)
+    }
+  }, [saveActiveTab, setActiveOutlineId, setActiveWorldEntryId])
 
   const handleSelectOutline = useCallback((chapterId: string) => {
     setActiveOutlineId(chapterId)
-  }, [])
+  }, [setActiveOutlineId])
 
   const handleSelectWorldEntry = useCallback((entryId: string) => {
     setActiveWorldEntryId(entryId)
-  }, [])
+  }, [setActiveWorldEntryId])
 
   const handleEditWorldEntry = useCallback((entryId: string) => {
     setActiveWorldEntryId(entryId)
-  }, [])
+  }, [setActiveWorldEntryId])
 
   const handleDeleteWorldEntry = useCallback((entryId: string) => {
-    if (entryId === activeWorldEntryId) setActiveWorldEntryId(null)
-  }, [activeWorldEntryId])
+    if (entryId === activeWorldEntryIdState) setActiveWorldEntryId(null)
+  }, [activeWorldEntryIdState, setActiveWorldEntryId])
 
   const handleCreateWorldEntry = useCallback(async (type: import('../types').WorldEntryType) => {
     const id = await addEntry(type)
-    saveActiveTab('world')
+    void saveActiveTab('world')
     setActiveOutlineId(null)
     setActiveWorldEntryId(id)
-  }, [addEntry, saveActiveTab])
+  }, [addEntry, saveActiveTab, setActiveOutlineId, setActiveWorldEntryId])
 
   const handleOutlinePrevious = useCallback(() => {
     if (currentOutlineIndex > 0) setActiveOutlineId(sortedChapters[currentOutlineIndex - 1].id)
-  }, [currentOutlineIndex, sortedChapters])
+  }, [currentOutlineIndex, setActiveOutlineId, sortedChapters])
 
   const handleOutlineNext = useCallback(() => {
     if (currentOutlineIndex < sortedChapters.length - 1 && currentOutlineIndex !== -1) {
       setActiveOutlineId(sortedChapters[currentOutlineIndex + 1].id)
     }
-  }, [currentOutlineIndex, sortedChapters])
+  }, [currentOutlineIndex, setActiveOutlineId, sortedChapters])
 
   const handleWorldPrevious = useCallback(() => {
     if (currentWorldIndex > 0) setActiveWorldEntryId(sameTypeEntries[currentWorldIndex - 1].id)
-  }, [currentWorldIndex, sameTypeEntries])
+  }, [currentWorldIndex, sameTypeEntries, setActiveWorldEntryId])
 
   const handleWorldNext = useCallback(() => {
-    if (currentWorldIndex < sameTypeEntries.length - 1) setActiveWorldEntryId(sameTypeEntries[currentWorldIndex + 1].id)
-  }, [currentWorldIndex, sameTypeEntries])
+    if (currentWorldIndex < sameTypeEntries.length - 1) {
+      setActiveWorldEntryId(sameTypeEntries[currentWorldIndex + 1].id)
+    }
+  }, [currentWorldIndex, sameTypeEntries, setActiveWorldEntryId])
 
   useEffect(() => {
     if (activeTab !== 'chapters') return
+    if (chaptersLoading) return
     if (sortedChapters.length === 0) {
-      if (activeChapterId !== null) setActiveChapterId(null)
+      if (activeChapterIdState !== null) setActiveChapterId(null)
       return
     }
 
-    const hasActiveChapter = activeChapterId
-      ? sortedChapters.some(chapter => chapter.id === activeChapterId)
+    const hasActiveChapter = activeChapterIdState
+      ? sortedChapters.some(chapter => chapter.id === activeChapterIdState)
       : false
 
     if (!hasActiveChapter) {
       setActiveChapterId(sortedChapters[0].id)
     }
-  }, [activeChapterId, activeTab, sortedChapters])
+  }, [activeChapterIdState, activeTab, chaptersLoading, setActiveChapterId, sortedChapters])
 
-  // ── Keyboard shortcuts ───────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (activeOutlineId) setActiveOutlineId(null)
-        if (activeWorldEntryId) setActiveWorldEntryId(null)
+        if (activeOutlineIdState) setActiveOutlineId(null)
+        if (activeWorldEntryIdState) setActiveWorldEntryId(null)
       }
 
       const target = e.target as HTMLElement | null
@@ -129,30 +250,29 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
         if (e.key === '1') { e.preventDefault(); handleTabChange('chapters') }
         else if (e.key === '2') { e.preventDefault(); handleTabChange('outline') }
         else if (e.key === '3') { e.preventDefault(); handleTabChange('world') }
+        else if (e.key === '4') { e.preventDefault(); handleTabChange('planning') }
       }
-
     }
+
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [activeOutlineId, activeWorldEntryId, handleTabChange])
+  }, [activeOutlineIdState, activeWorldEntryIdState, handleTabChange, setActiveOutlineId, setActiveWorldEntryId])
 
-  // ── Layout helpers ───────────────────────────────────────────────
   const handleSidebarDoubleClickReset = () => {
     import('@/components/workspace/resizable-panel').then(m => saveSidebarWidth(m.DEFAULT_SIDEBAR_WIDTH))
   }
 
   const handleChatPanelDoubleClickReset = () => {
-    saveChatPanelWidth(340)
+    void saveChatPanelWidth(340)
   }
 
   return {
-    // State
     focusMode, setFocusMode,
-    activeChapterId, setActiveChapterId,
-    activeOutlineId, setActiveOutlineId,
-    activeWorldEntryId, setActiveWorldEntryId,
+    activeChapterId: activeChapterIdState, setActiveChapterId,
+    activeOutlineId: activeOutlineIdState, setActiveOutlineId,
+    activeWorldEntryId: activeWorldEntryIdState, setActiveWorldEntryId,
+    activePlanningItem: activePlanningItemState, setActivePlanningItem,
     activeTab,
-    // Derived
     sortedChapters,
     currentChapter,
     currentChapterNumber,
@@ -160,7 +280,6 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
     sameTypeEntries,
     isEditorMain,
     entries,
-    // Navigation
     handleTabChange,
     handleSelectOutline,
     handleSelectWorldEntry,
@@ -175,10 +294,8 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
     hasNext,
     hasWorldPrevious,
     hasWorldNext,
-    // Layout helpers
     handleSidebarDoubleClickReset,
     handleChatPanelDoubleClickReset,
-    // Shared
     projectId,
     saveChatPanelWidth,
     idle,

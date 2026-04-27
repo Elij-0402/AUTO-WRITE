@@ -8,6 +8,8 @@ import {
   softDeleteWorldEntry,
   searchWorldEntries,
   getWorldEntryById,
+  queryEntriesByKeyword,
+  getEntriesByTypeForContext,
 } from './world-entry-queries'
 import { addRelation } from './relation-queries'
 
@@ -54,6 +56,30 @@ describe('world-entry-queries', () => {
       const entry = await db.worldEntries.get(id)
       expect(entry!.name).toBe('未命名规则')
       expect(entry!.type).toBe('rule')
+    })
+
+    it('should create a faction entry with correct default name', async () => {
+      const id = await addWorldEntry(db, 'proj-1', 'faction')
+
+      const entry = await db.worldEntries.get(id)
+      expect(entry!.name).toBe('未命名势力')
+      expect(entry!.type).toBe('faction')
+    })
+
+    it('should create a secret entry with correct default name', async () => {
+      const id = await addWorldEntry(db, 'proj-1', 'secret')
+
+      const entry = await db.worldEntries.get(id)
+      expect(entry!.name).toBe('未命名秘密')
+      expect(entry!.type).toBe('secret')
+    })
+
+    it('should create an event entry with correct default name', async () => {
+      const id = await addWorldEntry(db, 'proj-1', 'event')
+
+      const entry = await db.worldEntries.get(id)
+      expect(entry!.name).toBe('未命名事件')
+      expect(entry!.type).toBe('event')
     })
 
     it('should create a timeline entry with correct default name', async () => {
@@ -120,6 +146,45 @@ describe('world-entry-queries', () => {
     it('should return empty array when no entries exist', async () => {
       const entries = await getWorldEntries(db, 'proj-1')
       expect(entries).toEqual([])
+    })
+
+    it('should sort event entries by timeOrder before falling back to name', async () => {
+      const earlyId = await addWorldEntry(db, 'proj-1', 'event', '终局')
+      const laterId = await addWorldEntry(db, 'proj-1', 'event', '序章')
+      const noOrderId = await addWorldEntry(db, 'proj-1', 'event', '补遗')
+
+      await updateWorldEntryFields(db, earlyId, { timeOrder: 1 })
+      await updateWorldEntryFields(db, laterId, { timeOrder: 5 })
+
+      const events = await getWorldEntries(db, 'proj-1', 'event')
+      expect(events.map(entry => entry.name)).toEqual(['终局', '序章', '补遗'])
+      expect(events.map(entry => entry.id)).toEqual([earlyId, laterId, noOrderId])
+    })
+
+    it('should sort timeline entries by timeOrder before falling back to name', async () => {
+      const laterId = await addWorldEntry(db, 'proj-1', 'timeline', '终章')
+      const noOrderId = await addWorldEntry(db, 'proj-1', 'timeline', '中章')
+      const earlierId = await addWorldEntry(db, 'proj-1', 'timeline', '序章')
+
+      await updateWorldEntryFields(db, laterId, { timeOrder: 20 })
+      await updateWorldEntryFields(db, earlierId, { timeOrder: 10 })
+
+      const timelines = await getWorldEntries(db, 'proj-1', 'timeline')
+      expect(timelines.map(entry => entry.name)).toEqual(['序章', '终章', '中章'])
+      expect(timelines.map(entry => entry.id)).toEqual([earlierId, laterId, noOrderId])
+    })
+
+    it('should treat null and undefined timeOrder as missing order for event sorting', async () => {
+      const numberedId = await addWorldEntry(db, 'proj-1', 'event', '终局')
+      const nullOrderId = await addWorldEntry(db, 'proj-1', 'event', '补遗')
+      const undefinedOrderId = await addWorldEntry(db, 'proj-1', 'event', '序章')
+
+      await updateWorldEntryFields(db, numberedId, { timeOrder: 2 })
+      await updateWorldEntryFields(db, nullOrderId, { timeOrder: null })
+
+      const events = await getWorldEntries(db, 'proj-1', 'event')
+      expect(events.map(entry => entry.name)).toEqual(['终局', '补遗', '序章'])
+      expect(events.map(entry => entry.id)).toEqual([numberedId, nullOrderId, undefinedOrderId])
     })
   })
 
@@ -335,6 +400,73 @@ describe('world-entry-queries', () => {
     it('should return undefined for non-existent id', async () => {
       const entry = await getWorldEntryById(db, 'nonexistent-id')
       expect(entry).toBeUndefined()
+    })
+  })
+
+  describe('queryEntriesByKeyword', () => {
+    it('should match faction core fields', async () => {
+      const factionId = await addWorldEntry(db, 'proj-1', 'faction', '玄镜司')
+      await updateWorldEntryFields(db, factionId, {
+        factionRole: '监察天下异术',
+        factionGoal: '清剿禁术',
+        factionStyle: '铁律森严',
+      })
+
+      const results = await queryEntriesByKeyword(db, '禁术', 'proj-1')
+      expect(results.map(entry => entry.id)).toContain(factionId)
+    })
+
+    it('should match secret core fields', async () => {
+      const secretId = await addWorldEntry(db, 'proj-1', 'secret', '龙脉真相')
+      await updateWorldEntryFields(db, secretId, {
+        secretContent: '皇城地下封印着龙脉裂隙',
+        secretScope: '皇族内部',
+        revealCondition: '祭天仪式失败时暴露',
+      })
+
+      const results = await queryEntriesByKeyword(db, '祭天', 'proj-1')
+      expect(results.map(entry => entry.id)).toContain(secretId)
+    })
+
+    it('should match event core fields', async () => {
+      const eventId = await addWorldEntry(db, 'proj-1', 'event', '白塔之变')
+      await updateWorldEntryFields(db, eventId, {
+        eventDescription: '白塔倒塌引发全城戒严',
+        eventImpact: '三大势力停战',
+        timePoint: '天启三年冬',
+      })
+
+      const results = await queryEntriesByKeyword(db, '停战', 'proj-1')
+      expect(results.map(entry => entry.id)).toContain(eventId)
+    })
+  })
+
+  describe('getEntriesByTypeForContext', () => {
+    it('should expose all seven world entry groups', async () => {
+      const types = [
+        'character',
+        'faction',
+        'location',
+        'rule',
+        'secret',
+        'event',
+        'timeline',
+      ] as const
+
+      for (const type of types) {
+        await addWorldEntry(db, 'proj-1', type, `${type}-entry`)
+      }
+
+      const grouped = await getEntriesByTypeForContext(db, 'proj-1')
+
+      expect(Object.keys(grouped).sort()).toEqual(types.slice().sort())
+      expect(grouped.character).toHaveLength(1)
+      expect(grouped.faction).toHaveLength(1)
+      expect(grouped.location).toHaveLength(1)
+      expect(grouped.rule).toHaveLength(1)
+      expect(grouped.secret).toHaveLength(1)
+      expect(grouped.event).toHaveLength(1)
+      expect(grouped.timeline).toHaveLength(1)
     })
   })
 

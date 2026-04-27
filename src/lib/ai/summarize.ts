@@ -11,6 +11,7 @@ import type { SegmentedSystemPrompt } from './prompts'
 const SUMMARY_SYSTEM: SegmentedSystemPrompt = {
   baseInstruction:
     '你是对话摘要助手。把作者与写作助手的对话浓缩为 200 字以内的要点列表，保留人物决策、情节走向、世界观约束、未解决问题，去除闲聊。用简体中文，要点之间换行。',
+  projectCharterContext: '',
   worldBibleContext: '',
   runtimeContext: '',
 }

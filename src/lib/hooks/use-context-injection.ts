@@ -15,8 +15,11 @@ export { calculateTokenCount } from '../ai/formatters'
 /** Entry type groupings for context injection — per D-09 */
 export interface EntriesByType {
   character: WorldEntry[]
+  faction: WorldEntry[]
   location: WorldEntry[]
   rule: WorldEntry[]
+  secret: WorldEntry[]
+  event: WorldEntry[]
   timeline: WorldEntry[]
 }
 
@@ -76,8 +79,11 @@ export function findRelevantEntries(
   
   const allEntries = [
     ...entriesByType.character,
+    ...entriesByType.faction,
     ...entriesByType.location,
     ...entriesByType.rule,
+    ...entriesByType.secret,
+    ...entriesByType.event,
     ...entriesByType.timeline,
   ]
   
@@ -101,9 +107,21 @@ export function findRelevantEntries(
     } else if (entry.type === 'location') {
       if (matchKeyword(entry.description, keywordLower)) score += 5
       if (matchKeyword(entry.features, keywordLower)) score += 3
+    } else if (entry.type === 'faction') {
+      if (matchKeyword(entry.factionRole, keywordLower)) score += 5
+      if (matchKeyword(entry.factionGoal, keywordLower)) score += 4
+      if (matchKeyword(entry.factionStyle, keywordLower)) score += 3
     } else if (entry.type === 'rule') {
       if (matchKeyword(entry.content, keywordLower)) score += 5
       if (matchKeyword(entry.scope, keywordLower)) score += 3
+    } else if (entry.type === 'secret') {
+      if (matchKeyword(entry.secretContent, keywordLower)) score += 5
+      if (matchKeyword(entry.secretScope, keywordLower)) score += 3
+      if (matchKeyword(entry.revealCondition, keywordLower)) score += 4
+    } else if (entry.type === 'event') {
+      if (matchKeyword(entry.eventDescription, keywordLower)) score += 5
+      if (matchKeyword(entry.eventImpact, keywordLower)) score += 4
+      if (matchKeyword(entry.timePoint, keywordLower)) score += 3
     } else if (entry.type === 'timeline') {
       if (matchKeyword(entry.eventDescription, keywordLower)) score += 5
       if (matchKeyword(entry.timePoint, keywordLower)) score += 3

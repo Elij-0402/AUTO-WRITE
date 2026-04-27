@@ -16,7 +16,7 @@ import { ChatInput } from './chat-input'
 import { NewEntryDialog, type NewEntryPrefillData } from '../new-entry-dialog'
 import { ConversationDrawer } from '../conversation-drawer'
 import { findEntryIdByName } from '@/lib/ai/find-entry-by-name'
-import type { WorldEntryType } from '@/lib/types'
+import type { WorldEntry, WorldEntryType } from '@/lib/types'
 import type { NewEntrySuggestion } from '@/lib/ai/suggestion-parser'
 import type { AssistantPreferenceFeedbackInput } from '../message-bubble'
 
@@ -212,7 +212,12 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   }
 
   const handleCheckDuplicate = async (name: string) => {
-    const allEntries = [...entriesByType.character, ...entriesByType.location, ...entriesByType.rule, ...entriesByType.timeline]
+    const allEntries: WorldEntry[] = [
+      ...entriesByType.character,
+      ...entriesByType.location,
+      ...entriesByType.rule,
+      ...entriesByType.timeline,
+    ]
     const existing = allEntries.find(e => e.name === name)
     if (existing) {
       const entry = await db.table('worldEntries').get(existing.id)

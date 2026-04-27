@@ -2,6 +2,7 @@
 
 import { Group, Panel, Separator as PanelSeparator } from '../resizable-panel'
 import { ChapterSidebar } from '../../chapter/chapter-sidebar'
+import type { PlanningSelection } from '../../planning/planning-workbench'
 import { DEFAULT_SIDEBAR_WIDTH } from '../resizable-panel'
 import { PanelErrorBoundary } from '../error-boundary'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
@@ -16,6 +17,7 @@ interface NormalLayoutProps {
   activeTab: ActiveTab
   activeOutlineId: string | null
   activeWorldEntryId: string | null
+  activePlanningSelection: PlanningSelection | null
   mainContent: React.ReactNode
   handleSidebarDoubleClickReset: () => void
   handleChatPanelDoubleClickReset: () => void
@@ -25,6 +27,7 @@ interface NormalLayoutProps {
   onSelectWorldEntry: (id: string) => void
   onEditWorldEntry: (id: string) => void
   onDeleteWorldEntry: (id: string) => void
+  onSelectPlanningItem: (selection: PlanningSelection) => void
   children?: React.ReactNode
 }
 
@@ -34,6 +37,7 @@ export function NormalLayout({
   activeTab,
   activeOutlineId,
   activeWorldEntryId,
+  activePlanningSelection,
   mainContent,
   handleSidebarDoubleClickReset,
   handleChatPanelDoubleClickReset,
@@ -43,6 +47,7 @@ export function NormalLayout({
   onSelectWorldEntry,
   onEditWorldEntry,
   onDeleteWorldEntry,
+  onSelectPlanningItem,
   children,
 }: NormalLayoutProps) {
   return (
@@ -68,6 +73,8 @@ export function NormalLayout({
               onSelectWorldEntry={onSelectWorldEntry}
               onEditWorldEntry={onEditWorldEntry}
               onDeleteWorldEntry={onDeleteWorldEntry}
+              activePlanningSelection={activePlanningSelection}
+              onSelectPlanningItem={onSelectPlanningItem}
             />
           </PanelErrorBoundary>
         </div>

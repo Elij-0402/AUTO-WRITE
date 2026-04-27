@@ -17,6 +17,26 @@ import {
   getWorldEntryById as getWorldEntryByIdQuery,
 } from '../db/world-entry-queries'
 
+const WORLD_ENTRY_GROUP_TYPES = [
+  'character',
+  'faction',
+  'location',
+  'rule',
+  'secret',
+  'event',
+  'timeline',
+] as const satisfies readonly WorldEntryType[]
+
+const EMPTY_ENTRIES_BY_TYPE = {
+  character: [],
+  faction: [],
+  location: [],
+  rule: [],
+  secret: [],
+  event: [],
+  timeline: [],
+}
+
 /**
  * Reactive hook for world bible entry CRUD operations.
  * Per D-09: entries displayed in sidebar grouped by type.
@@ -36,13 +56,16 @@ export function useWorldEntries(projectId: string) {
 
   // Computed: group entries by type for D-09 sidebar sections
   const entriesByType = useMemo(() => {
-    if (!entries) return { character: [], location: [], rule: [], timeline: [] }
-    return {
-      character: entries.filter(e => e.type === 'character'),
-      location: entries.filter(e => e.type === 'location'),
-      rule: entries.filter(e => e.type === 'rule'),
-      timeline: entries.filter(e => e.type === 'timeline'),
+    if (!entries) {
+      return EMPTY_ENTRIES_BY_TYPE
     }
+
+    return Object.fromEntries(
+      WORLD_ENTRY_GROUP_TYPES.map(type => [
+        type,
+        entries.filter(entry => entry.type === type),
+      ])
+    ) as typeof EMPTY_ENTRIES_BY_TYPE
   }, [entries])
 
   // Helper to get userId for sync

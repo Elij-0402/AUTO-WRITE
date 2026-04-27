@@ -1,12 +1,15 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { User, MapPin, BookOpen, Clock, Plus, ChevronDown, ChevronRight, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { User, Users, MapPin, BookOpen, KeyRound, CalendarDays, Clock, Plus, ChevronDown, ChevronRight, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
 import { useContradictions } from '@/lib/hooks/use-contradictions'
+import { useStoryTrackerCounts } from '@/lib/hooks/use-story-trackers'
 import { DeleteEntryDialog } from './delete-entry-dialog'
+import { StoryBibleOverview } from './story-bible-overview'
+import { StoryTrackerPanel } from './story-tracker-panel'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,11 +25,19 @@ function getTypeIcon(type: WorldEntryType) {
   switch (type) {
     case 'character':
       return User
+    case 'faction':
+      return Users
     case 'location':
       return MapPin
     case 'rule':
       return BookOpen
+    case 'secret':
+      return KeyRound
+    case 'event':
+      return CalendarDays
     case 'timeline':
+      return Clock
+    default:
       return Clock
   }
 }
@@ -35,11 +46,19 @@ function TypeIcon({ type, className, strokeWidth }: { type: WorldEntryType; clas
   switch (type) {
     case 'character':
       return <User className={className} strokeWidth={strokeWidth} />
+    case 'faction':
+      return <Users className={className} strokeWidth={strokeWidth} />
     case 'location':
       return <MapPin className={className} strokeWidth={strokeWidth} />
     case 'rule':
       return <BookOpen className={className} strokeWidth={strokeWidth} />
+    case 'secret':
+      return <KeyRound className={className} strokeWidth={strokeWidth} />
+    case 'event':
+      return <CalendarDays className={className} strokeWidth={strokeWidth} />
     case 'timeline':
+      return <Clock className={className} strokeWidth={strokeWidth} />
+    default:
       return <Clock className={className} strokeWidth={strokeWidth} />
   }
 }
@@ -48,11 +67,19 @@ function getTypeName(type: WorldEntryType): string {
   switch (type) {
     case 'character':
       return '角色'
+    case 'faction':
+      return '势力'
     case 'location':
       return '地点'
     case 'rule':
       return '规则'
+    case 'secret':
+      return '秘密'
+    case 'event':
+      return '事件'
     case 'timeline':
+      return '时间线'
+    default:
       return '时间线'
   }
 }
@@ -61,34 +88,50 @@ function getEmptyPrompt(type: WorldEntryType): string {
   switch (type) {
     case 'character':
       return '还没有角色，点击添加'
+    case 'faction':
+      return '还没有势力，点击添加'
     case 'location':
       return '还没有地点，点击添加'
     case 'rule':
       return '还没有规则，点击添加'
+    case 'secret':
+      return '还没有秘密，点击添加'
+    case 'event':
+      return '还没有事件，点击添加'
     case 'timeline':
       return '还没有时间线，点击添加'
+    default:
+      return '还没有条目，点击添加'
   }
 }
 
 function getTypeColorClass(type: WorldEntryType): string {
   switch (type) {
     case 'character': return 'text-[hsl(var(--accent-amber))]'
+    case 'faction':   return 'text-[hsl(var(--accent-jade))]'
     case 'location':  return 'text-[hsl(var(--accent-jade))]'
     case 'rule':      return 'text-[hsl(var(--accent-violet))]'
+    case 'secret':    return 'text-[hsl(var(--accent-violet))]'
+    case 'event':     return 'text-[hsl(var(--accent-amber))]'
     case 'timeline':  return 'text-foreground/80'
+    default:          return 'text-foreground/80'
   }
 }
 
 function getTypeRailClass(type: WorldEntryType): string {
   switch (type) {
     case 'character': return 'bg-[hsl(var(--accent-amber))]'
+    case 'faction':   return 'bg-[hsl(var(--accent-jade))]'
     case 'location':  return 'bg-[hsl(var(--accent-jade))]'
     case 'rule':      return 'bg-[hsl(var(--accent-violet))]'
+    case 'secret':    return 'bg-[hsl(var(--accent-violet))]'
+    case 'event':     return 'bg-[hsl(var(--accent-amber))]'
     case 'timeline':  return 'bg-foreground/40'
+    default:          return 'bg-foreground/40'
   }
 }
 
-const TYPE_ORDER: WorldEntryType[] = ['character', 'location', 'rule', 'timeline']
+const TYPE_ORDER: WorldEntryType[] = ['character', 'faction', 'location', 'rule', 'secret', 'event', 'timeline']
 
 interface WorldEntryRowProps {
   entry: WorldEntry
@@ -180,12 +223,20 @@ function getDefaultName(type: WorldEntryType): string {
   switch (type) {
     case 'character':
       return '未命名角色'
+    case 'faction':
+      return '未命名势力'
     case 'location':
       return '未命名地点'
     case 'rule':
       return '未命名规则'
+    case 'secret':
+      return '未命名秘密'
+    case 'event':
+      return '未命名事件'
     case 'timeline':
       return '未命名时间线'
+    default:
+      return '未命名条目'
   }
 }
 
@@ -196,9 +247,10 @@ export function WorldBibleTab({
   onEditEntry,
   onDeleteEntry,
 }: WorldBibleTabProps) {
-const { entries, entriesByType, loading, addEntry, softDeleteEntry } = useWorldEntries(projectId)
+  const { entries, entriesByType, loading, addEntry, softDeleteEntry } = useWorldEntries(projectId)
   const { getRelationCount } = useRelations(projectId)
   const { entriesWithBadge } = useContradictions(projectId)
+  const trackerCounts = useStoryTrackerCounts(projectId)
   const contradictionCountByName = useMemo(() => {
     const m = new Map<string, number>()
     for (const { entryName, count } of entriesWithBadge) m.set(entryName, count)
@@ -208,8 +260,11 @@ const { entries, entriesByType, loading, addEntry, softDeleteEntry } = useWorldE
   const [searchQuery, setSearchQuery] = useState('')
   const [collapsedSections, setCollapsedSections] = useState<Record<WorldEntryType, boolean>>({
     character: false,
+    faction: false,
     location: false,
     rule: false,
+    secret: false,
+    event: false,
     timeline: false,
   })
 
@@ -323,6 +378,15 @@ const { entries, entriesByType, loading, addEntry, softDeleteEntry } = useWorldE
       </div>
 
       <div className="flex-1 overflow-y-auto">
+        <StoryBibleOverview
+          entriesByType={entriesByType}
+          trackerCounts={trackerCounts}
+        />
+
+        <div className="px-3 py-3 divider-hair">
+          <StoryTrackerPanel projectId={projectId} entries={entries} />
+        </div>
+
         {TYPE_ORDER.map(type => {
           const sectionEntries = entriesByType[type] || []
           const isCollapsed = collapsedSections[type]
@@ -370,8 +434,7 @@ const { entries, entriesByType, loading, addEntry, softDeleteEntry } = useWorldE
                   </button>
                 ) : (
                   sectionEntries
-                    .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
-                    .map(entry => (
+                    .map((entry: WorldEntry) => (
                       <WorldEntryRow
                         key={entry.id}
                         entry={entry}

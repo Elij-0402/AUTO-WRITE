@@ -1,0 +1,24 @@
+
+> inkforge@0.1.0 dev D:\AUTO-WRITE
+> next dev
+
+▲ Next.js 16.2.3 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://198.18.0.1:3000
+- Environments: .env.local
+✓ Ready in 346ms
+
+ GET / 200 in 476ms (next.js: 67ms, proxy.ts: 147ms, application-code: 262ms)
+ GET / 200 in 45ms (next.js: 4ms, proxy.ts: 6ms, application-code: 35ms)
+ GET /projects/PIYzBxifB0O8-md6txfvH/charter 200 in 380ms (next.js: 347ms, proxy.ts: 7ms, application-code: 26ms)
+ GET /projects/PIYzBxifB0O8-md6txfvH 200 in 360ms (next.js: 328ms, proxy.ts: 4ms, application-code: 29ms)
+ GET /projects/PIYzBxifB0O8-md6txfvH 200 in 196ms (next.js: 11ms, proxy.ts: 4ms, application-code: 181ms)
+ GET /projects/PIYzBxifB0O8-md6txfvH/analysis 200 in 363ms (next.js: 334ms, proxy.ts: 6ms, application-code: 23ms)
+ GET /projects/PIYzBxifB0O8-md6txfvH/analysis 200 in 66ms (next.js: 11ms, proxy.ts: 4ms, application-code: 52ms)
+ GET /projects/PIYzBxifB0O8-md6txfvH 200 in 69ms (next.js: 12ms, proxy.ts: 6ms, application-code: 52ms)
+ GET /projects/PIYzBxifB0O8-md6txfvH 200 in 56ms (next.js: 11ms, proxy.ts: 5ms, application-code: 40ms)
+ GET / 200 in 59ms (next.js: 3ms, proxy.ts: 4ms, application-code: 52ms)
+ GET /projects/PIYzBxifB0O8-md6txfvH 200 in 34ms (next.js: 10ms, proxy.ts: 5ms, application-code: 19ms)
+ GET /projects/PIYzBxifB0O8-md6txfvH 200 in 55ms (next.js: 12ms, proxy.ts: 4ms, application-code: 38ms)
+ GET /projects/PIYzBxifB0O8-md6txfvH 200 in 53ms (next.js: 11ms, proxy.ts: 4ms, application-code: 38ms)
+✓ Compiled in 679ms

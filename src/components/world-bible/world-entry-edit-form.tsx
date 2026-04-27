@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { User, MapPin, BookOpen, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { User, Users, MapPin, BookOpen, KeyRound, CalendarDays, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useAutoSave } from '@/lib/hooks/use-autosave'
 import { TagInput } from './tag-input'
@@ -17,11 +17,19 @@ function TypeIcon({ type, className }: { type: WorldEntryType; className?: strin
   switch (type) {
     case 'character':
       return <User className={className} />
+    case 'faction':
+      return <Users className={className} />
     case 'location':
       return <MapPin className={className} />
     case 'rule':
       return <BookOpen className={className} />
+    case 'secret':
+      return <KeyRound className={className} />
+    case 'event':
+      return <CalendarDays className={className} />
     case 'timeline':
+      return <Clock className={className} />
+    default:
       return <Clock className={className} />
   }
 }
@@ -30,21 +38,31 @@ function getTypeName(type: WorldEntryType): string {
   switch (type) {
     case 'character':
       return '角色'
+    case 'faction':
+      return '势力'
     case 'location':
       return '地点'
     case 'rule':
       return '规则'
+    case 'secret':
+      return '秘密'
+    case 'event':
+      return '事件'
     case 'timeline':
+      return '时间线'
+    default:
       return '时间线'
   }
 }
 
 function AutoGrowTextarea({
+  id,
   value,
   onChange,
   placeholder,
   className,
 }: {
+  id?: string
   value: string
   onChange: (value: string) => void
   placeholder?: string
@@ -62,6 +80,7 @@ function AutoGrowTextarea({
 
   return (
     <Textarea
+      id={id}
       ref={textareaRef}
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -104,25 +123,32 @@ export function WorldEntryEditForm({
   const { entries, renameEntry, updateEntryFields } = useWorldEntries(projectId)
   const entry = entries?.find(e => e.id === entryId)
 
-  const [localName, setLocalName] = useState('')
-  const [localAlias, setLocalAlias] = useState('')
-  const [localAppearance, setLocalAppearance] = useState('')
-  const [localPersonality, setLocalPersonality] = useState('')
-  const [localBackground, setLocalBackground] = useState('')
-  const [localDescription, setLocalDescription] = useState('')
-  const [localFeatures, setLocalFeatures] = useState('')
-  const [localContent, setLocalContent] = useState('')
-  const [localScope, setLocalScope] = useState('')
-  const [localTimePoint, setLocalTimePoint] = useState('')
-  const [localEventDescription, setLocalEventDescription] = useState('')
-  const [localTags, setLocalTags] = useState<string[]>([])
+  const [localName, setLocalName] = useState(entry?.name ?? '')
+  const [localAlias, setLocalAlias] = useState(entry?.alias ?? '')
+  const [localFactionRole, setLocalFactionRole] = useState(entry?.factionRole ?? '')
+  const [localFactionGoal, setLocalFactionGoal] = useState(entry?.factionGoal ?? '')
+  const [localFactionStyle, setLocalFactionStyle] = useState(entry?.factionStyle ?? '')
+  const [localAppearance, setLocalAppearance] = useState(entry?.appearance ?? '')
+  const [localPersonality, setLocalPersonality] = useState(entry?.personality ?? '')
+  const [localBackground, setLocalBackground] = useState(entry?.background ?? '')
+  const [localDescription, setLocalDescription] = useState(entry?.description ?? '')
+  const [localFeatures, setLocalFeatures] = useState(entry?.features ?? '')
+  const [localContent, setLocalContent] = useState(entry?.content ?? '')
+  const [localScope, setLocalScope] = useState(entry?.scope ?? '')
+  const [localSecretContent, setLocalSecretContent] = useState(entry?.secretContent ?? '')
+  const [localSecretScope, setLocalSecretScope] = useState(entry?.secretScope ?? '')
+  const [localRevealCondition, setLocalRevealCondition] = useState(entry?.revealCondition ?? '')
+  const [localTimePoint, setLocalTimePoint] = useState(entry?.timePoint ?? '')
+  const [localEventDescription, setLocalEventDescription] = useState(entry?.eventDescription ?? '')
+  const [localEventImpact, setLocalEventImpact] = useState(entry?.eventImpact ?? '')
+  const [localTags, setLocalTags] = useState<string[]>(entry?.tags ?? [])
   /**
    * T4: per-entry inferred voice/style. Only rendered for character + location
    * types (discriminated via `entry.type` in the form body below). `aiDraft`
    * is reserved for future AI generation; `localInferredVoice` writes to
    * `inferredVoice.userEdit` so the dual-column record keeps diff history.
    */
-  const [localInferredVoice, setLocalInferredVoice] = useState('')
+  const [localInferredVoice, setLocalInferredVoice] = useState(entry?.inferredVoice?.userEdit ?? '')
 
   // Sync form state when switching to a different entry.
   // Using the "set state during render" pattern per React docs
@@ -133,6 +159,9 @@ export function WorldEntryEditForm({
     setPrevEntryId(entry.id)
     setLocalName(entry.name || '')
     setLocalAlias(entry.alias || '')
+    setLocalFactionRole(entry.factionRole || '')
+    setLocalFactionGoal(entry.factionGoal || '')
+    setLocalFactionStyle(entry.factionStyle || '')
     setLocalAppearance(entry.appearance || '')
     setLocalPersonality(entry.personality || '')
     setLocalBackground(entry.background || '')
@@ -140,8 +169,12 @@ export function WorldEntryEditForm({
     setLocalFeatures(entry.features || '')
     setLocalContent(entry.content || '')
     setLocalScope(entry.scope || '')
+    setLocalSecretContent(entry.secretContent || '')
+    setLocalSecretScope(entry.secretScope || '')
+    setLocalRevealCondition(entry.revealCondition || '')
     setLocalTimePoint(entry.timePoint || '')
     setLocalEventDescription(entry.eventDescription || '')
+    setLocalEventImpact(entry.eventImpact || '')
     setLocalTags(entry.tags || [])
     setLocalInferredVoice(entry.inferredVoice?.userEdit ?? '')
   }
@@ -162,6 +195,9 @@ export function WorldEntryEditForm({
           : undefined
       await updateEntryFields(entryId, {
         alias: localAlias,
+        factionRole: localFactionRole,
+        factionGoal: localFactionGoal,
+        factionStyle: localFactionStyle,
         appearance: localAppearance,
         personality: localPersonality,
         background: localBackground,
@@ -169,13 +205,17 @@ export function WorldEntryEditForm({
         features: localFeatures,
         content: localContent,
         scope: localScope,
+        secretContent: localSecretContent,
+        secretScope: localSecretScope,
+        revealCondition: localRevealCondition,
         timePoint: localTimePoint,
         eventDescription: localEventDescription,
+        eventImpact: localEventImpact,
         tags: localTags,
         inferredVoice: nextInferredVoice,
       })
     },
-    [localAlias, localAppearance, localPersonality, localBackground, localDescription, localFeatures, localContent, localScope, localTimePoint, localEventDescription, localTags, localInferredVoice, entryId],
+    [localAlias, localFactionRole, localFactionGoal, localFactionStyle, localAppearance, localPersonality, localBackground, localDescription, localFeatures, localContent, localScope, localSecretContent, localSecretScope, localRevealCondition, localTimePoint, localEventDescription, localEventImpact, localTags, localInferredVoice, entryId],
     500
   )
 
@@ -300,6 +340,55 @@ export function WorldEntryEditForm({
           </>
         )
 
+      case 'faction':
+        return (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="name">名称</Label>
+              <Input
+                id="name"
+                type="text"
+                value={localName}
+                onChange={(e) => setLocalName(e.target.value)}
+                placeholder="势力名称"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="faction-role">阵营定位</Label>
+              <AutoGrowTextarea
+                id="faction-role"
+                value={localFactionRole}
+                onChange={setLocalFactionRole}
+                placeholder="这个势力在世界格局中的位置..."
+                className="resize-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="faction-goal">核心目标</Label>
+              <AutoGrowTextarea
+                id="faction-goal"
+                value={localFactionGoal}
+                onChange={setLocalFactionGoal}
+                placeholder="它想得到什么、守住什么..."
+                className="resize-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="faction-style">行事风格</Label>
+              <AutoGrowTextarea
+                id="faction-style"
+                value={localFactionStyle}
+                onChange={setLocalFactionStyle}
+                placeholder="这个势力惯常的手段与气质..."
+                className="resize-none"
+              />
+            </div>
+          </>
+        )
+
       case 'rule':
         return (
           <>
@@ -332,6 +421,104 @@ export function WorldEntryEditForm({
                 value={localScope}
                 onChange={(e) => setLocalScope(e.target.value)}
                 placeholder="这个规则适用于哪些场景或角色"
+              />
+            </div>
+          </>
+        )
+
+      case 'secret':
+        return (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="name">名称</Label>
+              <Input
+                id="name"
+                type="text"
+                value={localName}
+                onChange={(e) => setLocalName(e.target.value)}
+                placeholder="秘密名称"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="secret-content">秘密内容</Label>
+              <AutoGrowTextarea
+                id="secret-content"
+                value={localSecretContent}
+                onChange={setLocalSecretContent}
+                placeholder="这条秘密到底是什么..."
+                className="resize-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="secret-scope">影响范围</Label>
+              <Input
+                id="secret-scope"
+                type="text"
+                value={localSecretScope}
+                onChange={(e) => setLocalSecretScope(e.target.value)}
+                placeholder="这条秘密牵涉哪些人或势力"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reveal-condition">揭露条件</Label>
+              <AutoGrowTextarea
+                id="reveal-condition"
+                value={localRevealCondition}
+                onChange={setLocalRevealCondition}
+                placeholder="何时、因何被揭开..."
+                className="resize-none"
+              />
+            </div>
+          </>
+        )
+
+      case 'event':
+        return (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="name">名称</Label>
+              <Input
+                id="name"
+                type="text"
+                value={localName}
+                onChange={(e) => setLocalName(e.target.value)}
+                placeholder="事件名称"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="timePoint">时间点</Label>
+              <Input
+                id="timePoint"
+                type="text"
+                value={localTimePoint}
+                onChange={(e) => setLocalTimePoint(e.target.value)}
+                placeholder="例如：第一卷末、王朝更替之夜"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="event-description">事件描述</Label>
+              <AutoGrowTextarea
+                id="event-description"
+                value={localEventDescription}
+                onChange={setLocalEventDescription}
+                placeholder="描述事件经过..."
+                className="resize-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="event-impact">事件影响</Label>
+              <AutoGrowTextarea
+                id="event-impact"
+                value={localEventImpact}
+                onChange={setLocalEventImpact}
+                placeholder="这件事改变了什么..."
+                className="resize-none"
               />
             </div>
           </>
@@ -373,24 +560,33 @@ export function WorldEntryEditForm({
             </div>
           </>
         )
+
+      default:
+        return null
     }
   }
 
   const typeColorVar: Record<WorldEntryType, string> = {
     character: 'var(--accent-amber)',
+    faction: 'var(--accent-jade)',
     location: 'var(--accent-jade)',
     rule: 'var(--accent-violet)',
+    secret: 'var(--accent-violet)',
+    event: 'var(--accent-amber)',
     timeline: 'var(--foreground)',
   }
   const badgeVariant: Record<WorldEntryType, 'amber' | 'jade' | 'violet' | 'secondary'> = {
     character: 'amber',
+    faction: 'jade',
     location: 'jade',
     rule: 'violet',
+    secret: 'violet',
+    event: 'amber',
     timeline: 'secondary',
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden surface-0 bg-spotlight">
+    <div className="flex-1 flex flex-col overflow-hidden surface-0">
       <div className="relative px-6 py-3 divider-hair flex items-center justify-between">
         <span
           aria-hidden
@@ -407,7 +603,7 @@ export function WorldEntryEditForm({
             className={
               'h-1.5 w-1.5 rounded-full ' +
               (isSaving
-                ? 'bg-[hsl(var(--accent-amber))] animate-amber-pulse'
+                ? 'bg-[hsl(var(--accent-amber))]'
                 : 'bg-[hsl(var(--accent-jade))]')
             }
           />

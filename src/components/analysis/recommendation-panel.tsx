@@ -17,15 +17,21 @@ interface RecommendationPanelProps {
 
 const TYPE_COLORS: Record<WorldEntryType, string> = {
   character: 'border-[hsl(38_92%_58%)]',
+  faction: 'border-[hsl(162_44%_55%)]',
   location: 'border-[hsl(162_44%_55%)]',
   rule: 'border-[hsl(260_42%_70%)]',
+  secret: 'border-[hsl(260_42%_70%)]',
+  event: 'border-[hsl(38_92%_58%)]',
   timeline: 'border-[hsl(40_14%_92%/_0.8)]',
 }
 
 const TYPE_LABELS: Record<WorldEntryType, string> = {
   character: '角色',
+  faction: '势力',
   location: '地点',
   rule: '规则',
+  secret: '秘密',
+  event: '事件',
   timeline: '时间',
 }
 

@@ -5,12 +5,24 @@ import type { WorldEntry } from '../types/world-entry'
 
 describe('findEntryIdByName', () => {
   const mockEntry = (name: string, type: string = 'character'): WorldEntry =>
-    ({ id: `id-${name}`, name, type: type as WorldEntry['type'], createdAt: Date.now(), updatedAt: Date.now() })
+    ({
+      id: `id-${name}`,
+      projectId: 'p1',
+      name,
+      type: type as WorldEntry['type'],
+      tags: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+    })
 
   const mockEntriesByType = (entries: WorldEntry[]): EntriesByType => ({
     character: entries.filter(e => e.type === 'character'),
+    faction: entries.filter(e => e.type === 'faction'),
     location: entries.filter(e => e.type === 'location'),
     rule: entries.filter(e => e.type === 'rule'),
+    secret: entries.filter(e => e.type === 'secret'),
+    event: entries.filter(e => e.type === 'event'),
     timeline: entries.filter(e => e.type === 'timeline'),
   })
 

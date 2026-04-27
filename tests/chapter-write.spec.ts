@@ -6,6 +6,10 @@ async function createProject(page: import('@playwright/test').Page, title: strin
   const dialog = page.getByRole('dialog', { name: '新建项目' })
   await dialog.getByLabel(/标题/).fill(title)
   await dialog.getByRole('button', { name: '创建' }).click()
+  await page.waitForURL(/\/projects\/[^/]+\/charter$/)
+  const projectId = page.url().match(/\/projects\/([^/]+)\/charter$/)?.[1]
+  if (!projectId) throw new Error('未能从宪章页 URL 解析项目 ID')
+  await page.goto(`/projects/${projectId}`)
   await page.waitForURL(/\/projects\/[^/]+$/)
 }
 

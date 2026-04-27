@@ -9,8 +9,11 @@ const HEIGHT = 480
 
 const TYPE_COLORS: Record<WorldEntryType, { fill: string; stroke: string; label: string }> = {
   character: { fill: 'hsl(38 92% 58% / 0.16)', stroke: 'hsl(38 92% 58%)', label: '角色' },
+  faction:   { fill: 'hsl(162 44% 55% / 0.16)', stroke: 'hsl(162 44% 55%)', label: '势力' },
   location:  { fill: 'hsl(162 44% 55% / 0.16)', stroke: 'hsl(162 44% 55%)', label: '地点' },
   rule:      { fill: 'hsl(260 42% 70% / 0.18)', stroke: 'hsl(260 42% 70%)', label: '规则' },
+  secret:    { fill: 'hsl(260 42% 70% / 0.18)', stroke: 'hsl(260 42% 70%)', label: '秘密' },
+  event:     { fill: 'hsl(38 92% 58% / 0.16)', stroke: 'hsl(38 92% 58%)', label: '事件' },
   timeline:  { fill: 'hsl(40 14% 92% / 0.12)', stroke: 'hsl(40 14% 92% / 0.8)', label: '时间' },
 }
 

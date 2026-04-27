@@ -29,6 +29,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.codex-dev*.log
+.codex-dev*.err.log
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -51,6 +53,13 @@ next-env.d.ts
 
 # MCP configuration (local tooling)
 .mcp.json
+.superpowers/
+.codex/
+AGENTS.md
+CLAUDE.md
+/inkforge-linear-preview.html
+/skills-lock.json
+/.vscode/
 
 # Playwright
 node_modules/

@@ -1,58 +1,56 @@
 # 贡献指南
 
-## 开发规范
+## 开发环境
 
-- 包管理器：pnpm（见 `package.json`）
-- 新功能**必须**伴随测试：单测（Vitest）+ 必要时 e2e（Playwright）
-- 提交前跑 `pnpm lint && pnpm test`
+- Node.js 20+
+- pnpm 10+
+- 推荐使用 `pnpm` 作为唯一包管理器
 
 ## 常用命令
 
 ```bash
-pnpm dev              # 本地开发 (localhost:3000)
-pnpm build            # 生产构建
-pnpm lint             # ESLint
-pnpm test             # Vitest 单测
-pnpm test:watch       # 单测 watch
-npx vitest run <file> # 跑单个测试文件
+pnpm install
+pnpm dev
+pnpm build
+pnpm lint
+pnpm test
+pnpm test:e2e
+npx vitest run <file>
 ```
 
-## spec / plan 工作流
+## 开发约定
 
-面向非平凡的功能或架构改动，先写设计 spec 再写实施 plan：
+- 所有 UI 文案使用中文
+- UI 与视觉调整前先读 `DESIGN.md`
+- 路径别名：`@/*` -> `./src/*`
+- 测试文件与源码同目录：`*.test.ts` / `*.test.tsx`
+- 软删除实体必须处理 `deletedAt: Date | null`
+- 项目级数据库通过 `createProjectDB(projectId)` 获取
 
-1. **spec（设计规范）** —— 战略层，落在 `docs/superpowers/specs/YYYY-MM-DD-<kebab-slug>-design.md`。回答"做什么、为什么、边界在哪"。
-2. **plan（实施计划）** —— 可执行清单，落在 `docs/superpowers/plans/YYYY-MM-DD-<kebab-slug>-plan.md`。由 task 组成，每个 task 有 step-by-step 指令 + 验证命令。
-3. 完成后（所有 task 已合并），把 spec + plan 一同移到 `docs/superpowers/archive/`。
+## 提交与校验
 
-## 提交信息
+提交前至少运行：
 
-遵循 [Conventional Commits](https://www.conventionalcommits.org/)：
-
+```bash
+pnpm lint && pnpm test
 ```
+
+提交信息遵循 Conventional Commits：
+
+```text
 <type>(<scope>): <subject>
 ```
 
-类型：`feat | fix | refactor | test | docs | chore | perf`
+常用类型：`feat`、`fix`、`refactor`、`test`、`docs`、`chore`、`perf`
 
-示例（摘自本仓库 git log）：
+## Pull Request 建议
 
-- `feat: inject world bible context into chapter generation`
-- `fix: preserve whitespace in paragraph rendering`
-- `refactor: rewrite use-chapter-generation with timeout and retry`
+- 描述改动目的和影响范围
+- 关联涉及的页面或模块
+- UI 改动附截图
+- 明确是否影响 IndexedDB schema、AI provider 或导出格式
 
-## CHANGELOG 与发布
+## 发布说明
 
-每次发布按 [Keep a Changelog](https://keepachangelog.com/) 更新 `CHANGELOG.md`（Added / Changed / Fixed / Deferred），并在 main 分支打 annotated tag：
-
-```bash
-git tag -a v0.X.0 -m "v0.X.0: 简述"
-```
-
-## 目录约定
-
-- 生成产物（构建、缓存、报告）必须 gitignore，不进入仓库
-- 源码 alias `@/*` → `./src/*`（见 `tsconfig.json`）
-- 单测文件和源码同目录（`*.test.ts` / `*.test.tsx`）
-- e2e 测试集中在 `tests/`
-- 中文 UI 文案；设计参考注释用 `D-XX` 编号引用
+- 版本变更记录维护在 `CHANGELOG.md`
+- 发布前确保 `package.json` 版本与 changelog 口径一致

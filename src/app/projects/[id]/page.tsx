@@ -266,7 +266,7 @@ function Placeholder({ activeTab }: { activeTab: ActiveTab }) {
       ? { hero: '梳理脉络', hint: '从左侧大纲列表中选择章节', Icon: ListTree }
       : activeTab === 'world'
         ? { hero: '构建世界', hint: '从左侧世界观列表中选择或创建条目', Icon: Globe2 }
-        : { hero: '夜色正好', hint: '从左侧章节列表中选择或创建章节', Icon: BookOpen }
+        : { hero: '', hint: '从左侧章节列表中选择或创建章节', Icon: BookOpen }
 
   const Icon = copy.Icon
 
@@ -278,9 +278,11 @@ function Placeholder({ activeTab }: { activeTab: ActiveTab }) {
           strokeWidth={1.25}
           aria-hidden
         />
-        <h2 className="font-display text-[64px] leading-[1.1] tracking-[0.06em] text-foreground/85">
-          {copy.hero}
-        </h2>
+        {copy.hero ? (
+          <h2 className="font-display text-[64px] leading-[1.1] tracking-[0.06em] text-foreground/85">
+            {copy.hero}
+          </h2>
+        ) : null}
         <p className="text-sm text-muted-foreground max-w-xs">{copy.hint}</p>
       </div>
     </div>

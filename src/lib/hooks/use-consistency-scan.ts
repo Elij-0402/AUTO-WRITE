@@ -339,7 +339,7 @@ export function useConsistencyScan({
         setProgress(null)
       }
     },
-    [config, chapters, db, projectId, scanOneChapter]
+    [config, chapters, db, projectId, scanOneChapter, worldEntries.length]
   )
 
   return {

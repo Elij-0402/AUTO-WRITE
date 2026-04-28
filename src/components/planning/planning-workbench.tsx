@@ -134,10 +134,11 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
         selectedSceneCard?.updatedAt,
       ].join(':')
     : 'none'
-
-  /* eslint-disable react-hooks/set-state-in-effect */
+  /* eslint-disable react-hooks/exhaustive-deps */
   // This effect intentionally rehydrates the local form from the currently
-  // selected planning entity when selection identity or source data changes.
+  // selected planning entity when its semantic version changes. Depending on
+  // object identity here would reset in-progress input because usePlanning()
+  // materializes fresh records on each render.
   useEffect(() => {
     if (selectedIdea) {
       setTitle(selectedIdea.title)
@@ -210,7 +211,7 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
       }
     }
   }, [selectionVersion])
-  /* eslint-enable react-hooks/set-state-in-effect */
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const { isSaving } = useAutoSave(
     async () => {

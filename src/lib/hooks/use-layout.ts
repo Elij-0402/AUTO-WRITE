@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { createProjectDB } from '../db/project-db'
 import { useMemo, useCallback } from 'react'
 import type { PlanningSelection } from '../types'
+import type { LayoutSettings } from '../db/project-db'
 
 /**
  * Active sidebar tab type per D-13, D-14, D-08.
@@ -24,7 +25,16 @@ export interface WorkspaceContextSnapshot {
   lastWorkspaceContext?: 'chapter' | 'outline' | 'world' | 'planning'
 }
 
-const DEFAULT_LAYOUT = {
+type PersistedLayout = LayoutSettings & {
+  chatPanelWidth: number
+  activeChapterId: string | null
+  activeOutlineId: string | null
+  activeWorldEntryId: string | null
+  activePlanningSelection: PlanningSelection | null
+  lastWorkspaceContext: NonNullable<LayoutSettings['lastWorkspaceContext']>
+}
+
+const DEFAULT_LAYOUT: PersistedLayout = {
   id: 'default',
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   activeTab: 'chapters' as ActiveTab,
@@ -40,18 +50,18 @@ function getLayoutStorageKey(projectId: string): string {
   return `inkforge:layout:${projectId}`
 }
 
-function readLocalLayout(projectId: string): Partial<typeof DEFAULT_LAYOUT> | null {
+function readLocalLayout(projectId: string): Partial<PersistedLayout> | null {
   if (typeof window === 'undefined') return null
 
   try {
     const raw = window.localStorage.getItem(getLayoutStorageKey(projectId))
-    return raw ? JSON.parse(raw) as Partial<typeof DEFAULT_LAYOUT> : null
+    return raw ? JSON.parse(raw) as Partial<PersistedLayout> : null
   } catch {
     return null
   }
 }
 
-function writeLocalLayout(projectId: string, layout: Partial<typeof DEFAULT_LAYOUT>): void {
+function writeLocalLayout(projectId: string, layout: Partial<PersistedLayout>): void {
   if (typeof window === 'undefined') return
 
   try {
@@ -88,8 +98,8 @@ export function useLayout(projectId: string) {
     ...localLayout,
   }), [layout, localLayout])
 
-  const persistLayout = useCallback(async (partial: Partial<typeof DEFAULT_LAYOUT>) => {
-    const nextLayout = {
+  const persistLayout = useCallback(async (partial: Partial<PersistedLayout>) => {
+    const nextLayout: PersistedLayout = {
       ...effectiveLayout,
       ...partial,
     }

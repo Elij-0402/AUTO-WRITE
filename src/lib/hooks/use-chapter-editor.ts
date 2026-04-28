@@ -70,7 +70,7 @@ export function useChapterEditor(projectId: string, chapterId: string | null) {
     }
     prevChapterIdRef.current = chapterId
     hydratedChapterIdRef.current = chapterMatchesSelection && chapter?.content !== undefined ? chapterId : null
-  }, [chapterId, chapter?.content, chapter?.wordCount, content])
+  }, [chapter, chapterId])
   
   const persistContent = useCallback(async (nextContent: object) => {
     if (!chapterId) return

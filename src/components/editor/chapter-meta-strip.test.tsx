@@ -44,4 +44,17 @@ describe('ChapterMetaStrip', () => {
     // extras wrapper has ml-auto; absent when no extras
     expect(container.querySelector('.ml-auto')).toBeNull()
   })
+
+  it('renders the chapter title when provided', () => {
+    render(
+      <ChapterMetaStrip
+        chapterNumber={1}
+        chapterTitle="雨夜押解"
+        wordCount={100}
+        status="draft"
+      />
+    )
+
+    expect(screen.getByText('雨夜押解')).toBeInTheDocument()
+  })
 })

@@ -43,7 +43,6 @@ interface ChapterDraftPanelProps {
   config: AIClientConfig
   worldEntries: WorldEntry[]
   onAcceptDraft: (draft: string, meta: { applyMode: DraftApplyMode; chapterTitle?: string; outline: string }) => void
-  onClose?: () => void
   onOpenAIConfig: () => void
 }
 
@@ -53,7 +52,6 @@ export function ChapterDraftPanel({
   config,
   worldEntries,
   onAcceptDraft,
-  onClose,
   onOpenAIConfig,
 }: ChapterDraftPanelProps) {
   const { snapshot } = usePlanning(projectId)
@@ -174,7 +172,7 @@ export function ChapterDraftPanel({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-[13px] font-medium text-foreground">先配置 AI，之后才能生成章节草稿</div>
+            <div className="text-[13px] font-medium text-foreground">先配置 AI，之后才能开始本章起草</div>
             <p className="mt-1 text-[12px] leading-[1.6] text-muted-foreground">
               配置完成后会停留在当前起草模式，章节上下文不会丢。
             </p>
@@ -192,16 +190,11 @@ export function ChapterDraftPanel({
       <div className="border-b border-border px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-[14px] font-semibold text-foreground">章节草稿</div>
+            <div className="text-[14px] font-semibold text-foreground">起草</div>
             <p className="mt-1 text-[12px] text-muted-foreground">
               基于当前章节和世界观，先起一版可继续讨论的草稿。
             </p>
           </div>
-          {onClose ? (
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              返回聊天
-            </Button>
-          ) : null}
         </div>
       </div>
 
@@ -340,7 +333,7 @@ export function ChapterDraftPanel({
       <div className="border-t border-border px-4 py-3">
         {isDraftReady ? (
           <div className="flex flex-wrap gap-2">
-            <Button variant="ghost" onClick={() => { dismissDraft(); onClose?.() }} className="gap-1.5">
+            <Button variant="ghost" onClick={dismissDraft} className="gap-1.5">
               <X className="h-4 w-4" />
               关闭
             </Button>

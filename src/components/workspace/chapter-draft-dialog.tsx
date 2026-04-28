@@ -142,7 +142,6 @@ export function ChapterDraftDialog({
             config={config}
             worldEntries={worldEntries}
             onAcceptDraft={(draft, meta) => handleAcceptAndClose(draft, meta.applyMode)}
-            onClose={handleClose}
             onOpenAIConfig={() => {}}
           />
         ) : (

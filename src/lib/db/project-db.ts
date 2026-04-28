@@ -235,7 +235,7 @@ export interface LayoutSettings {
   activeTab: 'chapters' | 'world' | 'planning'
   chatPanelWidth?: number // default 320, made optional for existing projects
   activeChapterId?: string | null
-  chapterView?: 'editor' | 'outline'
+  chapterBriefOpen?: boolean
   activeWorldEntryId?: string | null
   activePlanningSelection?: PlanningSelection | null
   lastWorkspaceContext?: 'chapter' | 'world' | 'planning'

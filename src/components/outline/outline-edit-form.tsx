@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { useAutoSave } from '@/lib/hooks/use-autosave'
@@ -28,11 +28,13 @@ interface OutlineEditFormProps {
 }
 
 function AutoGrowTextarea({
+  id,
   value,
   onChange,
   placeholder,
   className,
 }: {
+  id?: string
   value: string
   onChange: (value: string) => void
   placeholder?: string
@@ -50,6 +52,7 @@ function AutoGrowTextarea({
 
   return (
     <Textarea
+      id={id}
       ref={textareaRef}
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -93,10 +96,6 @@ export function OutlineEditForm({
   const [localOutlineStatus, setLocalOutlineStatus] = useState<OutlineStatus>('not_started')
   const [localTitle, setLocalTitle] = useState('')
 
-  // Sync form state when switching to a different chapter.
-  // Using the "set state during render" pattern per React docs
-  // (https://react.dev/reference/react/useState#storing-information-from-previous-renders)
-  // to avoid useEffect cascading renders.
   const [prevChapterId, setPrevChapterId] = useState<string | null>(chapter?.id ?? null)
   if (chapter && chapter.id !== prevChapterId) {
     setPrevChapterId(chapter.id)
@@ -157,14 +156,16 @@ export function OutlineEditForm({
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="px-6 py-3 border-b flex items-center justify-between">
-        <span className="text-sm font-medium">章节大纲</span>
+        <span className="text-sm font-medium">章节简报</span>
         <span className="text-xs text-muted-foreground">{isSaving ? '保存中...' : '已保存'}</span>
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
         {linkedPlan ? (
-          <div className="px-3 py-2 divider-hair text-[12px] text-muted-foreground">
+          <div className="space-y-2 rounded-[var(--radius-control)] border border-border bg-[hsl(var(--surface-1))] px-3 py-3 text-[12px] text-muted-foreground">
+            <p className="font-medium text-foreground">关联规划摘要</p>
             <p>{linkedPlan.summary || '该章已关联章纲，建议优先在规划台维护结构信息。'}</p>
+            <p>详细结构请前往规划台维护。</p>
           </div>
         ) : null}
 
@@ -180,11 +181,12 @@ export function OutlineEditForm({
         </div>
 
         <div className="space-y-2">
-          <Label>大纲摘要</Label>
+          <Label htmlFor="chapter-summary">章节摘要</Label>
           <AutoGrowTextarea
+            id="chapter-summary"
             value={localSummary}
             onChange={setLocalSummary}
-            placeholder="输入章节大纲摘要..."
+            placeholder="输入章节摘要..."
             className="resize-none"
           />
         </div>

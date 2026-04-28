@@ -6,15 +6,23 @@ test.describe.configure({ mode: 'serial' })
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 async function createProject(page: Page, title: string) {
-  await page.goto('/')
-  await page.waitForLoadState('networkidle')
-  await page.waitForLoadState('domcontentloaded')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await waitForHMR(page)
 
   const emptyBtn = page.getByRole('button', { name: '开始第一个故事' })
   if (await emptyBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
-    await emptyBtn.click()
+    try {
+      await emptyBtn.click({ timeout: 5000 })
+    } catch {
+      await emptyBtn.click({ force: true })
+    }
   } else {
-    await page.getByRole('button', { name: '新建项目' }).click()
+    const newProjectBtn = page.getByRole('button', { name: '新建项目' })
+    try {
+      await newProjectBtn.click({ timeout: 5000 })
+    } catch {
+      await newProjectBtn.click({ force: true })
+    }
   }
 
   const dialog = page.getByRole('dialog', { name: '新建项目' })
@@ -24,8 +32,14 @@ async function createProject(page: Page, title: string) {
   await titleInput.waitFor({ state: 'visible', timeout: 5000 })
   await titleInput.fill(title)
 
-  await dialog.getByRole('button', { name: '创建' }).click()
-  await page.waitForURL(/\/projects\/[^/?#]+(?:\?.*)?$/)
+  const createButton = dialog.getByRole('button', { name: '创建' })
+  await expect(createButton).toBeEnabled()
+  try {
+    await createButton.click({ timeout: 5000 })
+  } catch {
+    await titleInput.press('Enter')
+  }
+  await page.waitForURL(/\/projects\/[^/?#]+(?:\?.*)?$/, { waitUntil: 'domcontentloaded' })
   const projectId = page.url().match(/\/projects\/([^/?#]+)/)?.[1]
   if (!projectId) throw new Error('未能从宪章页 URL 解析项目 ID')
   await expect(page.getByText(title).first()).toBeVisible()
@@ -153,10 +167,205 @@ async function createChapter(page: Page, projectId: string, title: string) {
 }
 
 async function openWorldTab(page: Page, projectId: string) {
-  await page.goto(`/projects/${projectId}?tab=world`)
-  await page.waitForLoadState('domcontentloaded')
+  await page.goto(`/projects/${projectId}?tab=world`, { waitUntil: 'domcontentloaded' })
   await waitForHMR(page)
-  await expect(page.getByPlaceholder('搜索世界观...')).toBeVisible({ timeout: 10000 })
+
+  const searchInput = page.getByPlaceholder('搜索世界观...')
+  if (await searchInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+    return
+  }
+
+  await page.getByRole('button', { name: '世界观' }).click()
+  await expect(searchInput).toBeVisible({ timeout: 10000 })
+}
+
+async function seedMockAIConfig(page: Page) {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await writeMockAIConfig(page)
+}
+
+async function writeMockAIConfig(page: Page) {
+  await page.evaluate(async () => {
+    const openMetaDb = (version?: number, createStore = false) => new Promise<IDBDatabase>((resolve, reject) => {
+      const request = version === undefined
+        ? indexedDB.open('inkforge-meta')
+        : indexedDB.open('inkforge-meta', version)
+
+      request.onupgradeneeded = () => {
+        if (!createStore) return
+        const upgradeDb = request.result
+        if (!upgradeDb.objectStoreNames.contains('aiConfig')) {
+          upgradeDb.createObjectStore('aiConfig', { keyPath: 'id' })
+        }
+      }
+      request.onsuccess = () => resolve(request.result)
+      request.onerror = () => reject(request.error)
+    })
+
+    let db = await openMetaDb()
+    if (!db.objectStoreNames.contains('aiConfig')) {
+      const nextVersion = db.version + 1
+      db.close()
+      db = await openMetaDb(nextVersion, true)
+    }
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction('aiConfig', 'readwrite')
+        tx.objectStore('aiConfig').put({
+          id: 'config',
+          provider: 'openai-compatible',
+          apiKey: 'mock-api-key',
+          baseUrl: 'https://mocked-openai.local',
+          model: 'mock-gpt',
+          availableModels: ['mock-gpt'],
+        })
+        tx.oncomplete = () => resolve()
+        tx.onerror = () => reject(tx.error)
+      })
+    } finally {
+      db.close()
+    }
+  })
+}
+
+async function clearMockAIConfig(page: Page) {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+  await page.evaluate(async () => {
+    const openReq = indexedDB.open('inkforge-meta')
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      openReq.onsuccess = () => resolve(openReq.result)
+      openReq.onerror = () => reject(openReq.error)
+    })
+
+    try {
+      if (!db.objectStoreNames.contains('aiConfig')) {
+        return
+      }
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction('aiConfig', 'readwrite')
+        tx.objectStore('aiConfig').delete('config')
+        tx.oncomplete = () => resolve()
+        tx.onerror = () => reject(tx.error)
+      })
+    } finally {
+      db.close()
+    }
+  })
+}
+
+async function openChapterBrief(page: Page) {
+  await page.getByRole('button', { name: '章节简报' }).click()
+}
+
+async function mockChapterDraft(page: Page, draftText: string) {
+  await page.route('https://mocked-openai.local/v1/chat/completions', async (route) => {
+    const body = [
+      `data: ${JSON.stringify({ choices: [{ delta: { content: `以下是草稿\n${draftText}` } }] })}`,
+      'data: [DONE]',
+      '',
+    ].join('\n\n')
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/event-stream',
+      headers: {
+        'access-control-allow-origin': '*',
+        'cache-control': 'no-cache',
+      },
+      body,
+    })
+  })
+}
+
+async function seedLinkedChapterPlan(
+  page: Page,
+  projectId: string,
+  chapterId: string,
+  chapterTitle: string
+) {
+  await page.evaluate(
+    async ([pid, cid, title]) => {
+      const dbName = `inkforge-project-${pid}`
+      const openReq = indexedDB.open(dbName)
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        openReq.onsuccess = () => resolve(openReq.result)
+        openReq.onerror = () => reject(openReq.error)
+      })
+
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const tx = db.transaction('chapterPlans', 'readwrite')
+          tx.objectStore('chapterPlans').put({
+            id: crypto.randomUUID(),
+            projectId: pid,
+            arcId: null,
+            linkedChapterId: cid,
+            title,
+            summary: '押解途中第一次遇袭，主角被迫提前暴露底牌。',
+            chapterGoal: '把犯人活着送进关城，同时稳住队伍士气。',
+            conflict: '追兵突然拦截，押解队内部也有人动摇。',
+            turn: '主角用禁术挡下第一轮袭击，身份暴露。',
+            reveal: '幕后追兵与关城守军暗中勾连。',
+            order: 1,
+            status: 'planned',
+            targetWordCount: 2800,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            deletedAt: null,
+          })
+          tx.oncomplete = () => resolve()
+          tx.onerror = () => reject(tx.error)
+        })
+      } finally {
+        db.close()
+      }
+    },
+    [projectId, chapterId, chapterTitle]
+  )
+}
+
+async function waitForChapterBriefPersisted(
+  page: Page,
+  projectId: string,
+  chapterId: string,
+  expected: {
+    title: string
+    outlineSummary: string
+    outlineTargetWordCount: number | null
+  }
+) {
+  await page.waitForFunction(
+    async ([pid, cid, exp]) => {
+      const dbName = `inkforge-project-${pid}`
+      const openReq = indexedDB.open(dbName)
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        openReq.onsuccess = () => resolve(openReq.result)
+        openReq.onerror = () => reject(openReq.error)
+      })
+
+      try {
+        const tx = db.transaction('chapters', 'readonly')
+        const store = tx.objectStore('chapters')
+        const row = await new Promise<Record<string, unknown> | undefined>((resolve, reject) => {
+          const req = store.get(cid)
+          req.onsuccess = () => resolve(req.result as Record<string, unknown> | undefined)
+          req.onerror = () => reject(req.error)
+        })
+
+        if (!row) return false
+
+        return row.title === exp.title &&
+          row.outlineSummary === exp.outlineSummary &&
+          row.outlineTargetWordCount === exp.outlineTargetWordCount
+      } finally {
+        db.close()
+      }
+    },
+    [projectId, chapterId, expected],
+    { timeout: 10000 }
+  )
 }
 
 // ─── Scenario 1: Project + Chapter + Save persist ───────────────────────────
@@ -294,9 +503,12 @@ test('2.2 左侧导航可切换，大纲/世界观/规划都能进入', async ({
 
   await createChapter(page, projectId, '第一章 导航切换')
   await page.getByText('第一章 导航切换').first().click()
-  await page.getByRole('button', { name: '大纲' }).click()
+  await expect(page.locator('.ProseMirror').first()).toBeVisible({ timeout: 10000 })
+  await expect(page.getByRole('button', { name: '章节简报' })).toBeVisible()
+
+  await page.getByRole('button', { name: '章节简报' }).click()
   await expect(page.getByLabel('标题')).toBeVisible({ timeout: 10000 })
-  await expect(page.getByRole('button', { name: '正文' })).toBeVisible()
+  await expect(page.getByLabel('章节摘要')).toBeVisible()
 
   await page.getByRole('button', { name: '世界观' }).click()
   await expect(page.getByPlaceholder('搜索世界观...')).toBeVisible({ timeout: 10000 })
@@ -309,6 +521,89 @@ test('2.2 左侧导航可切换，大纲/世界观/规划都能进入', async ({
   await page.evaluate((id) => {
     indexedDB.deleteDatabase(`inkforge-project-${id}`)
   }, projectId)
+})
+
+test('2.3 章节工作台：默认正文、章节简报、起草插入、切回对话', async ({ page }) => {
+  test.slow()
+
+  const draftText = '门外铁蹄骤停，雨线在火把边缘炸开。沈砚按住刀鞘，先听见囚车里那一声极轻的笑。'
+  await seedMockAIConfig(page)
+  await mockChapterDraft(page, draftText)
+
+  const projectId = await createProject(page, `e2e-chapter-workbench-${Date.now()}`)
+
+  const chapterTab = page.getByRole('button', { name: '章节' }).nth(0)
+  await chapterTab.click()
+  await page.waitForLoadState('domcontentloaded')
+  await waitForHMR(page)
+  await page.waitForTimeout(400)
+
+  const originalTitle = '第一章 工作台联调'
+  const chapterId = await createChapter(page, projectId, originalTitle)
+  await seedLinkedChapterPlan(page, projectId, chapterId, originalTitle)
+
+  const editor = page.locator('.ProseMirror').first()
+  await expect(editor).toBeVisible({ timeout: 10000 })
+  await expect(page).toHaveURL(/\/projects\/[^/]+$/)
+  expect(page.url()).not.toContain('view=outline')
+
+  await openChapterBrief(page)
+  await expect(page.getByText('章节简报')).toBeVisible()
+  await expect(page.getByText('关联规划摘要')).toBeVisible()
+  await expect(page.getByLabel('章节摘要')).toBeVisible()
+
+  const renamedTitle = '第一章 押解遇袭'
+  const summary = '押解途中第一次遇袭，主角暴露底牌，但暂时稳住了队伍。'
+  await page.getByLabel('标题').fill(renamedTitle)
+  await page.getByLabel('章节摘要').fill(summary)
+  await page.getByPlaceholder('不设定').fill('3200')
+
+  await waitForChapterBriefPersisted(page, projectId, chapterId, {
+    title: renamedTitle,
+    outlineSummary: summary,
+    outlineTargetWordCount: 3200,
+  })
+  await expect(page.getByText(renamedTitle).first()).toBeVisible()
+
+  await page.getByRole('button', { name: '章节简报' }).click()
+  await expect(page.getByLabel('章节摘要')).toHaveCount(0)
+  await expect(editor).toBeVisible()
+
+  await expect(page.getByRole('button', { name: '对话', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '起草', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '改写', exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: '起草', exact: true }).click()
+  await expect(page.getByTestId('draft-panel')).toBeVisible()
+  if (await page.getByRole('button', { name: '去配置 AI' }).isVisible({ timeout: 1500 }).catch(() => false)) {
+    await writeMockAIConfig(page)
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await waitForHMR(page)
+    await getChapterRow(page, renamedTitle).first().click()
+    await page.getByRole('button', { name: '起草', exact: true }).click()
+    await expect(page.getByTestId('draft-panel')).toBeVisible()
+  }
+  await expect(page.getByRole('button', { name: '生成草稿' })).toBeVisible({ timeout: 10000 })
+  await expect(page.locator('#outline')).toHaveValue(/章节摘要：押解途中第一次遇袭，主角被迫提前暴露底牌。/)
+  await page.getByRole('button', { name: '生成草稿' }).click()
+
+  await expect(page.getByRole('button', { name: '插入到正文' })).toBeVisible({ timeout: 10000 })
+  await expect(page.getByText(draftText)).toBeVisible()
+  await page.getByRole('button', { name: '插入到正文' }).click()
+
+  await expect(editor).toContainText('门外铁蹄骤停', { timeout: 10000 })
+  await waitForChapterContentPersisted(page, projectId, '门外铁蹄骤停')
+  await expect(page.getByRole('button', { name: '对话', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('button', { name: '起草', exact: true })).toHaveAttribute('aria-pressed', 'false')
+  await expect(
+    page.getByPlaceholder(/与墨客聊聊你的故事|你想写一个什么故事，或者想要什么感觉\？?|输入.*消息|说点什么/)
+  ).toBeVisible()
+  await expect(getChapterRow(page, renamedTitle).first()).toBeVisible()
+
+  await page.evaluate((id) => {
+    indexedDB.deleteDatabase(`inkforge-project-${id}`)
+  }, projectId)
+  await clearMockAIConfig(page)
 })
 
 // ─── Scenario 3: Chat panel accepts input ─────────────────────────────────

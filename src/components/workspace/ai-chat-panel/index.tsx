@@ -12,7 +12,7 @@ import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
 import { generateDirectionConfirmation, type DirectionConfirmationDraft } from '@/lib/ai/direction-confirmation'
 import { History } from 'lucide-react'
-import { PenLine, MessageSquare, Quote } from 'lucide-react'
+import { PenLine, MessageSquare, Quote, Wand2 } from 'lucide-react'
 import { MessageList } from './message-list'
 import { ChatInput } from './chat-input'
 import { DirectionConfirmationCard } from './direction-confirmation-card'
@@ -49,7 +49,7 @@ export function AIChatPanel({
   const { conversations, loading: conversationsLoading, remove: removeConversation } = useConversations(projectId)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
-  const [panelMode, setPanelMode] = useState<'chat' | 'draft'>('chat')
+  const [panelMode, setPanelMode] = useState<'chat' | 'draft' | 'rewrite'>('chat')
 
   const db = useMemo(() => createProjectDB(projectId), [projectId])
 
@@ -447,14 +447,12 @@ export function AIChatPanel({
         </button>
         <div className="flex flex-col min-w-0 flex-1 px-1">
           <span className="text-[14px] font-semibold text-foreground leading-none truncate">
-            {activeConversation?.displayTitle ?? activeConversation?.title ?? '墨客'}
+            本章助手
           </span>
           <span className="mt-1 truncate text-[11px] leading-none text-muted-foreground">
-            {isConversationEmpty
-              ? '先开口，剩下的我帮你收'
-              : activeConversation
-                ? activeConversation.lastMeaningfulSnippet || `${activeConversation.messageCount} 条消息`
-                : 'AI 写作伙伴'}
+            {activeChapterId
+              ? '围绕当前章节协作：对话、起草、改写。'
+              : activeConversation?.displayTitle ?? activeConversation?.title ?? '先选一个章节，再让助手围绕本章协作'}
           </span>
         </div>
         {activeChapterId ? (
@@ -480,6 +478,17 @@ export function AIChatPanel({
             >
               <PenLine className="h-3.5 w-3.5" />
               起草
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={panelMode === 'rewrite' ? 'subtle' : 'ghost'}
+              className="h-7 px-2.5"
+              onClick={() => setPanelMode('rewrite')}
+              aria-pressed={panelMode === 'rewrite'}
+            >
+              <Wand2 className="h-3.5 w-3.5" />
+              改写
             </Button>
           </div>
         ) : null}
@@ -534,9 +543,17 @@ export function AIChatPanel({
             ...entriesByType.timeline,
           ]}
           onAcceptDraft={handleAcceptDraft}
-          onClose={() => setPanelMode('chat')}
           onOpenAIConfig={handleOpenAIConfig}
         />
+      ) : panelMode === 'rewrite' ? (
+        <div className="flex-1 px-4 py-4">
+          <div className="rounded-[var(--radius-panel)] border border-border bg-[hsl(var(--surface-1))] px-4 py-4">
+            <div className="text-[14px] font-semibold text-foreground">改写功能即将开放</div>
+            <p className="mt-1 text-[12px] leading-[1.6] text-muted-foreground">
+              后续会在这里提供改写、扩写和续写。
+            </p>
+          </div>
+        </div>
       ) : (
         <>
           {/* ── Message list ─────────────────────────────────── */}

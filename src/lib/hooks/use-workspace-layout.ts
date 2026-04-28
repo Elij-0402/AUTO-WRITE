@@ -5,7 +5,7 @@ import { useLayout } from './use-layout'
 import { useChapters } from './use-chapters'
 import { useWorldEntries } from './use-world-entries'
 import { useIdleMode } from './use-idle-mode'
-import type { ActiveTab, ChapterView } from './use-layout'
+import type { ActiveTab } from './use-layout'
 import type { PlanningSelection, WorldEntry } from '../types'
 
 interface UseWorkspaceLayoutOptions {
@@ -15,7 +15,6 @@ interface UseWorkspaceLayoutOptions {
 interface WorkspaceUrlState {
   activeTab?: ActiveTab
   activeChapterId?: string | null
-  chapterView?: ChapterView
   activeWorldEntryId?: string | null
   activePlanningItem?: PlanningSelection | null
 }
@@ -34,7 +33,6 @@ function readWorkspaceUrlState(): WorkspaceUrlState {
   return {
     activeTab: (params.get('tab') as ActiveTab | null) ?? undefined,
     activeChapterId: params.get('chapter'),
-    chapterView: (params.get('view') as ChapterView | null) ?? undefined,
     activeWorldEntryId: params.get('entry'),
     activePlanningItem:
       activePlanningKind && activePlanningId
@@ -55,7 +53,6 @@ function writeWorkspaceUrlState(partial: WorkspaceUrlState): void {
 
   if ('activeTab' in partial) assignParam('tab', partial.activeTab)
   if ('activeChapterId' in partial) assignParam('chapter', partial.activeChapterId)
-  if ('chapterView' in partial) assignParam('view', partial.chapterView && partial.chapterView !== 'editor' ? partial.chapterView : null)
   if ('activeWorldEntryId' in partial) assignParam('entry', partial.activeWorldEntryId)
   if ('activePlanningItem' in partial) {
     assignParam('planningKind', partial.activePlanningItem?.kind)
@@ -70,7 +67,7 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
   const {
     activeTab: persistedActiveTab,
     activeChapterId: persistedActiveChapterId,
-    chapterView: persistedChapterView,
+    chapterBriefOpen: persistedChapterBriefOpen,
     activeWorldEntryId: persistedActiveWorldEntryId,
     activePlanningSelection: persistedActivePlanningSelection,
     saveSidebarWidth,
@@ -81,7 +78,7 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
 
   const [activeTabState, setActiveTabState] = useState<ActiveTab>(urlState.activeTab ?? persistedActiveTab)
   const [activeChapterIdState, setActiveChapterIdState] = useState<string | null>(urlState.activeChapterId ?? persistedActiveChapterId)
-  const [chapterViewState, setChapterViewState] = useState<ChapterView>(urlState.chapterView ?? persistedChapterView)
+  const [chapterBriefOpenState, setChapterBriefOpenState] = useState<boolean>(persistedChapterBriefOpen)
   const [activeWorldEntryIdState, setActiveWorldEntryIdState] = useState<string | null>(urlState.activeWorldEntryId ?? persistedActiveWorldEntryId)
   const [activePlanningItemState, setActivePlanningItemState] = useState<PlanningSelection | null>(urlState.activePlanningItem ?? persistedActivePlanningSelection)
 
@@ -98,8 +95,8 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
   }, [persistedActiveChapterId, projectId, urlState.activeChapterId])
 
   useEffect(() => {
-    setChapterViewState(urlState.chapterView ?? persistedChapterView)
-  }, [persistedChapterView, projectId, urlState.chapterView])
+    setChapterBriefOpenState(persistedChapterBriefOpen)
+  }, [persistedChapterBriefOpen, projectId])
 
   useEffect(() => {
     setActiveWorldEntryIdState(urlState.activeWorldEntryId ?? persistedActiveWorldEntryId)
@@ -117,24 +114,23 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
       setActiveTabState('chapters')
     }
     writeWorkspaceUrlState(syncTab
-      ? { activeChapterId: nextId, activeTab: 'chapters', chapterView: chapterViewState }
+      ? { activeChapterId: nextId, activeTab: 'chapters' }
       : { activeChapterId: nextId })
     void saveWorkspaceContext({
       activeChapterId: nextId,
       lastWorkspaceContext: nextId ? 'chapter' : undefined,
     })
-  }, [chapterViewState, saveWorkspaceContext])
+  }, [saveWorkspaceContext])
 
-  const setChapterView = useCallback((view: ChapterView) => {
-    setChapterViewState(view)
+  const setChapterBriefOpen = useCallback((open: boolean) => {
+    setChapterBriefOpenState(open)
     setActiveTabState('chapters')
     writeWorkspaceUrlState({
       activeTab: 'chapters',
       activeChapterId: activeChapterIdState,
-      chapterView: view,
     })
     void saveWorkspaceContext({
-      chapterView: view,
+      chapterBriefOpen: open,
       lastWorkspaceContext: activeChapterIdState ? 'chapter' : undefined,
     })
   }, [activeChapterIdState, saveWorkspaceContext])
@@ -193,19 +189,14 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
     writeWorkspaceUrlState({ activeTab: tab })
     void saveActiveTab(tab)
     if (tab === 'world') {
-      setChapterViewState('editor')
-      writeWorkspaceUrlState({ chapterView: 'editor' })
+      setChapterBriefOpenState(false)
+      void saveWorkspaceContext({ chapterBriefOpen: false })
     } else if (tab === 'planning') {
-      setChapterViewState('editor')
-      writeWorkspaceUrlState({ chapterView: 'editor' })
+      setChapterBriefOpenState(false)
+      void saveWorkspaceContext({ chapterBriefOpen: false })
       setActiveWorldEntryId(null, { syncTab: false })
     }
-  }, [saveActiveTab, setActiveWorldEntryId])
-
-  const handleSelectOutline = useCallback((chapterId: string) => {
-    setActiveChapterId(chapterId)
-    setChapterView('outline')
-  }, [setActiveChapterId, setChapterView])
+  }, [saveActiveTab, saveWorkspaceContext, setActiveWorldEntryId])
 
   const handleSelectWorldEntry = useCallback((entryId: string) => {
     setActiveWorldEntryId(entryId)
@@ -222,9 +213,10 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
   const handleCreateWorldEntry = useCallback(async (type: import('../types').WorldEntryType) => {
     const id = await addEntry(type)
     void saveActiveTab('world')
-    setChapterViewState('editor')
+    setChapterBriefOpenState(false)
+    void saveWorkspaceContext({ chapterBriefOpen: false })
     setActiveWorldEntryId(id)
-  }, [addEntry, saveActiveTab, setActiveWorldEntryId])
+  }, [addEntry, saveActiveTab, saveWorkspaceContext, setActiveWorldEntryId])
 
   const handleOutlinePrevious = useCallback(() => {
     if (currentChapterIndex > 0) setActiveChapterId(sortedChapters[currentChapterIndex - 1].id)
@@ -266,7 +258,7 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (chapterViewState === 'outline') setChapterView('editor')
+        if (chapterBriefOpenState) setChapterBriefOpen(false)
         if (activeWorldEntryIdState) setActiveWorldEntryId(null)
       }
 
@@ -283,7 +275,7 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [activeWorldEntryIdState, chapterViewState, handleTabChange, setActiveChapterId, setChapterView, setActiveWorldEntryId])
+  }, [activeWorldEntryIdState, chapterBriefOpenState, handleTabChange, setActiveChapterId, setChapterBriefOpen, setActiveWorldEntryId])
 
   const handleSidebarDoubleClickReset = () => {
     import('@/components/workspace/resizable-panel').then(m => saveSidebarWidth(m.DEFAULT_SIDEBAR_WIDTH))
@@ -295,7 +287,7 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
 
   return {
     activeChapterId: activeChapterIdState, setActiveChapterId,
-    chapterView: chapterViewState, setChapterView,
+    chapterBriefOpen: chapterBriefOpenState, setChapterBriefOpen,
     activeWorldEntryId: activeWorldEntryIdState, setActiveWorldEntryId,
     activePlanningItem: activePlanningItemState, setActivePlanningItem,
     activeTab: activeTabState,
@@ -307,7 +299,6 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
     isEditorMain,
     entries,
     handleTabChange,
-    handleSelectOutline,
     handleSelectWorldEntry,
     handleEditWorldEntry,
     handleDeleteWorldEntry,

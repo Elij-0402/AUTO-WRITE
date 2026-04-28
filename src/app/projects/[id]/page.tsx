@@ -21,7 +21,7 @@ import { FloatingToolbar } from '@/components/editor/floating-toolbar'
 import { HistoryDrawer } from '@/components/editor/history-drawer'
 import { ChapterMetaStrip } from '@/components/editor/chapter-meta-strip'
 import { Button } from '@/components/ui/button'
-import { Clock, BookOpen, FileText, ListTree, Globe2 } from 'lucide-react'
+import { Clock, BookOpen, Globe2, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import type { Chapter } from '@/lib/types'
 import { OutlineEditForm } from '@/components/outline/outline-edit-form'
 import { PlanningWorkbench } from '@/components/planning/planning-workbench'
@@ -76,8 +76,8 @@ export default function ProjectPage() {
       chapterId={layout.activeChapterId}
       chapter={layout.currentChapter}
       chapterNumber={layout.currentChapterNumber}
-      chapterView={layout.chapterView}
-      onSetChapterView={layout.setChapterView}
+      chapterBriefOpen={layout.chapterBriefOpen}
+      onSetChapterBriefOpen={layout.setChapterBriefOpen}
       onPrevious={layout.handleOutlinePrevious}
       onNext={layout.handleOutlineNext}
       hasPrevious={layout.hasPrevious}
@@ -208,8 +208,8 @@ function ChapterWorkspaceView({
   chapterId,
   chapter,
   chapterNumber,
-  chapterView,
-  onSetChapterView,
+  chapterBriefOpen,
+  onSetChapterBriefOpen,
   onPrevious,
   onNext,
   hasPrevious,
@@ -222,8 +222,8 @@ function ChapterWorkspaceView({
   chapterId: string
   chapter: Chapter | undefined
   chapterNumber: number
-  chapterView: 'editor' | 'outline'
-  onSetChapterView: (view: 'editor' | 'outline') => void
+  chapterBriefOpen: boolean
+  onSetChapterBriefOpen: (open: boolean) => void
   onPrevious?: () => void
   onNext?: () => void
   hasPrevious: boolean
@@ -237,55 +237,47 @@ function ChapterWorkspaceView({
       {chapter && chapterNumber > 0 ? (
         <ChapterMetaStrip
           chapterNumber={chapterNumber}
+          chapterTitle={chapter.title}
           wordCount={chapter.wordCount}
           status={chapter.status}
           extras={
-            <div className="inline-flex rounded-sm border border-border surface-1 p-0.5">
-              <Button
-                type="button"
-                size="sm"
-                variant={chapterView === 'editor' ? 'subtle' : 'ghost'}
-                className="h-7 px-2.5"
-                onClick={() => onSetChapterView('editor')}
-                aria-pressed={chapterView === 'editor'}
-              >
-                <FileText className="h-3.5 w-3.5" />
-                正文
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={chapterView === 'outline' ? 'subtle' : 'ghost'}
-                className="h-7 px-2.5"
-                onClick={() => onSetChapterView('outline')}
-                aria-pressed={chapterView === 'outline'}
-              >
-                <ListTree className="h-3.5 w-3.5" />
-                大纲
-              </Button>
-            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant={chapterBriefOpen ? 'subtle' : 'ghost'}
+              className="h-7 px-2.5"
+              onClick={() => onSetChapterBriefOpen(!chapterBriefOpen)}
+              aria-pressed={chapterBriefOpen}
+            >
+              {chapterBriefOpen ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
+              章节简报
+            </Button>
           }
         />
       ) : null}
 
-      {chapterView === 'outline' ? (
-        <OutlineEditForm
-          projectId={projectId}
-          chapterId={chapterId}
-          onPrevious={onPrevious}
-          onNext={onNext}
-          hasPrevious={hasPrevious}
-          hasNext={hasNext}
-        />
-      ) : (
-        <EditorWithStatus
-          projectId={projectId}
-          chapterId={chapterId}
-          editorRef={editorRef}
-          editorContentRef={editorContentRef}
-          onDiscuss={onDiscuss}
-        />
-      )}
+      {chapterBriefOpen ? (
+        <div className="px-6 pb-3">
+          <div className="h-[320px] overflow-hidden rounded-[var(--radius-panel)] border border-border bg-[hsl(var(--surface-1))]">
+            <OutlineEditForm
+              projectId={projectId}
+              chapterId={chapterId}
+              onPrevious={onPrevious}
+              onNext={onNext}
+              hasPrevious={hasPrevious}
+              hasNext={hasNext}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <EditorWithStatus
+        projectId={projectId}
+        chapterId={chapterId}
+        editorRef={editorRef}
+        editorContentRef={editorContentRef}
+        onDiscuss={onDiscuss}
+      />
     </div>
   )
 }
@@ -294,7 +286,7 @@ function Placeholder({ activeTab }: { activeTab: ActiveTab }) {
   const copy =
     activeTab === 'world'
       ? { hero: '构建世界', hint: '从左侧世界观列表中选择或创建条目', Icon: Globe2 }
-      : { hero: '', hint: '从左侧章节列表中选择章节，再切换正文或大纲视图', Icon: BookOpen }
+      : { hero: '', hint: '从左侧章节列表中选择章节，直接进入正文工作台。', Icon: BookOpen }
 
   const Icon = copy.Icon
 

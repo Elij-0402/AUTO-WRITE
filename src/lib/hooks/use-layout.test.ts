@@ -36,7 +36,7 @@ describe('useLayout', () => {
       activeTab: 'planning',
       chatPanelWidth: 360,
       activeChapterId: 'chapter-3',
-      chapterView: 'outline',
+      chapterBriefOpen: true,
       activePlanningSelection: { kind: 'chapter', id: 'plan-2' },
       lastWorkspaceContext: 'planning',
     })
@@ -44,7 +44,7 @@ describe('useLayout', () => {
     const { result } = renderHook(() => useLayout('project-1'))
 
     expect(result.current.activeChapterId).toBe('chapter-3')
-    expect(result.current.chapterView).toBe('outline')
+    expect(result.current.chapterBriefOpen).toBe(true)
     expect(result.current.activePlanningSelection).toEqual({ kind: 'chapter', id: 'plan-2' })
     expect(result.current.lastWorkspaceContext).toBe('planning')
   })
@@ -56,7 +56,7 @@ describe('useLayout', () => {
       activeTab: 'chapters',
       chatPanelWidth: 320,
       activeChapterId: 'chapter-1',
-      chapterView: 'editor',
+      chapterBriefOpen: false,
       activePlanningSelection: null,
       lastWorkspaceContext: 'chapter',
     })
@@ -66,7 +66,7 @@ describe('useLayout', () => {
     await act(async () => {
       await result.current.saveWorkspaceContext({
         activeChapterId: 'chapter-4',
-        chapterView: 'outline',
+        chapterBriefOpen: true,
         activePlanningSelection: { kind: 'scene', id: 'scene-9' },
         lastWorkspaceContext: 'planning',
       })
@@ -78,7 +78,7 @@ describe('useLayout', () => {
       activeTab: 'chapters',
       chatPanelWidth: 320,
       activeChapterId: 'chapter-4',
-      chapterView: 'outline',
+      chapterBriefOpen: true,
       activeWorldEntryId: null,
       activePlanningSelection: { kind: 'scene', id: 'scene-9' },
       lastWorkspaceContext: 'planning',

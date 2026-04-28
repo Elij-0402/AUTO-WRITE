@@ -163,7 +163,16 @@ describe('AIChatPanel', () => {
   it('does not render the wizard entry point in the header', () => {
     render(<AIChatPanel projectId="project-1" />)
 
+    expect(screen.getByText('本章助手')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '构思搭档' })).not.toBeInTheDocument()
+  })
+
+  it('does not render chapter task tabs when no active chapter is selected', () => {
+    render(<AIChatPanel projectId="project-1" />)
+
+    expect(screen.queryByRole('button', { name: '对话' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '起草' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '改写' })).not.toBeInTheDocument()
   })
 
   it('shows the AI understanding section once charter content exists', () => {
@@ -252,9 +261,21 @@ describe('AIChatPanel', () => {
     await user.click(screen.getByRole('button', { name: '起草' }))
 
     expect(screen.getByTestId('draft-panel')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '改写' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '草稿去配置' }))
 
     expect(onOpenAIConfig).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows a rewrite placeholder inside the assistant container', async () => {
+    const user = userEvent.setup()
+
+    render(<AIChatPanel projectId="project-1" activeChapterId="chapter-1" />)
+
+    await user.click(screen.getByRole('button', { name: '改写' }))
+
+    expect(screen.getByText('改写功能即将开放')).toBeInTheDocument()
+    expect(screen.getByText('后续会在这里提供改写、扩写和续写。')).toBeInTheDocument()
   })
 })

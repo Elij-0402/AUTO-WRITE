@@ -74,6 +74,10 @@ describe('OutlineEditForm', () => {
       />
     )
 
+    expect(screen.getByText('章节简报')).toBeInTheDocument()
+    expect(screen.getByText('关联规划摘要')).toBeInTheDocument()
     expect(screen.getByText('该章已关联章纲，建议优先在规划台维护结构信息。')).toBeInTheDocument()
+    expect(screen.getByText('详细结构请前往规划台维护。')).toBeInTheDocument()
+    expect(screen.getByLabelText('章节摘要')).toBeInTheDocument()
   })
 })

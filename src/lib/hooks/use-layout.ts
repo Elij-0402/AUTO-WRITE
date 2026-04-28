@@ -12,7 +12,6 @@ import type { LayoutSettings } from '../db/project-db'
  * 'planning' = planning chain
  */
 export type ActiveTab = 'chapters' | 'world' | 'planning'
-export type ChapterView = 'editor' | 'outline'
 
 /** Default chat panel width in pixels per D-09 */
 const DEFAULT_CHAT_PANEL_WIDTH = 320
@@ -20,7 +19,7 @@ const DEFAULT_SIDEBAR_WIDTH = 280
 
 export interface WorkspaceContextSnapshot {
   activeChapterId?: string | null
-  chapterView?: ChapterView
+  chapterBriefOpen?: boolean
   activeWorldEntryId?: string | null
   activePlanningSelection?: PlanningSelection | null
   lastWorkspaceContext?: 'chapter' | 'world' | 'planning'
@@ -29,7 +28,7 @@ export interface WorkspaceContextSnapshot {
 type PersistedLayout = LayoutSettings & {
   chatPanelWidth: number
   activeChapterId: string | null
-  chapterView: ChapterView
+  chapterBriefOpen: boolean
   activeWorldEntryId: string | null
   activePlanningSelection: PlanningSelection | null
   lastWorkspaceContext: NonNullable<LayoutSettings['lastWorkspaceContext']>
@@ -41,7 +40,7 @@ const DEFAULT_LAYOUT: PersistedLayout = {
   activeTab: 'chapters' as ActiveTab,
   chatPanelWidth: DEFAULT_CHAT_PANEL_WIDTH,
   activeChapterId: null,
-  chapterView: 'editor',
+  chapterBriefOpen: false,
   activeWorldEntryId: null,
   activePlanningSelection: null,
   lastWorkspaceContext: 'chapter' as const,
@@ -133,7 +132,7 @@ export function useLayout(projectId: string) {
     activeTab: (effectiveLayout.activeTab ?? 'chapters') as ActiveTab,
     chatPanelWidth: effectiveLayout.chatPanelWidth ?? DEFAULT_CHAT_PANEL_WIDTH,
     activeChapterId: effectiveLayout.activeChapterId ?? null,
-    chapterView: effectiveLayout.chapterView ?? 'editor',
+    chapterBriefOpen: effectiveLayout.chapterBriefOpen ?? false,
     activeWorldEntryId: effectiveLayout.activeWorldEntryId ?? null,
     activePlanningSelection: effectiveLayout.activePlanningSelection ?? null,
     lastWorkspaceContext: effectiveLayout.lastWorkspaceContext ?? 'chapter',

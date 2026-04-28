@@ -31,7 +31,7 @@ describe('useWorkspaceLayout', () => {
     mockUseLayout.mockReturnValue({
       activeTab: 'chapters',
       activeChapterId: 'chapter-2',
-      activeOutlineId: null,
+      chapterBriefOpen: false,
       activeWorldEntryId: null,
       activePlanningSelection: null,
       saveSidebarWidth: vi.fn(),
@@ -90,7 +90,7 @@ describe('useWorkspaceLayout', () => {
     mockUseLayout.mockReturnValue({
       activeTab: 'chapters',
       activeChapterId: 'chapter-2',
-      activeOutlineId: null,
+      chapterBriefOpen: false,
       activeWorldEntryId: null,
       activePlanningSelection: null,
       saveSidebarWidth: vi.fn(),
@@ -118,7 +118,21 @@ describe('useWorkspaceLayout', () => {
     expect(saveActiveTab).toHaveBeenCalledWith('planning')
   })
 
-  it('syncs chapter view in URL state and keeps the selected chapter', () => {
+  it('opens the chapter brief without changing URL view state or dropping the selected chapter', () => {
+    const saveWorkspaceContext = vi.fn()
+
+    mockUseLayout.mockReturnValue({
+      activeTab: 'chapters',
+      activeChapterId: 'chapter-2',
+      chapterBriefOpen: false,
+      activeWorldEntryId: null,
+      activePlanningSelection: null,
+      saveSidebarWidth: vi.fn(),
+      saveActiveTab: vi.fn(),
+      saveChatPanelWidth: vi.fn(),
+      saveWorkspaceContext,
+    })
+
     mockUseChapters.mockReturnValue({
       chapters: [
         { id: 'chapter-1', deletedAt: null, order: 0, title: '第一章' },
@@ -130,15 +144,19 @@ describe('useWorkspaceLayout', () => {
     const { result } = renderHook(() => useWorkspaceLayout({ projectId: 'p1' }))
 
     act(() => {
-      result.current.setChapterView('outline')
+      result.current.setChapterBriefOpen(true)
     })
 
     expect(result.current.activeTab).toBe('chapters')
-    expect(result.current.chapterView).toBe('outline')
+    expect(result.current.chapterBriefOpen).toBe(true)
     expect(result.current.activeChapterId).toBe('chapter-2')
     expect(window.location.search).toContain('tab=chapters')
     expect(window.location.search).toContain('chapter=chapter-2')
-    expect(window.location.search).toContain('view=outline')
+    expect(window.location.search).not.toContain('view=')
+    expect(saveWorkspaceContext).toHaveBeenCalledWith({
+      chapterBriefOpen: true,
+      lastWorkspaceContext: 'chapter',
+    })
   })
 
   it('syncs URL params for world and planning tab state', () => {
@@ -176,7 +194,7 @@ describe('useWorkspaceLayout', () => {
     mockUseLayout.mockReturnValue({
       activeTab: 'chapters',
       activeChapterId: 'chapter-2',
-      activeOutlineId: null,
+      chapterBriefOpen: false,
       activeWorldEntryId: null,
       activePlanningSelection: null,
       saveSidebarWidth: vi.fn(),
@@ -202,8 +220,18 @@ describe('useWorkspaceLayout', () => {
     expect(result.current.activeWorldEntryId).toBe('entry-2')
   })
 
-  it('prefers URL chapter view state during initialization', () => {
-    window.history.replaceState({}, '', 'http://localhost:3000/projects/p1?tab=chapters&chapter=chapter-2&view=outline')
+  it('restores the persisted chapter brief state during initialization', () => {
+    mockUseLayout.mockReturnValue({
+      activeTab: 'chapters',
+      activeChapterId: 'chapter-2',
+      chapterBriefOpen: true,
+      activeWorldEntryId: null,
+      activePlanningSelection: null,
+      saveSidebarWidth: vi.fn(),
+      saveActiveTab: vi.fn(),
+      saveChatPanelWidth: vi.fn(),
+      saveWorkspaceContext: vi.fn(),
+    })
 
     mockUseChapters.mockReturnValue({
       chapters: [
@@ -217,6 +245,6 @@ describe('useWorkspaceLayout', () => {
 
     expect(result.current.activeTab).toBe('chapters')
     expect(result.current.activeChapterId).toBe('chapter-2')
-    expect(result.current.chapterView).toBe('outline')
+    expect(result.current.chapterBriefOpen).toBe(true)
   })
 })

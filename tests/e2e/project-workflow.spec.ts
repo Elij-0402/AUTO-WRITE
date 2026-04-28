@@ -25,12 +25,10 @@ async function createProject(page: Page, title: string) {
   await titleInput.fill(title)
 
   await dialog.getByRole('button', { name: '创建' }).click()
-  await page.waitForURL(/\/projects\/[^/]+\/charter$/)
-  await expect(page.getByRole('heading', { name: '作品宪章' })).toBeVisible()
-  const projectId = page.url().match(/\/projects\/([^/]+)\/charter$/)?.[1]
+  await page.waitForURL(/\/projects\/[^/?#]+(?:\?.*)?$/)
+  const projectId = page.url().match(/\/projects\/([^/?#]+)/)?.[1]
   if (!projectId) throw new Error('未能从宪章页 URL 解析项目 ID')
-  await page.goto(`/projects/${projectId}`)
-  await page.waitForURL(/\/projects\/[^/]+$/)
+  await expect(page.getByText(title).first()).toBeVisible()
 
   // Wait for any HMR recompilation triggered by new project creation to finish
   // This can take several seconds in dev mode as Next.js needs to compile the
@@ -323,7 +321,7 @@ test('3. AI 聊天输入并确认提交', async ({ page }) => {
     await page.waitForTimeout(500)
   }
 
-  const chatInput = page.getByPlaceholder(/与墨客聊聊你的故事|输入.*消息|说点什么/)
+  const chatInput = page.getByPlaceholder(/与墨客聊聊你的故事|你想写一个什么故事，或者想要什么感觉\？?|输入.*消息|说点什么/)
   await chatInput.waitFor({ state: 'visible', timeout: 5000 })
   await chatInput.fill('介绍一下主角小明')
   await chatInput.press('Enter')

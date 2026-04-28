@@ -11,12 +11,8 @@ test('create project from empty dashboard and land on workspace', async ({ page 
   await dialog.getByLabel(/标题/).fill('测试项目 · E2E')
   await dialog.getByRole('button', { name: '创建' }).click()
 
-  await page.waitForURL(/\/projects\/[^/]+\/charter$/)
-  await expect(page.getByRole('heading', { name: '作品宪章' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '保存这版方向' })).toBeVisible()
-
-  await page.getByRole('link', { name: '返回项目' }).click()
-  await page.waitForURL(/\/projects\/[^/]+$/)
+  await page.waitForURL(/\/projects\/[^/?#]+(?:\?.*)?$/)
+  await expect(page.getByText('测试项目 · E2E').first()).toBeVisible()
 
   await expect(page.getByRole('button', { name: '章节', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: '大纲', exact: true })).toBeVisible()

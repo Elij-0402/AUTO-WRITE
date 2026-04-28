@@ -41,11 +41,8 @@ export default function AnalysisPage() {
   const { uiFlags } = useAIConfig()
   const { trackers } = useStoryTrackers(params.id)
 
-  // Handler for editing an entry (opens entry in world-bible sidebar)
   const handleEditEntry = useCallback((entry: WorldEntry) => {
-    // In analysis page, we could navigate to project with entry selected
-    // For now, we'll use window.location to set hash
-    window.location.href = `/projects/${params.id}#entry-${entry.id}`
+    window.location.href = `/projects/${params.id}?tab=world&entry=${entry.id}`
   }, [params.id])
 
   // Handler for creating a relation

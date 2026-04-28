@@ -282,6 +282,32 @@ test('2.1 项目页与分析页支持直接访问，不落入项目未找到', a
   }, projectId)
 })
 
+test('2.2 左侧导航可切换，大纲/世界观/规划都能进入', async ({ page }) => {
+  const projectId = await createProject(page, `e2e-sidebar-${Date.now()}`)
+
+  await page.goto(`/projects/${projectId}`)
+  await page.waitForLoadState('networkidle')
+  await waitForHMR(page)
+
+  await expect(page.getByText('章节').first()).toBeVisible()
+
+  await page.getByRole('button', { name: '大纲' }).click()
+  await expect(page.getByText('请先在章节标签中创建章节')).toBeVisible({ timeout: 10000 })
+  await expect(page.getByText('大纲').first()).toBeVisible()
+
+  await page.getByRole('button', { name: '世界观' }).click()
+  await expect(page.getByPlaceholder('搜索世界观...')).toBeVisible({ timeout: 10000 })
+  await expect(page.getByText('世界观').first()).toBeVisible()
+
+  await page.getByRole('button', { name: '规划' }).click()
+  await expect(page.getByText('规划').first()).toBeVisible()
+  await expect(page.getByText('灵感').first()).toBeVisible({ timeout: 10000 })
+
+  await page.evaluate((id) => {
+    indexedDB.deleteDatabase(`inkforge-project-${id}`)
+  }, projectId)
+})
+
 // ─── Scenario 3: Chat panel accepts input ─────────────────────────────────
 
 test('3. AI 聊天输入并确认提交', async ({ page }) => {

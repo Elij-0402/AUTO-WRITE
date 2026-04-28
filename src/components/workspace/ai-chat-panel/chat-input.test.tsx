@@ -46,4 +46,17 @@ describe('ChatInput', () => {
 
     expect(onSaveModel).toHaveBeenCalledWith('deepseek-v4-pro')
   })
+
+  it('supports a custom opening placeholder for the first conversation turn', () => {
+    render(
+      <ChatInput
+        {...baseProps}
+        placeholder="你想写一个什么故事，或者想要什么感觉？"
+      />
+    )
+
+    expect(
+      screen.getByPlaceholderText('你想写一个什么故事，或者想要什么感觉？')
+    ).toBeInTheDocument()
+  })
 })

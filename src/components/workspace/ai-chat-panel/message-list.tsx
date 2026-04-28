@@ -9,10 +9,9 @@ import { RelationshipSuggestionCard, NewEntrySuggestionCard } from '../suggestio
 import { ConsistencyWarningCard } from '../consistency-warning-card'
 
 const STARTER_PROMPTS = [
-  { label: '推敲人物动机', prompt: '帮我推敲这章主角的动机是否合理，能否再深一层？' },
-  { label: '设计情节冲突', prompt: '基于当前设定，为接下来的情节构思三种可能的冲突走向。' },
-  { label: '检查设定一致性', prompt: '对照世界观百科，检查本章是否有与设定冲突的地方。' },
-  { label: '优化场景描写', prompt: '这段场景描写略显平淡，请给出更有画面感的改写思路。' }
+  { label: '我想写一个复仇复国的故事', prompt: '我想写一个复仇复国的故事，主角是流亡太子，想回到帝京夺回身份。你先陪我把方向聊清楚。' },
+  { label: '我想要关系拉扯很强', prompt: '我想写一个关系拉扯很强、反转很多的故事。先帮我抓一下适合推进的核心关系。' },
+  { label: '我只有一个模糊念头', prompt: '我现在只有一个模糊念头，还没想清楚具体故事。你先带着我聊，帮我把方向收出来。' },
 ] as const
 
 interface MessageListProps {
@@ -123,27 +122,27 @@ export function MessageList({
 function EmptyState({ onSendMessage }: { onSendMessage: (text: string) => void }) {
   return (
     <div className="h-full flex items-center justify-center p-6">
-      <div className="max-w-[280px] w-full space-y-6">
-        <div className="flex flex-col items-center gap-3">
+      <div className="max-w-[320px] w-full space-y-7">
+        <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
             <Feather className="h-5 w-5 text-primary" strokeWidth={1.75} />
           </div>
-          <div className="text-center space-y-1.5">
-            <p className="text-[18px] font-semibold text-foreground">墨客</p>
+          <div className="text-center space-y-2">
+            <p className="text-[22px] font-medium text-foreground">先说一句，你想写什么。</p>
             <p className="text-[13px] text-muted-foreground leading-relaxed">
-              与 AI 聊聊你的故事
+              故事、关系、爽点、情绪，都可以。你先开口，我来陪你慢慢收拢。
             </p>
           </div>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {STARTER_PROMPTS.map((starter, i) => (
             <button
               key={starter.label}
               onClick={() => onSendMessage(starter.prompt)}
-              className="group w-full text-left px-3 py-2.5 rounded-[var(--radius-control)] border border-border hover:border-primary/40 hover:bg-primary/[0.03] transition-colors animate-message-enter"
+              className="group w-full text-left px-3 py-3 rounded-[var(--radius-control)] border border-border hover:border-primary/40 hover:bg-primary/[0.03] transition-colors animate-message-enter"
               style={{ animationDelay: `${120 + i * 60}ms` }}
             >
-              <span className="text-[13px] text-foreground/85 group-hover:text-foreground">
+              <span className="text-[13px] leading-[1.65] text-foreground/85 group-hover:text-foreground">
                 {starter.label}
               </span>
             </button>

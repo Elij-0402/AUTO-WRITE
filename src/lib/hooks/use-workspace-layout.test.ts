@@ -58,6 +58,7 @@ describe('useWorkspaceLayout', () => {
     const { result, rerender } = renderHook(() => useWorkspaceLayout({ projectId: 'p1' }))
 
     expect(result.current.activeChapterId).toBe('chapter-2')
+    expect(result.current).not.toHaveProperty('focusMode')
 
     mockUseChapters.mockReturnValue({
       chapters: [

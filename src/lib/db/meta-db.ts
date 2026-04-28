@@ -1,7 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import type { ProjectMeta } from '../types'
 import type { AIProvider } from './project-db'
-import type { UiExperimentFlags } from '../ai/ui-flags'
 
 /**
  * Global AI config — single row keyed by 'config'. Lives in meta-db so the
@@ -16,7 +15,6 @@ export interface GlobalAIConfig {
   baseUrl: string
   model?: string
   availableModels?: string[]
-  uiFlags?: UiExperimentFlags
 }
 
 /**

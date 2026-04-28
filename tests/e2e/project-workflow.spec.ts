@@ -261,7 +261,7 @@ test('2. 创建 3 个 WorldEntry，刷新后确认仍在', async ({ page }) => {
   }, projectId)
 })
 
-test('2.1 项目页与分析页支持直接访问，不落入项目未找到', async ({ page }) => {
+test('2.1 项目页支持直接访问，分析页返回 404', async ({ page }) => {
   const projectTitle = `e2e-deeplink-${Date.now()}`
   const projectId = await createProject(page, projectTitle)
 
@@ -274,8 +274,8 @@ test('2.1 项目页与分析页支持直接访问，不落入项目未找到', a
   await page.goto(`/projects/${projectId}/analysis`)
   await page.waitForLoadState('domcontentloaded')
   await waitForHMR(page)
-  await expect(page.getByText('项目未找到')).toHaveCount(0)
-  await expect(page.getByText('创作者分析')).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`/projects/${projectId}/analysis$`))
+  await expect(page.getByRole('heading', { name: '404' })).toBeVisible()
 
   await page.evaluate((id) => {
     indexedDB.deleteDatabase(`inkforge-project-${id}`)
@@ -337,81 +337,6 @@ test('3. AI 聊天输入并确认提交', async ({ page }) => {
 })
 
 // ─── Scenario 4: Contradiction → exempt → reload → still exempt ────────────
-
-test('4. 矛盾已豁免状态刷新后仍保留', async ({ page }) => {
-  const projectId = await createProject(page, `e2e-contra-${Date.now()}`)
-  await openWorldTab(page, projectId)
-
-  const addBtn = page.getByRole('button', { name: '添加角色' }).first()
-  await addBtn.waitFor({ state: 'visible', timeout: 8000 })
-  await addBtn.click()
-  await page.waitForTimeout(300)
-
-  const nameInput = page.getByLabel('姓名')
-  await nameInput.waitFor({ state: 'visible', timeout: 5000 })
-  await nameInput.fill('小明')
-  await nameInput.blur()
-  await page.waitForTimeout(700)
-
-  await page.evaluate(
-    ([pid, entryName]) => {
-      return new Promise<void>((resolve, reject) => {
-        const dbReq = indexedDB.open(`inkforge-project-${pid}`)
-        dbReq.onsuccess = () => {
-          const db = dbReq.result as IDBDatabase
-          const tx = db.transaction(['contradictions', 'consistencyExemptions'], 'readwrite')
-          const contradictionStore = tx.objectStore('contradictions')
-          const exemptionStore = tx.objectStore('consistencyExemptions')
-          contradictionStore.add({
-            id: crypto.randomUUID(),
-            projectId: pid,
-            conversationId: null,
-            messageId: null,
-            entryName,
-            entryType: 'character',
-            description: '测试矛盾描述：角色前后设定不一致',
-            exempted: true,
-            createdAt: Date.now(),
-          })
-          exemptionStore.add({
-            id: crypto.randomUUID(),
-            projectId: pid,
-            exemptionKey: `${entryName}:character`,
-            createdAt: Date.now(),
-            note: 'e2e 豁免',
-          })
-          tx.oncomplete = () => resolve()
-          tx.onerror = () => reject(tx.error)
-        }
-        dbReq.onerror = () => reject(dbReq.error)
-      })
-    },
-    [projectId, '小明']
-  )
-
-  await page.goto(`/projects/${projectId}/analysis`)
-  await page.waitForLoadState('networkidle')
-  await waitForHMR(page)
-  await page.getByRole('button', { name: '矛盾记录', exact: true }).click()
-  await expect(page.getByRole('heading', { name: '矛盾记录' }).first()).toBeVisible({ timeout: 5000 })
-  await page.getByRole('button', { name: '已豁免', exact: true }).click()
-  await expect(page.getByText('小明').first()).toBeVisible({ timeout: 5000 })
-  await expect(page.getByText('已豁免').first()).toBeVisible()
-  await expect(page.getByRole('button', { name: '撤销豁免' })).toBeVisible()
-
-  await page.reload()
-  await page.waitForLoadState('networkidle')
-  await waitForHMR(page)
-  await page.getByRole('button', { name: '矛盾记录', exact: true }).click()
-  await expect(page.getByRole('heading', { name: '矛盾记录' }).first()).toBeVisible({ timeout: 5000 })
-  await page.getByRole('button', { name: '已豁免', exact: true }).click()
-  await expect(page.getByText('小明').first()).toBeVisible({ timeout: 5000 })
-  await expect(page.getByRole('button', { name: '撤销豁免' })).toBeVisible()
-
-  await page.evaluate((id) => {
-    indexedDB.deleteDatabase(`inkforge-project-${id}`)
-  }, projectId)
-})
 
 // ─── Scenario 5: EPUB export round-trip ─────────────────────────────────────
 

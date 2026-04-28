@@ -72,7 +72,7 @@ export function CreateProjectModal({
     try {
       const id = await onSubmit(data)
       reset()
-      router.push(`/projects/${id}/charter`)
+      router.push(`/projects/${id}`)
       onOpenChange(false)
     } finally {
       setIsSubmitting(false)

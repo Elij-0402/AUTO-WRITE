@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, BarChart3, Bot, Maximize2, Minimize2, Moon, PenLine, ScrollText, Sun } from 'lucide-react'
+import { ArrowLeft, Bot, Moon, PenLine, Sun } from 'lucide-react'
 import { useTotalWordCount, useTodayWordCount } from '@/lib/hooks/use-word-count'
 import { useProjectMeta } from '@/lib/hooks/use-project-meta'
 import { useTheme } from '@/components/editor/theme-provider'
@@ -15,8 +15,6 @@ import {
 
 interface WorkspaceTopbarProps {
   projectId: string
-  focusMode: boolean
-  onToggleFocusMode: () => void
   onOpenAIConfig: () => void
   onOpenDraftDialog: () => void
   /** True after the user has been idle for the configured timeout (T6). */
@@ -25,8 +23,6 @@ interface WorkspaceTopbarProps {
 
 export function WorkspaceTopbar({
   projectId,
-  focusMode,
-  onToggleFocusMode,
   onOpenAIConfig,
   onOpenDraftDialog,
   idle = false,
@@ -82,28 +78,6 @@ export function WorkspaceTopbar({
 
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button asChild variant="ghost" size="icon-sm">
-            <Link href={`/projects/${projectId}/charter`} aria-label="作品宪章">
-              <ScrollText />
-            </Link>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>作品宪章</TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button asChild variant="ghost" size="icon-sm">
-            <Link href={`/projects/${projectId}/analysis`} aria-label="创作者分析">
-              <BarChart3 />
-            </Link>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>创作者分析</TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -128,20 +102,6 @@ export function WorkspaceTopbar({
           </Button>
         </TooltipTrigger>
         <TooltipContent>生成章节草稿</TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant={focusMode ? 'secondary' : 'ghost'}
-            size="icon-sm"
-            onClick={onToggleFocusMode}
-            aria-label={focusMode ? '退出专注写作' : '专注写作'}
-          >
-            {focusMode ? <Minimize2 /> : <Maximize2 />}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{focusMode ? '退出专注写作' : '专注写作'}</TooltipContent>
       </Tooltip>
 
       <ThemeToggle />

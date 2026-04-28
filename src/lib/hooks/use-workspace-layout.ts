@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLayout } from './use-layout'
 import { useChapters } from './use-chapters'
 import { useWorldEntries } from './use-world-entries'
@@ -79,7 +79,6 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
     saveWorkspaceContext,
   } = useLayout(projectId)
 
-  const [focusMode, setFocusMode] = useState(false)
   const [activeTabState, setActiveTabState] = useState<ActiveTab>(urlState.activeTab ?? persistedActiveTab)
   const [activeChapterIdState, setActiveChapterIdState] = useState<string | null>(urlState.activeChapterId ?? persistedActiveChapterId)
   const [activeOutlineIdState, setActiveOutlineIdState] = useState<string | null>(urlState.activeOutlineId ?? persistedActiveOutlineId)
@@ -293,7 +292,6 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
   }
 
   return {
-    focusMode, setFocusMode,
     activeChapterId: activeChapterIdState, setActiveChapterId,
     activeOutlineId: activeOutlineIdState, setActiveOutlineId,
     activeWorldEntryId: activeWorldEntryIdState, setActiveWorldEntryId,

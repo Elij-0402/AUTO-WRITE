@@ -15,7 +15,6 @@ import { useWorkspaceLayout } from '@/lib/hooks/use-workspace-layout'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { useAIConfigDialog, useAIOnboardingDialog, useOnboardingTourDialog, useChapterDraftDialog } from '@/components/workspace/dialogs'
 import { NormalLayout } from '@/components/workspace/layouts/normal-layout'
-import { FocusLayout } from '@/components/workspace/layouts/focus-layout'
 import type { EditorHandle } from '@/components/editor/editor-types'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
 import { useChapterEditor } from '@/lib/hooks/use-chapter-editor'
@@ -136,8 +135,6 @@ export default function ProjectPage() {
 
           <WorkspaceTopbar
             projectId={params.id}
-            focusMode={layout.focusMode}
-            onToggleFocusMode={() => layout.setFocusMode(!layout.focusMode)}
             onOpenAIConfig={() => {
               if (!toolbarReady) return
               aiConfigDialog.onOpen()
@@ -150,39 +147,31 @@ export default function ProjectPage() {
           />
 
           <div className="flex-1 flex overflow-hidden transition-[opacity] duration-[var(--dur-slow)] ease-[cubic-bezier(0.16,1,0.3,1)]">
-            {layout.focusMode ? (
-              <FocusLayout
-                activeChapterId={layout.activeChapterId}
-                sortedChapters={layout.sortedChapters}
-                mainContent={<PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>}
-              />
-            ) : (
-              <NormalLayout
+            <NormalLayout
+              projectId={params.id}
+              activeChapterId={layout.activeChapterId}
+              activeTab={layout.activeTab}
+              activeOutlineId={layout.activeOutlineId}
+              activeWorldEntryId={layout.activeWorldEntryId}
+              activePlanningSelection={layout.activePlanningItem}
+              mainContent={<PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>}
+              handleSidebarDoubleClickReset={layout.handleSidebarDoubleClickReset}
+              handleChatPanelDoubleClickReset={layout.handleChatPanelDoubleClickReset}
+              onSelectChapter={layout.setActiveChapterId}
+              onTabChange={layout.handleTabChange}
+              onSelectOutline={layout.handleSelectOutline}
+              onSelectWorldEntry={layout.handleSelectWorldEntry}
+              onEditWorldEntry={layout.handleEditWorldEntry}
+              onDeleteWorldEntry={layout.handleDeleteWorldEntry}
+              onSelectPlanningItem={layout.setActivePlanningItem}
+            >
+              <AIChatPanel
                 projectId={params.id}
-                activeChapterId={layout.activeChapterId}
-                activeTab={layout.activeTab}
-                activeOutlineId={layout.activeOutlineId}
-                activeWorldEntryId={layout.activeWorldEntryId}
-                activePlanningSelection={layout.activePlanningItem}
-                mainContent={<PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>}
-                handleSidebarDoubleClickReset={layout.handleSidebarDoubleClickReset}
-                handleChatPanelDoubleClickReset={layout.handleChatPanelDoubleClickReset}
-                onSelectChapter={layout.setActiveChapterId}
-                onTabChange={layout.handleTabChange}
-                onSelectOutline={layout.handleSelectOutline}
-                onSelectWorldEntry={layout.handleSelectWorldEntry}
-                onEditWorldEntry={layout.handleEditWorldEntry}
-                onDeleteWorldEntry={layout.handleDeleteWorldEntry}
-                onSelectPlanningItem={layout.setActivePlanningItem}
-              >
-                <AIChatPanel
-                  projectId={params.id}
-                  selectedText={selectedText}
-                  onDiscussComplete={() => setSelectedText(null)}
-                  onInsertDraft={handleInsertDraft}
-                />
-              </NormalLayout>
-            )}
+                selectedText={selectedText}
+                onDiscussComplete={() => setSelectedText(null)}
+                onInsertDraft={handleInsertDraft}
+              />
+            </NormalLayout>
           </div>
         </SidebarNavProvider>
       </TooltipProvider>

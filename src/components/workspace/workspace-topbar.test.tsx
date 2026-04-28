@@ -48,24 +48,20 @@ vi.mock('@/components/sync/SyncStatusIcon', () => ({
 }))
 
 describe('WorkspaceTopbar', () => {
-  it('exposes a charter link in the workspace chrome', () => {
+  it('keeps core workspace actions and removes analysis/focus controls', () => {
     render(
       <WorkspaceTopbar
         projectId="p-1"
-        focusMode={false}
-        onToggleFocusMode={() => {}}
         onOpenAIConfig={() => {}}
         onOpenDraftDialog={() => {}}
       />
     )
 
-    const charterLink = screen.getByRole('link', { name: '作品宪章' })
-
-    expect(charterLink).toHaveAttribute(
-      'href',
-      '/projects/p-1/charter'
-    )
-    expect(screen.queryByText('作品宪章')).not.toBeInTheDocument()
-    expect(charterLink.querySelector('svg')).not.toBeNull()
+    expect(screen.getByRole('link', { name: '返回项目列表' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('button', { name: 'AI 设置' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '生成章节草稿' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: '创作者分析' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '专注写作' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '退出专注写作' })).not.toBeInTheDocument()
   })
 })

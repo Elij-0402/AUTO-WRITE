@@ -13,6 +13,16 @@ const assistantMessage: ChatMessage = {
   timestamp: Date.now(),
 }
 
+const directionAdjustmentMessage: ChatMessage = {
+  id: 'msg-2',
+  projectId: 'proj-1',
+  conversationId: 'conv-1',
+  role: 'assistant',
+  kind: 'direction-adjustment',
+  content: '收到，我按这个理解继续。后面如果你想改，我们就边写边调。',
+  timestamp: Date.now(),
+}
+
 describe('MessageBubble', () => {
   it('reports preference payload through the panel-owned callback', async () => {
     const onRecordPreference = vi.fn().mockResolvedValue(undefined)
@@ -38,5 +48,17 @@ describe('MessageBubble', () => {
         note: '主角说话太轻浮',
       })
     })
+  })
+
+  it('renders direction-adjustment messages as lighter acknowledgements', () => {
+    render(
+      <MessageBubble
+        message={directionAdjustmentMessage}
+        projectId="proj-1"
+      />
+    )
+
+    expect(screen.getByText('墨客已记下')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '记录偏差' })).not.toBeInTheDocument()
   })
 })

@@ -4,15 +4,19 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useAIChat } from '@/lib/hooks/use-ai-chat'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { useConversations } from '@/lib/hooks/use-conversations'
+import { useProjectCharter } from '@/lib/hooks/use-project-charter'
 import { recordPreferenceMemory } from '@/lib/db/project-charter-queries'
 import { createProjectDB } from '@/lib/db/project-db'
 import { useDismissedSuggestions } from '@/lib/hooks/use-dismissed-suggestions'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
+import { generateDirectionConfirmation, type DirectionConfirmationDraft } from '@/lib/ai/direction-confirmation'
 import { History } from 'lucide-react'
 import { Quote } from 'lucide-react'
 import { MessageList } from './message-list'
 import { ChatInput } from './chat-input'
+import { DirectionConfirmationCard } from './direction-confirmation-card'
+import { AIUnderstandingPanel } from './ai-understanding-panel'
 import { NewEntryDialog, type NewEntryPrefillData } from '../new-entry-dialog'
 import { ConversationDrawer } from '../conversation-drawer'
 import { findEntryIdByName } from '@/lib/ai/find-entry-by-name'
@@ -50,6 +54,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   // ── AI Chat ───────────────────────────────────────────────────────
   const {
     messages, loading, sendMessage, cancelStream,
+    appendDirectionAdjustment,
     suggestions, dismissSuggestion, clearSuggestions,
     contradictions, isCheckingConsistency, addExemption,
     clearContradiction, cacheHint,
@@ -73,8 +78,14 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   const [showScrollPill, setShowScrollPill] = useState(false)
 
   const { config: aiConfig, saveConfig: saveAIConfig } = useAIConfig()
+  const { charter, save: saveCharter } = useProjectCharter(projectId)
 
   const visibleSuggestions = filterDismissed(suggestions)
+  const isConversationEmpty = messages.every(message => !message.content.trim())
+  const [directionConfirmation, setDirectionConfirmation] = useState<DirectionConfirmationDraft | null>(null)
+  const [isGeneratingDirectionConfirmation, setIsGeneratingDirectionConfirmation] = useState(false)
+  const confirmationKeyRef = useRef<string | null>(null)
+  const dismissedConfirmationKeyRef = useRef<string | null>(null)
 
   // ── Scroll management ─────────────────────────────────────────────
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
@@ -111,6 +122,78 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
       setTimeout(() => setCacheHintVisible(false), 3000)
     }
   }, [cacheHint])
+
+  useEffect(() => {
+    if (loading || isGeneratingDirectionConfirmation) {
+      return
+    }
+    if (!aiConfig.apiKey || !activeConversationId) {
+      return
+    }
+    if (!charter || charter.oneLinePremise.trim() || charter.storyPromise.trim() || charter.themes.length > 0) {
+      return
+    }
+
+    const nonEmptyMessages = messages.filter(message => message.content.trim())
+    const userMessages = nonEmptyMessages.filter(message => message.role === 'user')
+    const assistantMessages = nonEmptyMessages.filter(message => message.role === 'assistant')
+    if (userMessages.length < 2 || assistantMessages.length < 2) {
+      return
+    }
+
+    const confirmationWindow = nonEmptyMessages.slice(-4)
+    const confirmationKey = confirmationWindow.map(message => message.id).join(':')
+    if (!confirmationKey || confirmationKey === confirmationKeyRef.current || confirmationKey === dismissedConfirmationKeyRef.current) {
+      return
+    }
+
+    let cancelled = false
+    confirmationKeyRef.current = confirmationKey
+    setIsGeneratingDirectionConfirmation(true)
+
+    void (async () => {
+      try {
+        const draft = await generateDirectionConfirmation(
+          {
+            provider: aiConfig.provider,
+            apiKey: aiConfig.apiKey,
+            baseUrl: aiConfig.baseUrl,
+            model: aiConfig.model,
+          },
+          confirmationWindow.map(message => ({
+            role: message.role,
+            content: message.content,
+          }))
+        )
+
+        if (!cancelled) {
+          setDirectionConfirmation(draft)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('[AIChatPanel] direction confirmation failed:', error)
+        }
+      } finally {
+        if (!cancelled) {
+          setIsGeneratingDirectionConfirmation(false)
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    aiConfig.apiKey,
+    aiConfig.baseUrl,
+    aiConfig.model,
+    aiConfig.provider,
+    charter,
+    activeConversationId,
+    isGeneratingDirectionConfirmation,
+    loading,
+    messages,
+  ])
 
   // ── Input handling ────────────────────────────────────────────────
   const handleSend = async (overrideText?: string) => {
@@ -261,6 +344,25 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
   const handleDismissError = () => setChatError(null)
 
+  const handleAcceptDirectionConfirmation = async () => {
+    if (!directionConfirmation) {
+      return
+    }
+
+    await saveCharter({
+      oneLinePremise: directionConfirmation.oneLinePremise,
+      storyPromise: directionConfirmation.storyPromise,
+      themes: directionConfirmation.themes,
+    })
+    setDirectionConfirmation(null)
+  }
+
+  const handleContinueTalking = () => {
+    dismissedConfirmationKeyRef.current = confirmationKeyRef.current
+    setDirectionConfirmation(null)
+    setInput(current => current.trim() ? current : '我再补一句：')
+  }
+
   return (
     <div className="h-full flex flex-col overflow-hidden surface-0 relative">
       {toastMessage && (
@@ -283,7 +385,11 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
             {activeConversation?.title ?? '墨客'}
           </span>
           <span className="text-[11px] text-muted-foreground leading-none mt-1">
-            {activeConversation ? `${activeConversation.messageCount} 条消息` : 'AI 写作伙伴'}
+            {isConversationEmpty
+              ? '先开口，剩下的我帮你收'
+              : activeConversation
+                ? `${activeConversation.messageCount} 条消息`
+                : 'AI 写作伙伴'}
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -309,6 +415,22 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         </div>
       )}
 
+      {charter && (
+        <AIUnderstandingPanel
+          charter={{
+            oneLinePremise: charter.oneLinePremise,
+            storyPromise: charter.storyPromise,
+            themes: charter.themes,
+            aiUnderstanding: charter.aiUnderstanding,
+          }}
+          onSave={async (updates) => {
+            await saveCharter(updates)
+            await appendDirectionAdjustment(updates)
+            showToast('好，我按这个记下了')
+          }}
+        />
+      )}
+
       {/* ── Message list ─────────────────────────────────── */}
       <MessageList
         messages={messages}
@@ -332,12 +454,27 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         onScroll={handleScroll}
       />
 
+      {directionConfirmation && (
+        <DirectionConfirmationCard
+          oneLinePremise={directionConfirmation.oneLinePremise}
+          storyPromise={directionConfirmation.storyPromise}
+          themes={directionConfirmation.themes}
+          onAccept={() => void handleAcceptDirectionConfirmation()}
+          onContinueTalking={handleContinueTalking}
+        />
+      )}
+
       {/* ── Chat input ───────────────────────────────────── */}
       <ChatInput
         input={input}
         loading={loading}
         chatError={chatError}
         aiConfig={aiConfig}
+        placeholder={
+          isConversationEmpty
+            ? '你想写一个什么故事，或者想要什么感觉？'
+            : '与墨客聊聊你的故事…'
+        }
         onInputChange={setInput}
         onKeyDown={handleKeyDown}
         onSend={() => void handleSend()}

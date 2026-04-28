@@ -39,7 +39,7 @@ describe('CreateProjectModal', () => {
     pushMock.mockReset()
   })
 
-  it('routes new projects to the charter page after a successful create', async () => {
+  it('routes new projects directly into the workspace after a successful create', async () => {
     const onSubmit = vi.fn().mockResolvedValue('p-42')
     const onOpenChange = vi.fn()
 
@@ -63,7 +63,7 @@ describe('CreateProjectModal', () => {
         synopsis: '',
       })
       expect(onOpenChange).toHaveBeenCalledWith(false)
-      expect(pushMock).toHaveBeenCalledWith('/projects/p-42/charter')
+      expect(pushMock).toHaveBeenCalledWith('/projects/p-42')
     })
   })
 })

@@ -29,6 +29,7 @@ export interface ChatMessage {
   projectId: string
   conversationId: string
   role: 'user' | 'assistant'
+  kind?: 'default' | 'direction-adjustment'
   content: string
   timestamp: number
   hasDraft?: boolean
@@ -59,6 +60,12 @@ export interface UseAIChatOptions {
   onDraftGenerated?: (draft: string) => void
   /** Selected text for discussion — per D-08 */
   selectedText?: string
+}
+
+interface DirectionAdjustmentInput {
+  oneLinePremise: string
+  storyPromise: string
+  themes: string[]
 }
 
 /** Draft marker heuristics kept as a fallback when the provider can't emit a structured signal. */
@@ -391,6 +398,62 @@ await db.contradictions.add({
     abortControllerRef.current?.abort()
   }, [])
 
+  const appendDirectionAdjustment = useCallback(async ({
+    oneLinePremise,
+    storyPromise,
+    themes,
+  }: DirectionAdjustmentInput) => {
+    if (!conversationId) {
+      return
+    }
+
+    const db = createProjectDB(projectId)
+    const now = Date.now()
+    const keywordLine = themes.length > 0 ? `关键词先记为：${themes.join('、')}` : ''
+    const userContent = [
+      '我修正一下这部作品的方向：',
+      oneLinePremise && `- 方向：${oneLinePremise}`,
+      storyPromise && `- 感觉：${storyPromise}`,
+      keywordLine && `- ${keywordLine}`,
+    ]
+      .filter(Boolean)
+      .join('\n')
+
+    const assistantContent = '收到，我按这个理解继续。后面如果你想改，我们就边写边调。'
+
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      projectId,
+      conversationId,
+      role: 'user',
+      kind: 'direction-adjustment',
+      content: userContent,
+      timestamp: now,
+    }
+
+    const assistantMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      projectId,
+      conversationId,
+      role: 'assistant',
+      kind: 'direction-adjustment',
+      content: assistantContent,
+      timestamp: now + 1,
+    }
+
+    await db.table('messages').bulkAdd([userMsg, assistantMsg])
+    setMessages(prev => [...prev, userMsg, assistantMsg])
+
+    const conversation = await db.table('conversations').get(conversationId) as
+      | { messageCount?: number }
+      | undefined
+
+    await db.table('conversations').update(conversationId, {
+      updatedAt: now + 1,
+      messageCount: (conversation?.messageCount ?? 0) + 2,
+    })
+  }, [conversationId, projectId])
+
   const dismissSuggestion = useCallback((suggestion: Suggestion) => {
     setSuggestions(prev => prev.filter(s => {
       if (s.type === 'relationship' && suggestion.type === 'relationship') {
@@ -417,6 +480,7 @@ await db.contradictions.add({
     streamingContent,
     sendMessage,
     cancelStream,
+    appendDirectionAdjustment,
     suggestions,
     isAnalyzing,
     dismissSuggestion,

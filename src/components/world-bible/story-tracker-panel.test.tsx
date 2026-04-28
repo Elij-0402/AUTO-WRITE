@@ -1,8 +1,7 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { StoryTracker, WorldEntry } from '@/lib/types'
 import { StoryTrackerPanel } from './story-tracker-panel'
-import { TimelineView } from '@/components/analysis/timeline-view'
 
 const mockUseStoryTrackers = vi.fn()
 
@@ -111,50 +110,5 @@ describe('StoryTrackerPanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '标记“皇帝的病不能被草草治好”为已解决' }))
     expect(resolve).toHaveBeenCalledWith('tracker-open')
-  })
-})
-
-describe('TimelineView', () => {
-  it('shows event and timeline entries in story order with tracker badges', () => {
-    render(
-      <TimelineView
-        entries={[
-          makeEntry({
-            id: 'timeline-2',
-            type: 'timeline',
-            name: '旧朝崩塌',
-            timePoint: '第二纪',
-            timeOrder: 20,
-          }),
-          makeEntry({
-            id: 'event-1',
-            type: 'event',
-            name: '朱雀门夜袭',
-            timePoint: '第一卷末',
-            timeOrder: 10,
-            eventDescription: '主角第一次公开暴露身份',
-          }),
-          makeEntry({
-            id: 'timeline-1',
-            type: 'timeline',
-            name: '白塔盟约',
-            timePoint: '第一纪',
-            timeOrder: 5,
-          }),
-        ]}
-        trackerCountsByEntryId={{
-          'event-1': 2,
-          'timeline-2': 1,
-        }}
-      />
-    )
-
-    const items = screen.getAllByRole('listitem')
-
-    expect(within(items[0]).getByText('白塔盟约')).toBeInTheDocument()
-    expect(within(items[1]).getByText('朱雀门夜袭')).toBeInTheDocument()
-    expect(within(items[2]).getByText('旧朝崩塌')).toBeInTheDocument()
-    expect(screen.getByText('2 个追踪')).toBeInTheDocument()
-    expect(screen.getByText('1 个追踪')).toBeInTheDocument()
   })
 })

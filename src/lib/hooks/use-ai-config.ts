@@ -2,11 +2,8 @@ import { useCallback, useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { metaDb } from '../db/meta-db'
 import type { AIProvider } from '../ai/providers/types'
-import type { UiExperimentFlags } from '../ai/ui-flags'
-import { resolveUiFlags } from '../ai/ui-flags'
 
 export type { AIProvider } from '../ai/providers/types'
-export type { UiExperimentFlags } from '../ai/ui-flags'
 
 export interface AIConfig {
   id: 'config'
@@ -15,7 +12,6 @@ export interface AIConfig {
   baseUrl: string
   model?: string
   availableModels?: string[]
-  uiFlags?: UiExperimentFlags
 }
 
 const DEFAULT_CONFIG: AIConfig = {
@@ -45,11 +41,6 @@ export function useAIConfig() {
   )
   const loading = liveConfig === undefined
 
-  const uiFlags = useMemo(
-    () => resolveUiFlags(config.uiFlags),
-    [config.uiFlags]
-  )
-
   const saveConfig = useCallback(async (newConfig: Partial<AIConfig>) => {
     const updated = { ...config, ...newConfig, id: 'config' as const }
     await metaDb.aiConfig.put(updated)
@@ -60,5 +51,5 @@ export function useAIConfig() {
     await metaDb.aiConfig.delete('config')
   }, [])
 
-  return { config, loading, saveConfig, clearConfig, uiFlags }
+  return { config, loading, saveConfig, clearConfig }
 }

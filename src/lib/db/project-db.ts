@@ -13,7 +13,6 @@ import type {
   PlanningSelection,
 } from '../types'
 import type { PreferenceMemory, ProjectCharter } from '../types'
-import type { UiExperimentFlags } from '../ai/ui-flags'
 
 /**
  * AI configuration stored per-project in IndexedDB.
@@ -31,12 +30,6 @@ export interface AIConfig {
   baseUrl: string
   model?: string
   availableModels?: string[]
-  /**
-   * Phase F UI surface pruning — gates non-spine features (generation pipeline,
-   * style profile, timeline view). Undefined = defaults to all-hidden. Resolved
-   * via src/lib/ai/ui-flags.ts::resolveUiFlags.
-   */
-  uiFlags?: UiExperimentFlags
 }
 
 /**
@@ -51,6 +44,7 @@ export interface ChatMessage {
   projectId: string
   conversationId: string
   role: 'user' | 'assistant'
+  kind?: 'default' | 'direction-adjustment'
   content: string
   timestamp: number
   hasDraft?: boolean

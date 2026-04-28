@@ -20,6 +20,7 @@ interface ChatInputProps {
   loading: boolean
   chatError: string | null
   aiConfig: Pick<AIConfig, 'model' | 'availableModels'>
+  placeholder?: string
   onInputChange: (value: string) => void
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
   onSend: () => void
@@ -33,6 +34,7 @@ export function ChatInput({
   loading,
   chatError,
   aiConfig,
+  placeholder = '与墨客聊聊你的故事…',
   onInputChange,
   onKeyDown,
   onSend,
@@ -72,7 +74,7 @@ export function ChatInput({
             onKeyDown={onKeyDown}
             onFocus={() => setInputFocused(true)}
             onBlur={() => setInputFocused(false)}
-            placeholder="与墨客聊聊你的故事…"
+            placeholder={placeholder}
             disabled={loading}
             rows={1}
             className="resize-none min-h-[64px] max-h-[140px] text-[15px] leading-[1.75] font-medium !bg-transparent hover:!bg-transparent focus-visible:!bg-transparent px-3 py-3 border-0 shadow-none focus-visible:outline-none focus-visible:ring-0 placeholder:text-muted-foreground/85"

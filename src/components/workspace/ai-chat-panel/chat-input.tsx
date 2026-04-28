@@ -48,7 +48,8 @@ export function ChatInput({
   const overLimit = charCount > CHAR_LIMIT
   const showCharCount = charCount >= CHAR_LIMIT * 0.8 || overLimit
   const hasConfiguredModel = Boolean(aiConfig.apiKey?.trim())
-  const showModelPicker = hasConfiguredModel && Boolean(aiConfig.availableModels && aiConfig.availableModels.length > 0)
+  const availableModels = aiConfig.availableModels ?? []
+  const showModelPicker = hasConfiguredModel && availableModels.length > 0
 
   return (
     <div className="p-3 space-y-2 border-t border-border">
@@ -115,7 +116,7 @@ export function ChatInput({
                   <SelectValue placeholder="选择模型" />
                 </SelectTrigger>
                 <SelectContent>
-                  {aiConfig.availableModels.map(m => (
+                  {availableModels.map(m => (
                     <SelectItem key={m} value={m}>{m}</SelectItem>
                   ))}
                 </SelectContent>

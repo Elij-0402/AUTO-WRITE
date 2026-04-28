@@ -17,13 +17,13 @@ const TYPE_LABELS: Record<WorldEntryType, string> = {
   timeline: '时间线',
 }
 
-const TYPE_VARIANT: Record<WorldEntryType, 'amber' | 'jade' | 'violet' | 'secondary'> = {
-  character: 'amber',
-  faction: 'jade',
-  location: 'jade',
-  rule: 'violet',
-  secret: 'violet',
-  event: 'amber',
+const TYPE_VARIANT: Record<WorldEntryType, 'warning' | 'success' | 'default' | 'secondary'> = {
+  character: 'default',
+  faction: 'success',
+  location: 'success',
+  rule: 'warning',
+  secret: 'warning',
+  event: 'default',
   timeline: 'secondary',
 }
 
@@ -62,9 +62,9 @@ export function RelationshipSuggestionCard({
     >
       <div
         aria-hidden
-        className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[hsl(var(--accent-violet))]/70"
+        className="absolute left-0 top-3 bottom-3 w-[2px] bg-primary/70"
       />
-      <div className="flex items-center gap-1.5 mb-2 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--accent-violet))]/85">
+      <div className="mb-2 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-primary/85">
         <Sparkles className="w-3 h-3" />
         <span>关联建议</span>
         <button
@@ -78,7 +78,7 @@ export function RelationshipSuggestionCard({
       </div>
       <div className="flex items-center flex-wrap gap-2 text-[13px] mb-2">
         <span className="font-medium text-foreground">{entry1Name}</span>
-        <Badge variant="violet">{relationshipType}</Badge>
+        <Badge variant="default">{relationshipType}</Badge>
         <span className="font-medium text-foreground">{entry2Name}</span>
       </div>
       {sourceLabel ? (
@@ -132,9 +132,9 @@ export function NewEntrySuggestionCard({
     >
       <div
         aria-hidden
-        className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[hsl(var(--accent-violet))]/70"
+        className="absolute left-0 top-3 bottom-3 w-[2px] bg-primary/70"
       />
-      <div className="flex items-center gap-1.5 mb-2 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--accent-violet))]/85">
+      <div className="mb-2 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-primary/85">
         <Sparkles className="w-3 h-3" />
         <span>新条目建议</span>
         <button

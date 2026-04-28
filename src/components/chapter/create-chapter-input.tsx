@@ -45,7 +45,7 @@ export function CreateChapterInput({ onCreate }: CreateChapterInputProps) {
     return (
       <button
         onClick={handleExpand}
-        className="flex w-full items-center gap-2 px-3 py-2.5 text-[12px] text-muted-foreground hover:text-[hsl(var(--accent-amber))] hover:bg-[hsl(var(--surface-3))]/50 transition-colors"
+        className="flex w-full items-center gap-2 px-3 py-2.5 text-[12px] text-muted-foreground hover:bg-[hsl(var(--surface-3))]/50 hover:text-primary transition-colors"
       >
         <Plus className="h-3.5 w-3.5" />
         新建章节

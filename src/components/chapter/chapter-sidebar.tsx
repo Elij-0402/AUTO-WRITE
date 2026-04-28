@@ -162,13 +162,13 @@ export function ChapterSidebar({
                     'relative flex h-11 w-full items-center justify-center transition-[color,background-color] duration-150',
                     'text-muted-foreground/60 hover:text-foreground hover:bg-[hsl(var(--surface-3))]/60',
                     'focus-visible:outline-none',
-                    isActive && 'text-[hsl(var(--accent-amber))]'
+                    isActive && 'text-primary'
                   )}
                 >
                   {isActive && (
                     <span
                       aria-hidden
-                      className="absolute left-0 top-2 bottom-2 w-[2px] rounded-r-full bg-[hsl(var(--accent-amber))]"
+                      className="absolute left-0 top-2 bottom-2 w-[2px] rounded-r-full bg-primary"
                     />
                   )}
                   <Icon

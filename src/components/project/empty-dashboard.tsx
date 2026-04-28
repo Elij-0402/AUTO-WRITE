@@ -10,27 +10,27 @@ interface EmptyDashboardProps {
 
 export function EmptyDashboard({ onCreateProject, greeting }: EmptyDashboardProps) {
   return (
-    <div className="relative flex flex-col items-center justify-center py-24 px-6 animate-fade-up">
-      <div className="flex items-center gap-2.5 mb-8">
-        <div className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] bg-primary">
-          <PenLine className="h-4 w-4 text-primary-foreground" strokeWidth={2.2} />
+    <div className="relative flex max-w-[760px] flex-col items-center justify-center px-6 py-24 text-center animate-fade-up">
+      <div className="mb-10 flex items-center gap-3 text-[13px] text-[hsl(var(--muted-foreground))]">
+        <div className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] border border-[hsl(var(--accent))]/40 bg-[hsl(var(--surface-2))]">
+          <PenLine className="h-4 w-4 text-primary" strokeWidth={1.9} />
         </div>
-        <span className="text-[16px] font-semibold">InkForge</span>
+        <span className="font-display text-[20px] leading-none text-foreground">InkForge</span>
       </div>
 
-      <p className="mb-10 text-[13px] text-muted-foreground">
+      <p className="mb-6 text-[13px] text-muted-foreground">
         {greeting}
       </p>
 
-      <h2 className="mb-4 text-[32px] font-semibold leading-tight tracking-tight text-foreground text-center">
+      <h2 className="font-display mb-5 text-[42px] leading-[1.2] text-foreground sm:text-[52px]">
         落笔之前，先有世界
       </h2>
 
-      <p className="mb-10 text-[15px] text-muted-foreground max-w-md text-center leading-relaxed">
-        从一个标题开始，构建你的故事宇宙
+      <p className="font-body mb-12 max-w-[30rem] text-[17px] leading-[1.9] text-muted-foreground">
+        从一个标题开始，安静地搭起人物、因果与命运将要经过的地方。
       </p>
 
-      <Button size="lg" onClick={onCreateProject}>
+      <Button size="lg" onClick={onCreateProject} className="min-w-40">
         开始第一个故事
       </Button>
     </div>

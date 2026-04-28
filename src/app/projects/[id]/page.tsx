@@ -182,9 +182,9 @@ function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, o
           <span
             aria-hidden
             className={
-              'h-1.5 w-1.5 rounded-full ' +
+              'h-1.5 w-1.5 rounded-[2px] ' +
               (isSaving
-                ? 'bg-[hsl(var(--warning))] animate-pulse'
+                ? 'bg-primary animate-caret'
                 : 'bg-[hsl(var(--success))]')
             }
           />
@@ -302,7 +302,7 @@ function Placeholder({ activeTab }: { activeTab: ActiveTab }) {
     <div className="relative flex-1 flex items-center justify-center overflow-hidden surface-0">
       <div className="relative flex flex-col items-center gap-5 text-center px-6 animate-fade-up">
         <Icon
-          className="h-14 w-14 text-[hsl(var(--accent-amber))]/35"
+          className="h-14 w-14 text-primary/35"
           strokeWidth={1.25}
           aria-hidden
         />

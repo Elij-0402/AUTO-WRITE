@@ -27,9 +27,9 @@ function getStatusDotColor(status: OutlineStatus): string {
     case 'not_started':
       return 'bg-muted-foreground/40'
     case 'in_progress':
-      return 'bg-[hsl(var(--accent-amber))]'
+      return 'bg-primary'
     case 'completed':
-      return 'bg-[hsl(var(--accent-jade))]'
+      return 'bg-[hsl(var(--success))]'
     default:
       return 'bg-muted-foreground/40'
   }
@@ -70,7 +70,7 @@ function OutlineRow({ chapter, chapterPlanSummary, isActive, onSelect }: Outline
         'group relative flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-[background-color,color] duration-[var(--dur-fast)]',
         'border-l-2 border-transparent',
         isActive
-          ? 'border-[hsl(var(--accent-amber))] bg-[hsl(var(--surface-3))]/70 text-foreground'
+          ? 'border-primary bg-[hsl(var(--surface-3))]/70 text-foreground'
           : 'hover:bg-[hsl(var(--surface-3))]/40 text-foreground/85',
       isDragging && 'opacity-50 elev-md z-50'
       )}
@@ -107,7 +107,7 @@ function OutlineRow({ chapter, chapterPlanSummary, isActive, onSelect }: Outline
                 e.stopPropagation()
                 onSelect()
               }}
-              className="text-[11px] text-[hsl(var(--accent-amber))] hover:underline shrink-0"
+              className="shrink-0 text-[11px] text-primary hover:underline"
             >
               编辑
             </button>

@@ -104,7 +104,7 @@ export function RelationshipSection({
         key={relation.id}
         className="group relative flex items-start gap-2 p-3 rounded-[var(--radius-card)] surface-2 film-edge hover:film-edge-active transition-[box-shadow] duration-[var(--dur-fast)]"
       >
-        <span className="text-[hsl(var(--accent-amber))]/70 flex-shrink-0 mt-0.5">
+        <span className="text-primary/70 flex-shrink-0 mt-0.5">
           {isSource ? (
             <ArrowRight className="h-4 w-4" />
           ) : (
@@ -113,7 +113,7 @@ export function RelationshipSection({
         </span>
 
         <div className="flex-1 min-w-0 space-y-1.5">
-          <Badge variant="violet">
+          <Badge variant="default">
             {CATEGORY_LABELS[relation.category]}
           </Badge>
 
@@ -131,7 +131,7 @@ export function RelationshipSection({
 
           <button
             onClick={() => onSelectEntry(targetId)}
-            className="text-[13px] font-medium text-[hsl(var(--accent-amber))] hover:underline"
+            className="text-[13px] font-medium text-primary hover:underline"
           >
             {targetEntry.name}
           </button>
@@ -142,7 +142,7 @@ export function RelationshipSection({
           className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 rounded-[var(--radius-control)] hover:bg-[hsl(var(--surface-3))] transition-opacity"
           aria-label="删除关联"
         >
-          <X className="h-3.5 w-3.5 text-muted-foreground hover:text-[hsl(var(--accent-coral))]" />
+          <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
         </button>
       </div>
     )

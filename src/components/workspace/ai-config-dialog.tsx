@@ -208,7 +208,7 @@ export function AIConfigDialog({ open, onClose }: AIConfigDialogProps) {
 
           {/* Probe error */}
           {probeError && (
-            <div className="flex items-center gap-2 text-[12px] text-[hsl(var(--accent-coral))]">
+            <div className="flex items-center gap-2 text-[12px] text-destructive">
               <XCircle className="h-4 w-4 shrink-0" />
               <span>{probeError}</span>
             </div>

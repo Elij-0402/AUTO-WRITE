@@ -50,7 +50,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             size="icon-sm"
             className={cn(
               'relative',
-              editor.isActive('bold') && 'text-[hsl(var(--accent-amber))] after:absolute after:left-1.5 after:right-1.5 after:bottom-0.5 after:h-[2px] after:bg-[hsl(var(--accent-amber))] after:rounded-full'
+              editor.isActive('bold') && 'text-primary after:absolute after:left-1.5 after:right-1.5 after:bottom-0.5 after:h-[2px] after:rounded-[2px] after:bg-primary'
             )}
             onClick={() => editor.chain().focus().toggleBold().run()}
           >
@@ -67,7 +67,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             size="icon-sm"
             className={cn(
               'relative',
-              editor.isActive('italic') && 'text-[hsl(var(--accent-amber))] after:absolute after:left-1.5 after:right-1.5 after:bottom-0.5 after:h-[2px] after:bg-[hsl(var(--accent-amber))] after:rounded-full'
+              editor.isActive('italic') && 'text-primary after:absolute after:left-1.5 after:right-1.5 after:bottom-0.5 after:h-[2px] after:rounded-[2px] after:bg-primary'
             )}
             onClick={() => editor.chain().focus().toggleItalic().run()}
           >
@@ -84,7 +84,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             size="icon-sm"
             className={cn(
               'relative',
-              headingLevel > 0 && 'text-[hsl(var(--accent-amber))] after:absolute after:left-1.5 after:right-1.5 after:bottom-0.5 after:h-[2px] after:bg-[hsl(var(--accent-amber))] after:rounded-full'
+              headingLevel > 0 && 'text-primary after:absolute after:left-1.5 after:right-1.5 after:bottom-0.5 after:h-[2px] after:rounded-[2px] after:bg-primary'
             )}
             onClick={cycleHeading}
           >

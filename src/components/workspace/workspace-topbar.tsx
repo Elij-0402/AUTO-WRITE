@@ -52,19 +52,19 @@ export function WorkspaceTopbar({
 
       <div className="min-w-0 flex items-center gap-3">
         <span
-          className="text-[15px] font-semibold truncate text-foreground"
+          className="font-display truncate text-[24px] leading-none text-foreground"
           title={project?.title ?? ''}
         >
           {project?.title ?? '未命名项目'}
         </span>
-        <div className="hidden sm:inline-flex items-center gap-2 text-[12px] tabular-nums">
+        <div className="hidden sm:inline-flex items-center gap-2 text-[12px]">
           <span className="text-muted-foreground">今日</span>
-          <span className="text-primary font-medium">
+          <span className="font-numeric text-primary">
             {todayWordCount.toLocaleString()}
           </span>
           <span className="text-muted-foreground/40">·</span>
           <span className="text-muted-foreground">总</span>
-          <span className="text-foreground/80">
+          <span className="font-numeric text-foreground/80">
             {totalWordCount.toLocaleString()}
           </span>
         </div>

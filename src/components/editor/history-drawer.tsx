@@ -62,7 +62,7 @@ export function HistoryDrawer({
       <SheetContent side="right" className="w-[360px] sm:w-[420px] p-0 flex flex-col">
         <SheetHeader className="px-4 py-3 divider-hair">
           <SheetTitle className="text-[13px] font-medium flex items-center gap-2 uppercase tracking-[0.15em]">
-            <Clock className="h-4 w-4 text-[hsl(var(--accent-amber))]" />
+            <Clock className="h-4 w-4 text-primary" />
             版本历史
           </SheetTitle>
         </SheetHeader>
@@ -88,7 +88,7 @@ export function HistoryDrawer({
                               if (e.key === 'Enter') handleConfirmRename()
                               if (e.key === 'Escape') setEditingId(null)
                             }}
-                            className="flex-1 h-7 px-2 surface-2 border border-[hsl(var(--border))] rounded-[var(--radius-control)] text-[13px] focus:outline-none focus:border-[hsl(var(--accent-amber))]/60"
+                            className="flex-1 h-7 rounded-[var(--radius-control)] border border-[hsl(var(--border))] surface-2 px-2 text-[13px] focus:outline-none focus:border-primary/60"
                             placeholder="版本名称"
                           />
                           <Button variant="ghost" size="icon-sm" onClick={handleConfirmRename}>
@@ -131,7 +131,7 @@ export function HistoryDrawer({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-[hsl(var(--accent-coral))] hover:text-[hsl(var(--accent-coral))]"
+                      className="text-destructive hover:text-destructive"
                       onClick={() => remove(rev.id)}
                     >
                       <Trash2 className="h-3 w-3" />

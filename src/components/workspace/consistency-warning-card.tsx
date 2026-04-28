@@ -55,9 +55,9 @@ export function ConsistencyWarningCard({
     >
       <div
         aria-hidden
-        className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full bg-[hsl(var(--accent-coral))]/75"
+        className="absolute left-0 top-3 bottom-3 w-[2px] bg-destructive/75"
       />
-      <div className="flex items-center gap-1.5 mb-2 text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--accent-coral))]">
+      <div className="mb-2 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-destructive">
         <AlertTriangle className="w-3 h-3" />
         <span>一致性警告</span>
       </div>

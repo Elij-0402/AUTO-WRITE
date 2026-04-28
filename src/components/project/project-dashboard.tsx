@@ -85,40 +85,42 @@ export function ProjectDashboard() {
 
   return (
     <div className="min-h-screen flex flex-col surface-0">
-      <div className="flex-1 px-6 py-16 sm:px-8 lg:py-20">
-        <div className="mx-auto w-full max-w-5xl">
-          {/* Masthead */}
+      <div className="flex-1 px-6 py-16 sm:px-8 lg:px-12 lg:py-20">
+        <div className="mx-auto w-full max-w-6xl">
           <header className="animate-fade-up">
-            <div className="flex items-end justify-between gap-6">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] bg-primary">
-                  <PenLine className="h-4 w-4 text-primary-foreground" strokeWidth={2.2} />
+            <div className="flex flex-col gap-8 border-b border-[hsl(var(--line))] pb-8 sm:flex-row sm:items-end sm:justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-control)] border border-[hsl(var(--accent))]/40 bg-[hsl(var(--surface-2))]">
+                    <PenLine className="h-4 w-4 text-primary" strokeWidth={1.9} />
+                  </div>
+                  <span className="font-display text-[20px] leading-none text-foreground">
+                    InkForge
+                  </span>
                 </div>
-                <span className="text-[16px] font-semibold text-foreground">
-                  InkForge
-                </span>
+                <div className="space-y-3">
+                  <p className="text-[12px] text-muted-foreground">三更书房</p>
+                  <h1 className="font-display text-[34px] leading-[1.3] text-foreground sm:text-[40px]">
+                    我的书斋
+                  </h1>
+                </div>
               </div>
-              <p className="text-[13px] text-muted-foreground">
+              <p className="font-body max-w-[20rem] text-[17px] leading-[1.9] text-muted-foreground">
                 {greeting}
               </p>
             </div>
           </header>
 
-          {/* Section header */}
           <div
-            className="mt-10 mb-6 flex items-baseline justify-between animate-fade-up"
+            className="mt-8 mb-6 flex items-baseline justify-between animate-fade-up"
             style={{ animationDelay: '60ms' }}
           >
-            <h1 className="text-[24px] font-semibold tracking-tight text-foreground">
-              我的书斋
-            </h1>
             <span className="text-[13px] text-muted-foreground">
               共 {projects.length} 个项目
             </span>
           </div>
 
-          {/* Grid */}
-          <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((project, i) => (
               <div
                 key={project.id}
@@ -140,9 +142,9 @@ export function ProjectDashboard() {
             >
               <button
                 onClick={() => setCreateModalOpen(true)}
-                className="group flex h-full min-h-[160px] w-full flex-col items-center justify-center gap-3 rounded-[var(--radius-card)] border border-dashed border-[hsl(var(--border-strong))] bg-transparent text-muted-foreground transition-colors hover:border-primary/60 hover:bg-primary/[0.04] hover:text-primary cursor-pointer"
+                className="group flex h-full min-h-[160px] w-full flex-col items-center justify-center gap-3 rounded-[var(--radius-card)] border border-dashed border-[hsl(var(--line-strong))] bg-[hsl(var(--surface-1))] text-muted-foreground cursor-pointer hover:border-primary/60 hover:bg-[hsl(var(--surface-2))] hover:text-primary"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-current/50">
+                <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-current/50">
                   <Plus className="h-4 w-4" strokeWidth={1.75} />
                 </span>
                 <span className="text-[15px] font-medium">

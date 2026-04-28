@@ -1,7 +1,7 @@
 'use client'
 
 import { Trash2, MessageSquare } from 'lucide-react'
-import type { Conversation } from '@/lib/hooks/use-conversations'
+import type { ConversationPresentation as Conversation } from '@/lib/hooks/use-conversations'
 
 interface ConversationDrawerProps {
   open: boolean

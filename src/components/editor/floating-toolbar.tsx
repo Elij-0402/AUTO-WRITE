@@ -107,9 +107,9 @@ export function FloatingToolbar({ onDiscuss, editorRef }: FloatingToolbarProps) 
     >
       <button
         onClick={handleDiscussClick}
-        className="flex items-center gap-1.5 surface-1 film-edge rounded-full px-3.5 py-1.5 text-[12px] text-foreground hover:film-edge-active elev-sm transition-[box-shadow] duration-[var(--dur-fast)]"
+        className="flex items-center gap-1.5 rounded-[var(--radius-control)] surface-1 film-edge px-3.5 py-1.5 text-[12px] text-foreground hover:film-edge-active transition-[box-shadow] duration-[var(--dur-fast)]"
       >
-        <MessageCircle className="w-3.5 h-3.5 text-[hsl(var(--accent-amber))]" strokeWidth={2} />
+        <MessageCircle className="w-3.5 h-3.5 text-primary" strokeWidth={2} />
         <span className="tracking-wide">讨论</span>
       </button>
     </div>

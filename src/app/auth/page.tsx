@@ -46,32 +46,54 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex surface-0">
-      <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center p-12 surface-1 divider-hair-v">
-        <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-[var(--radius-dialog)] bg-primary">
-          <PenLine className="w-7 h-7 text-primary-foreground" strokeWidth={1.75} />
-        </div>
-        <h1 className="mb-4 text-[40px] font-semibold tracking-tight text-foreground">
-          InkForge
-        </h1>
-        <p className="text-[14px] text-muted-foreground text-center">
-          AI 小说创作工作台
-        </p>
-      </div>
-
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="max-w-[360px] w-full space-y-6">
-          <div className="lg:hidden text-center mb-4">
-            <h1 className="text-[26px] font-semibold tracking-tight">InkForge</h1>
-            <p className="text-[13px] text-muted-foreground">AI 小说创作</p>
+    <div className="min-h-screen surface-0 lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,460px)]">
+      <div className="hidden lg:flex flex-col justify-between border-r border-[hsl(var(--line))] px-16 py-14 surface-1">
+        <div className="space-y-12">
+          <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-control)] border border-[hsl(var(--accent))]/40 bg-[hsl(var(--surface-2))]">
+              <PenLine className="h-5 w-5 text-primary" strokeWidth={1.8} />
+            </div>
+            <span className="font-display text-[22px] leading-none text-foreground">InkForge</span>
           </div>
 
-          <div className="flex border-b border-border">
+          <div className="max-w-[28rem] space-y-6">
+            <p className="text-[12px] text-muted-foreground">三更书房</p>
+            <h1 className="font-display text-[48px] leading-[1.2] text-foreground">
+              在夜里，继续把故事写深一点。
+            </h1>
+            <p className="font-body text-[17px] leading-[1.9] text-muted-foreground">
+              这里不是通用协作面板。它更像一张安静展开的书桌，人物、章节与世界观都在同一盏灯下。
+            </p>
+          </div>
+        </div>
+
+        <p className="font-numeric text-[13px] text-muted-foreground">Study at Third Watch</p>
+      </div>
+
+      <div className="flex items-center justify-center px-6 py-10 sm:px-8">
+        <div className="w-full max-w-[360px] space-y-8">
+          <div className="lg:hidden text-center">
+            <div className="mb-5 flex items-center justify-center gap-3 text-[13px] text-muted-foreground">
+              <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-[hsl(var(--accent))]/40 bg-[hsl(var(--surface-2))]">
+                <PenLine className="h-4 w-4 text-primary" strokeWidth={1.8} />
+              </div>
+              <span className="font-display text-[22px] leading-none text-foreground">InkForge</span>
+            </div>
+            <p className="text-[13px] text-muted-foreground">三更书房</p>
+          </div>
+
+          <div className="border-b border-[hsl(var(--line))]">
+            <div className="mb-2">
+              <h2 className="font-display text-[28px] leading-[1.3] text-foreground">
+                {mode === 'login' ? '回到书桌' : '开一间新书房'}
+              </h2>
+            </div>
+            <div className="flex">
             <button
               type="button"
               onClick={() => { setMode('login'); setError(null); setSuccess(null) }}
               className={cn(
-                'flex-1 pb-3 text-center text-[14px] font-medium transition-colors relative',
+                'relative flex-1 pb-3 text-left text-[14px] font-medium transition-colors',
                 mode === 'login'
                   ? 'text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -86,7 +108,7 @@ export default function AuthPage() {
               type="button"
               onClick={() => { setMode('register'); setError(null); setSuccess(null) }}
               className={cn(
-                'flex-1 pb-3 text-center text-[14px] font-medium transition-colors relative',
+                'relative flex-1 pb-3 text-left text-[14px] font-medium transition-colors',
                 mode === 'register'
                   ? 'text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -97,6 +119,7 @@ export default function AuthPage() {
                 <span aria-hidden className="absolute left-0 right-0 -bottom-px h-[2px] bg-[hsl(var(--accent))]" />
               )}
             </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -126,18 +149,18 @@ export default function AuthPage() {
 
             {mode === 'login' && (
               <div className="text-right">
-                <a href="/auth/forgot-password" className="text-[13px] text-[hsl(var(--accent))] hover:underline">
+                <a href="/auth/forgot-password" className="text-[13px] text-primary hover:underline">
                   忘记密码？
                 </a>
               </div>
             )}
 
             {error && (
-              <div className="text-destructive text-[13px] text-center">{error}</div>
+              <div className="border border-destructive/30 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">{error}</div>
             )}
 
             {success && (
-              <div className="text-[hsl(var(--accent-jade))] text-[13px] text-center">{success}</div>
+              <div className="border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10 px-3 py-2 text-[13px] text-[hsl(var(--success))]">{success}</div>
             )}
 
             <Button type="submit" disabled={loading} className="w-full">

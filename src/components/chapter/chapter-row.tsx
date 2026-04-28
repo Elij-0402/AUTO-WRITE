@@ -93,7 +93,7 @@ export function ChapterRow({
         'group relative flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-[background-color,color] duration-[var(--dur-fast)]',
         'border-l-2 border-transparent',
         isActive
-          ? 'border-[hsl(var(--accent-amber))] bg-[hsl(var(--surface-3))]/70 text-foreground'
+          ? 'border-primary bg-[hsl(var(--surface-3))]/70 text-foreground'
           : 'hover:bg-[hsl(var(--surface-3))]/40 text-foreground/85',
       isDragging && 'opacity-50 elev-md z-50'
       )}
@@ -112,7 +112,7 @@ export function ChapterRow({
 
       <span className={cn(
         'flex-shrink-0 text-mono text-[11px] min-w-[1.5rem] text-right tabular-nums',
-        isActive ? 'text-[hsl(var(--accent-amber))]' : 'text-muted-foreground/60'
+        isActive ? 'text-primary' : 'text-muted-foreground/60'
       )}>
         {String(chapter.order + 1).padStart(2, '0')}
       </span>
@@ -128,7 +128,7 @@ export function ChapterRow({
             onCompositionStart={() => { isComposingRef.current = true }}
             onCompositionEnd={() => { isComposingRef.current = false }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full rounded-[var(--radius-control)] border border-[hsl(var(--border-strong))] surface-2 px-1.5 py-0 text-[13px] text-foreground focus:outline-none focus:border-[hsl(var(--accent-amber))]"
+            className="w-full rounded-[var(--radius-control)] border border-[hsl(var(--border-strong))] surface-2 px-1.5 py-0 text-[13px] text-foreground focus:outline-none focus:border-[hsl(var(--accent))]"
           />
         ) : (
           <span className="block truncate text-[13px]">
@@ -146,7 +146,7 @@ export function ChapterRow({
       {chapter.status === 'completed' && (
         <span
           aria-label="已完成"
-          className="flex-shrink-0 h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent-jade))]"
+          className="flex-shrink-0 h-1.5 w-1.5 rounded-[2px] bg-[hsl(var(--success))]"
         />
       )}
 
@@ -185,7 +185,7 @@ export function ChapterRow({
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => onDelete(chapter.id)}
-            className="text-[hsl(var(--accent-coral))] focus:text-[hsl(var(--accent-coral))]"
+            className="text-destructive focus:text-destructive"
           >
             <Trash2 />
             删除

@@ -156,7 +156,7 @@ export function PlanningAiPanel({
     <aside className="flex h-full w-[320px] shrink-0 flex-col divider-hair-v surface-1">
       <div className="px-4 py-3 divider-hair">
         <div className="flex items-center gap-2 text-sm font-medium">
-          <Bot className="h-4 w-4 text-[hsl(var(--accent-amber))]" />
+          <Bot className="h-4 w-4 text-primary" />
           <span>规划动作</span>
         </div>
         <p className="mt-1 text-[12px] text-muted-foreground">
@@ -252,7 +252,7 @@ function ActionButton({
 
 function StatusMessage({ tone, message }: { tone: 'error' | 'loading'; message: string }) {
   return (
-    <div className={tone === 'error' ? 'text-[12px] text-[hsl(var(--accent-coral))] leading-6' : 'flex items-center gap-2 text-[12px] text-muted-foreground'}>
+    <div className={tone === 'error' ? 'text-[12px] text-destructive leading-6' : 'flex items-center gap-2 text-[12px] text-muted-foreground'}>
       {tone === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
       <span>{message}</span>
     </div>

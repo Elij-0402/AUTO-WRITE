@@ -107,12 +107,12 @@ function getEmptyPrompt(type: WorldEntryType): string {
 
 function getTypeColorClass(type: WorldEntryType): string {
   switch (type) {
-    case 'character': return 'text-[hsl(var(--accent-amber))]'
-    case 'faction':   return 'text-[hsl(var(--accent-jade))]'
-    case 'location':  return 'text-[hsl(var(--accent-jade))]'
-    case 'rule':      return 'text-[hsl(var(--accent-violet))]'
-    case 'secret':    return 'text-[hsl(var(--accent-violet))]'
-    case 'event':     return 'text-[hsl(var(--accent-amber))]'
+    case 'character': return 'text-primary'
+    case 'faction':   return 'text-[hsl(var(--success))]'
+    case 'location':  return 'text-[hsl(var(--success))]'
+    case 'rule':      return 'text-[hsl(var(--warning))]'
+    case 'secret':    return 'text-[hsl(var(--warning))]'
+    case 'event':     return 'text-primary'
     case 'timeline':  return 'text-foreground/80'
     default:          return 'text-foreground/80'
   }
@@ -120,12 +120,12 @@ function getTypeColorClass(type: WorldEntryType): string {
 
 function getTypeRailClass(type: WorldEntryType): string {
   switch (type) {
-    case 'character': return 'bg-[hsl(var(--accent-amber))]'
-    case 'faction':   return 'bg-[hsl(var(--accent-jade))]'
-    case 'location':  return 'bg-[hsl(var(--accent-jade))]'
-    case 'rule':      return 'bg-[hsl(var(--accent-violet))]'
-    case 'secret':    return 'bg-[hsl(var(--accent-violet))]'
-    case 'event':     return 'bg-[hsl(var(--accent-amber))]'
+    case 'character': return 'bg-primary'
+    case 'faction':   return 'bg-[hsl(var(--success))]'
+    case 'location':  return 'bg-[hsl(var(--success))]'
+    case 'rule':      return 'bg-[hsl(var(--warning))]'
+    case 'secret':    return 'bg-[hsl(var(--warning))]'
+    case 'event':     return 'bg-primary'
     case 'timeline':  return 'bg-foreground/40'
     default:          return 'bg-foreground/40'
   }
@@ -190,7 +190,7 @@ function WorldEntryRow({ entry, isActive, contradictionCount = 0, onSelect, onEd
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={onDelete}
-            className="text-[hsl(var(--accent-coral))] focus:text-[hsl(var(--accent-coral))]"
+            className="text-destructive focus:text-destructive"
           >
             <Trash2 />
             删除

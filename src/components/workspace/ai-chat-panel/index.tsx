@@ -487,8 +487,8 @@ export function AIChatPanel({
           <span className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
             <span
               className={loading
-                ? 'h-1.5 w-1.5 rounded-full bg-primary animate-pulse'
-                : 'h-1.5 w-1.5 rounded-full bg-[hsl(var(--accent-jade))]'}
+                ? 'h-1.5 w-1.5 rounded-[2px] bg-primary animate-caret'
+                : 'h-1.5 w-1.5 rounded-[2px] bg-[hsl(var(--success))]'}
             />
             {loading ? '思索中' : '就绪'}
           </span>

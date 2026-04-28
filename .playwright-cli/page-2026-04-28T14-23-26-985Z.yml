@@ -1,0 +1,12 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - img [ref=e8]
+        - generic [ref=e10]: InkForge
+      - paragraph [ref=e11]: 夜深了，灵感正浓
+      - heading "落笔之前，先有世界" [level=2] [ref=e12]
+      - paragraph [ref=e13]: 从一个标题开始，构建你的故事宇宙
+      - button "开始第一个故事" [ref=e14]
+  - button "Open Next.js Dev Tools" [ref=e20] [cursor=pointer]:
+    - img [ref=e21]

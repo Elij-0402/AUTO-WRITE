@@ -101,6 +101,22 @@ describe('ChatInput', () => {
     expect(screen.getByText('未配置模型')).toBeInTheDocument()
   })
 
+  it('falls back to the current model label when available models are unavailable', () => {
+    render(
+      <ChatInput
+        {...baseProps}
+        aiConfig={{
+          apiKey: 'sk-test',
+          model: 'claude-sonnet-4-5',
+          availableModels: undefined,
+        }}
+      />
+    )
+
+    expect(screen.queryByRole('combobox', { name: '选择模型' })).toBeNull()
+    expect(screen.getByText('claude-sonnet-4-5')).toBeInTheDocument()
+  })
+
   it('shows a direct configure action when api key is missing', () => {
     const onOpenAIConfig = vi.fn()
 

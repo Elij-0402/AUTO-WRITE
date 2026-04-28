@@ -79,7 +79,7 @@ export function NormalLayout({
         className="group relative flex items-center justify-center w-px shrink-0 cursor-col-resize bg-[hsl(var(--border))]"
       >
         <div className="absolute inset-y-0 -left-1.5 -right-1.5" />
-        <div className="absolute inset-y-0 left-0 w-px group-hover:w-[3px] group-hover:bg-[hsl(var(--accent))] group-active:bg-[hsl(var(--accent))] transition-[width,background-color] duration-150" />
+        <div className="absolute inset-y-0 left-0 w-px group-hover:w-[2px] group-hover:bg-[hsl(var(--accent))] group-active:bg-[hsl(var(--accent))] transition-[width,background-color] duration-150" />
       </PanelSeparator>
 
       <Panel id="editor-chat" minSize={500} groupResizeBehavior="preserve-relative-size">
@@ -95,7 +95,7 @@ export function NormalLayout({
             className="group relative flex items-center justify-center w-px shrink-0 cursor-col-resize bg-[hsl(var(--border))]"
           >
             <div className="absolute inset-y-0 -left-1.5 -right-1.5" />
-            <div className="absolute inset-y-0 left-0 w-px group-hover:w-[3px] group-hover:bg-[hsl(var(--accent))] group-active:bg-[hsl(var(--accent))] transition-[width,background-color] duration-150" />
+            <div className="absolute inset-y-0 left-0 w-px group-hover:w-[2px] group-hover:bg-[hsl(var(--accent))] group-active:bg-[hsl(var(--accent))] transition-[width,background-color] duration-150" />
           </PanelSeparator>
 
           <Panel
@@ -105,7 +105,7 @@ export function NormalLayout({
             maxSize={MAX_CHAT_PANEL_WIDTH}
             groupResizeBehavior="preserve-pixel-size"
           >
-            <div className="h-full">
+            <div className="h-full surface-1">
               {children}
             </div>
           </Panel>

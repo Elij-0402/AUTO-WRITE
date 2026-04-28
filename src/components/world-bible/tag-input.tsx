@@ -71,7 +71,7 @@ export function TagInput({ tags, onTagsChange, allTags }: TagInputProps) {
               <button
                 type="button"
                 onClick={() => removeTag(tag)}
-                className="hover:text-[hsl(var(--accent-coral))] transition-colors"
+                className="transition-colors hover:text-destructive"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -113,7 +113,7 @@ export function TagInput({ tags, onTagsChange, allTags }: TagInputProps) {
           {showCreateOption && (
             <button
               type="button"
-              className="w-full px-3 py-1.5 text-left text-[13px] text-[hsl(var(--accent-amber))] hover:bg-[hsl(var(--surface-3))]"
+              className="w-full px-3 py-1.5 text-left text-[13px] text-primary hover:bg-[hsl(var(--surface-3))]"
               onClick={() => addTag(inputValue)}
             >
               + 创建 &quot;{inputValue}&quot;

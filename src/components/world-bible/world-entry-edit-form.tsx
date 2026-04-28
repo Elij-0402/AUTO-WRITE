@@ -567,21 +567,21 @@ export function WorldEntryEditForm({
   }
 
   const typeColorVar: Record<WorldEntryType, string> = {
-    character: 'var(--accent-amber)',
-    faction: 'var(--accent-jade)',
-    location: 'var(--accent-jade)',
-    rule: 'var(--accent-violet)',
-    secret: 'var(--accent-violet)',
-    event: 'var(--accent-amber)',
+    character: 'var(--accent)',
+    faction: 'var(--success)',
+    location: 'var(--success)',
+    rule: 'var(--warning)',
+    secret: 'var(--warning)',
+    event: 'var(--accent)',
     timeline: 'var(--foreground)',
   }
-  const badgeVariant: Record<WorldEntryType, 'amber' | 'jade' | 'violet' | 'secondary'> = {
-    character: 'amber',
-    faction: 'jade',
-    location: 'jade',
-    rule: 'violet',
-    secret: 'violet',
-    event: 'amber',
+  const badgeVariant: Record<WorldEntryType, 'default' | 'success' | 'warning' | 'secondary'> = {
+    character: 'default',
+    faction: 'success',
+    location: 'success',
+    rule: 'warning',
+    secret: 'warning',
+    event: 'default',
     timeline: 'secondary',
   }
 
@@ -601,10 +601,10 @@ export function WorldEntryEditForm({
           <span
             aria-hidden
             className={
-              'h-1.5 w-1.5 rounded-full ' +
+              'h-1.5 w-1.5 rounded-[2px] ' +
               (isSaving
-                ? 'bg-[hsl(var(--accent-amber))]'
-                : 'bg-[hsl(var(--accent-jade))]')
+                ? 'bg-primary animate-caret'
+                : 'bg-[hsl(var(--success))]')
             }
           />
           {isSaving ? '保存中' : '已保存'}

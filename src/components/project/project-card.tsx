@@ -99,7 +99,7 @@ export function ProjectCard({ project, onEdit, onDelete, onOpenSettings }: Proje
         'group relative flex h-full min-h-[160px] cursor-pointer flex-col',
         'rounded-[var(--radius-card)] card-soft px-5 pt-5 pb-4',
         'transition-colors duration-[var(--dur-base)]',
-        'hover:bg-[hsl(var(--surface-1))]'
+        'hover:border-[hsl(var(--line-strong))] hover:bg-[hsl(var(--surface-1))]'
       )}
       onClick={handleCardClick}
     >
@@ -113,11 +113,11 @@ export function ProjectCard({ project, onEdit, onDelete, onOpenSettings }: Proje
               onBlur={handleTitleSave}
               onKeyDown={handleTitleKeyDown}
               onClick={(e) => e.stopPropagation()}
-              className="w-full rounded-sm border-b border-foreground/30 bg-transparent px-0 py-0.5 text-[17px] font-semibold text-foreground focus:outline-none focus:border-foreground"
+              className="w-full border-b border-[hsl(var(--line-strong))] bg-transparent px-0 py-0.5 text-[17px] font-semibold text-foreground focus:outline-none focus:border-[hsl(var(--accent))]"
             />
           ) : (
             <h3
-              className="truncate text-[17px] font-semibold leading-tight text-foreground"
+              className="font-display truncate text-[24px] leading-[1.35] text-foreground"
               onClick={(e) => {
                 e.stopPropagation()
                 setIsEditingTitle(true)
@@ -132,7 +132,7 @@ export function ProjectCard({ project, onEdit, onDelete, onOpenSettings }: Proje
         <DropdownMenu>
           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
             <button
-              className="flex h-7 w-7 -mr-1 items-center justify-center rounded-md text-muted-foreground/70 opacity-0 transition-opacity hover:bg-[hsl(var(--surface-2))] hover:text-foreground group-hover:opacity-100"
+              className="flex h-7 w-7 -mr-1 items-center justify-center rounded-[var(--radius-control)] text-muted-foreground/70 opacity-0 transition-opacity hover:bg-[hsl(var(--surface-2))] hover:text-foreground group-hover:opacity-100"
               aria-label="更多操作"
             >
               <MoreHorizontal className="h-4 w-4" />
@@ -172,20 +172,20 @@ export function ProjectCard({ project, onEdit, onDelete, onOpenSettings }: Proje
       </div>
 
       <div className="mt-auto flex items-center justify-between pt-4">
-        <div className="flex items-center gap-3 text-[13px] tabular-nums text-muted-foreground">
+        <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
           <span>
             {project.wordCount.toLocaleString()} 字
           </span>
           {project.todayWordCount > 0 && (
             <>
               <span aria-hidden className="h-3 w-px bg-border" />
-              <span className="text-primary">
+              <span className="font-numeric text-primary">
                 今日 +{project.todayWordCount.toLocaleString()}
               </span>
             </>
           )}
         </div>
-        <span className="text-[12px] text-muted-foreground/80">
+        <span className="font-numeric text-[12px] text-muted-foreground/80">
           {formatRelativeTime(project.updatedAt)}
         </span>
       </div>

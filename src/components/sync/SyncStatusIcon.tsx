@@ -12,7 +12,7 @@ export function SyncStatusIcon() {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon-sm" className="text-[hsl(var(--accent-coral))]">
+          <Button variant="ghost" size="icon-sm" className="text-destructive">
             <WifiOff />
           </Button>
         </TooltipTrigger>
@@ -25,7 +25,7 @@ export function SyncStatusIcon() {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon-sm" className="text-[hsl(var(--accent-amber))]">
+          <Button variant="ghost" size="icon-sm" className="text-primary">
             <RefreshCw className="animate-spin" />
           </Button>
         </TooltipTrigger>
@@ -37,7 +37,7 @@ export function SyncStatusIcon() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon-sm" className="text-[hsl(var(--accent-jade))]">
+        <Button variant="ghost" size="icon-sm" className="text-[hsl(var(--success))]">
           <Check />
         </Button>
       </TooltipTrigger>

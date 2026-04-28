@@ -108,7 +108,7 @@ export function MessageList({
       {showScrollPill && (
         <button
           onClick={() => scrollToBottom('smooth')}
-        className="sticky bottom-3 left-1/2 ml-[-52px] z-20 inline-flex items-center gap-1 px-2.5 py-1 bg-[hsl(var(--surface-1))] border border-border rounded-full elev-sm text-[12px] text-foreground/80 hover:bg-[hsl(var(--surface-2))] transition-colors animate-fade-up"
+        className="sticky bottom-3 left-1/2 ml-[-52px] z-20 inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-border bg-[hsl(var(--surface-1))] px-2.5 py-1 text-[12px] text-foreground/80 hover:bg-[hsl(var(--surface-2))] transition-colors animate-fade-up"
           aria-label="跳到最新"
         >
           <ArrowDown className="w-3 h-3 text-primary" />
@@ -124,7 +124,7 @@ function EmptyState({ onSendMessage }: { onSendMessage: (text: string) => void }
     <div className="h-full flex items-center justify-center p-6">
       <div className="max-w-[320px] w-full space-y-7">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-primary/10">
             <Feather className="h-5 w-5 text-primary" strokeWidth={1.75} />
           </div>
           <div className="text-center space-y-2">
@@ -169,7 +169,7 @@ function SuggestionsSection({
 }) {
   return (
     <div className="mx-2 my-3 space-y-2">
-      <div className="flex items-center gap-1.5 text-[12px] font-medium text-[hsl(var(--accent-violet))] px-1">
+      <div className="flex items-center gap-1.5 px-1 text-[12px] font-medium text-primary">
         <Lightbulb className="w-3.5 h-3.5" />
         <span>墨客建议</span>
       </div>
@@ -243,16 +243,16 @@ function LoadingIndicator() {
   return (
     <div className="flex gap-2.5 py-3 pl-3 pr-1 ink-rail animate-message-enter">
       <div className="flex-shrink-0 mt-0.5">
-        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+        <div className="flex h-6 w-6 items-center justify-center rounded-[var(--radius-control)] bg-primary/10">
           <Feather className="w-3 h-3 text-primary" strokeWidth={2} />
         </div>
       </div>
       <div className="flex flex-col justify-center gap-1.5 pt-1">
         <span className="text-[13px] font-medium text-primary leading-none">墨客</span>
         <div className="flex items-center gap-1 h-4">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0ms' }} />
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: '160ms' }} />
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: '320ms' }} />
+          <span className="h-1.5 w-1.5 rounded-[2px] bg-primary animate-caret" style={{ animationDelay: '0ms' }} />
+          <span className="h-1.5 w-1.5 rounded-[2px] bg-primary animate-caret" style={{ animationDelay: '160ms' }} />
+          <span className="h-1.5 w-1.5 rounded-[2px] bg-primary animate-caret" style={{ animationDelay: '320ms' }} />
           <span className="ml-2 text-[12px] text-muted-foreground">思考中…</span>
         </div>
       </div>

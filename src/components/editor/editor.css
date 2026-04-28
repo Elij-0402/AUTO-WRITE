@@ -1,12 +1,12 @@
 /* Tiptap editor — InkForge 三更书房 manuscript surface (per DESIGN.md) */
 
 .tiptap {
-  font-family: var(--font-sans);
-  font-size: var(--text-md);
-  line-height: var(--leading-prose);
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
+  line-height: 1.9;
   color: hsl(var(--foreground));
   background: transparent;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
 }
 
 /* Chinese novel convention: 2em first-line indent on paragraphs
@@ -31,19 +31,18 @@
 .tiptap:focus { outline: none; }
 
 .tiptap ::selection {
-  background-color: hsl(var(--accent-amber) / 0.28);
+  background-color: hsl(var(--accent-soft));
 }
 
 .tiptap strong { font-weight: 600; color: hsl(var(--foreground)); }
 .tiptap em     { font-style: italic; color: hsl(var(--foreground) / 0.9); }
 
-/* ZCOOL display headings with amber hairline underline */
 .tiptap h1,
 .tiptap h2,
 .tiptap h3 {
   font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: 0.04em;
+  font-weight: 500;
+  letter-spacing: 0;
   color: hsl(var(--foreground));
   text-indent: 0;
   position: relative;
@@ -72,14 +71,9 @@
   bottom: 0;
   width: 2.2em;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    hsl(var(--accent-amber) / 0.9),
-    hsl(var(--accent-amber) / 0)
-  );
+  background: hsl(var(--accent) / 0.45);
 }
 
-/* Section break — an amber asterism instead of a plain rule */
 .tiptap hr {
   border: none;
   margin: 2em auto;
@@ -96,14 +90,13 @@
   align-items: center;
   justify-content: center;
   letter-spacing: 0.6em;
-  color: hsl(var(--accent-amber) / 0.6);
+  color: hsl(var(--accent) / 0.6);
   font-family: var(--font-display);
   font-size: 1.1em;
 }
 
-/* Blockquote — manuscript margin style */
 .tiptap blockquote {
-  border-left: 2px solid hsl(var(--accent-amber) / 0.6);
+  border-left: 2px solid hsl(var(--accent) / 0.6);
   padding: 0.1em 0 0.1em 1.1em;
   margin: 1em 0;
   color: hsl(var(--muted-foreground));
@@ -134,7 +127,7 @@
   padding: 0.1em 0.4em;
   border-radius: 3px;
   background: hsl(var(--surface-3));
-  color: hsl(var(--accent-amber));
+  color: hsl(var(--accent));
 }
 .tiptap pre {
   font-family: var(--font-mono);
@@ -151,12 +144,11 @@
   padding: 0;
 }
 
-/* Caret — a single warm amber sliver */
 .tiptap .ProseMirror-gapcursor::after {
-  border-color: hsl(var(--accent-amber));
+  border-color: hsl(var(--accent));
 }
 .tiptap {
-  caret-color: hsl(var(--accent-amber));
+  caret-color: hsl(var(--accent));
 }
 
 /* Paper-mode overrides when wrapped in .light — use token vars, not hardcoded HSL */
@@ -165,5 +157,5 @@
 }
 .light .tiptap code {
   background: hsl(var(--surface-2));
-  color: hsl(var(--accent-cinnabar));
+  color: hsl(var(--accent));
 }

@@ -136,7 +136,7 @@ export function ProjectSettingsDialog({
             className={cn(
               'px-4 py-2 text-[13px] font-medium border-b-2 -mb-px transition-colors',
               activeTab === 'settings'
-                ? 'border-[hsl(var(--accent-amber))] text-[hsl(var(--accent-amber))]'
+                ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             )}
           >
@@ -147,7 +147,7 @@ export function ProjectSettingsDialog({
             className={cn(
               'px-4 py-2 text-[13px] font-medium border-b-2 -mb-px transition-colors',
               activeTab === 'export'
-                ? 'border-[hsl(var(--accent-amber))] text-[hsl(var(--accent-amber))]'
+                ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             )}
           >
@@ -217,14 +217,14 @@ export function ProjectSettingsDialog({
               </div>
 
               {exportStatus !== 'idle' && exportStatus !== 'error' && (
-                <div className="flex items-center gap-2 text-sm text-[hsl(var(--accent-amber))]">
+                <div className="flex items-center gap-2 text-sm text-primary">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   {getStepText()}
                 </div>
               )}
 
               {exportStatus === 'error' && exportError && (
-                <div className="text-[13px] text-[hsl(var(--accent-coral))]">
+                <div className="text-[13px] text-destructive">
                   {exportError}
                 </div>
               )}

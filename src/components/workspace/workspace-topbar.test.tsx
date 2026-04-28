@@ -53,13 +53,12 @@ describe('WorkspaceTopbar', () => {
       <WorkspaceTopbar
         projectId="p-1"
         onOpenAIConfig={() => {}}
-        onOpenDraftDialog={() => {}}
       />
     )
 
     expect(screen.getByRole('link', { name: '返回项目列表' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('button', { name: 'AI 设置' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '生成章节草稿' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '生成章节草稿' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: '创作者分析' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '专注写作' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '退出专注写作' })).not.toBeInTheDocument()

@@ -12,49 +12,80 @@ import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
 import { generateDirectionConfirmation, type DirectionConfirmationDraft } from '@/lib/ai/direction-confirmation'
 import { History } from 'lucide-react'
-import { Quote } from 'lucide-react'
+import { PenLine, MessageSquare, Quote } from 'lucide-react'
 import { MessageList } from './message-list'
 import { ChatInput } from './chat-input'
 import { DirectionConfirmationCard } from './direction-confirmation-card'
 import { AIUnderstandingPanel } from './ai-understanding-panel'
 import { NewEntryDialog, type NewEntryPrefillData } from '../new-entry-dialog'
 import { ConversationDrawer } from '../conversation-drawer'
+import { ChapterDraftPanel, type DraftApplyMode } from '../chapter-draft-panel'
 import { findEntryIdByName } from '@/lib/ai/find-entry-by-name'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 import type { NewEntrySuggestion } from '@/lib/ai/suggestion-parser'
 import type { AssistantPreferenceFeedbackInput } from '../message-bubble'
+import { Button } from '@/components/ui/button'
 
 interface AIChatPanelProps {
   projectId: string
+  activeChapterId?: string | null
   onInsertDraft?: (content: string) => void
   selectedText?: string | null
   onDiscussComplete?: () => void
   onSwitchToWorldTab?: () => void
+  onOpenAIConfig?: () => void
 }
 
-export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussComplete, onSwitchToWorldTab }: AIChatPanelProps) {
+export function AIChatPanel({
+  projectId,
+  activeChapterId = null,
+  onInsertDraft,
+  selectedText,
+  onDiscussComplete,
+  onSwitchToWorldTab,
+  onOpenAIConfig,
+}: AIChatPanelProps) {
   // ── Conversation management ──────────────────────────────────────
   const { conversations, loading: conversationsLoading, remove: removeConversation } = useConversations(projectId)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
+  const [panelMode, setPanelMode] = useState<'chat' | 'draft'>('chat')
 
   const db = useMemo(() => createProjectDB(projectId), [projectId])
-  const activeConversationId = conversations[0]?.id ?? null
 
-  useEffect(() => {
-    if (conversationsLoading || conversations.length > 0 || activeConversationId !== null) return
+  const ensureConversation = useCallback(async () => {
     const id = crypto.randomUUID()
-    db.table('conversations').add({
+    await db.table('conversations').add({
       id, projectId, title: '对话', messageCount: 0,
       createdAt: Date.now(), updatedAt: Date.now(),
-    }).catch(console.error)
-  }, [conversationsLoading, conversations.length, activeConversationId, db, projectId])
+    })
+    setActiveConversationId(id)
+    return id
+  }, [db, projectId])
 
-  const activeConversation = conversations[0] ?? null
+  useEffect(() => {
+    if (conversationsLoading) return
+    if (conversations.length === 0) {
+      if (!activeConversationId) {
+        void ensureConversation().catch(console.error)
+      }
+      return
+    }
+    const hasActiveConversation = activeConversationId
+      ? conversations.some((conversation) => conversation.id === activeConversationId)
+      : false
+    if (!hasActiveConversation) {
+      setActiveConversationId(conversations[0].id)
+    }
+  }, [activeConversationId, conversations, conversationsLoading, ensureConversation])
+
+  const activeConversation = conversations.find((conversation) => conversation.id === activeConversationId) ?? null
 
   // ── AI Chat ───────────────────────────────────────────────────────
   const {
     messages, loading, sendMessage, cancelStream,
     appendDirectionAdjustment,
+    appendDraftTurn,
     suggestions, dismissSuggestion, clearSuggestions,
     contradictions, isCheckingConsistency, addExemption,
     clearContradiction, cacheHint,
@@ -203,7 +234,7 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
     const result = await sendMessage(text)
     if (!result.success && result.needsConfig) {
-      showToast('请先在设置中配置 API 密钥')
+      setChatError(result.message)
       return
     }
     onDiscussComplete?.()
@@ -335,7 +366,17 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
 
   const handleDeleteConversation = async (id: string) => {
     await removeConversation(id)
-    setDrawerOpen(false)
+    if (id !== activeConversationId) {
+      return
+    }
+
+    const remainingConversations = conversations.filter((conversation) => conversation.id !== id)
+    if (remainingConversations.length > 0) {
+      setActiveConversationId(remainingConversations[0].id)
+      return
+    }
+
+    await ensureConversation()
   }
 
   const handleSaveModel = async (model: string) => {
@@ -343,6 +384,30 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
   }
 
   const handleDismissError = () => setChatError(null)
+
+  const handleSelectConversation = (id: string) => {
+    setActiveConversationId(id)
+    setPanelMode('chat')
+    setDrawerOpen(false)
+  }
+
+  const handleAcceptDraft = async (
+    draft: string,
+    meta: { applyMode: DraftApplyMode; chapterTitle?: string; outline: string }
+  ) => {
+    onInsertDraft?.(draft)
+    await appendDraftTurn({
+      draft,
+      outline: meta.outline,
+      chapterTitle: meta.chapterTitle,
+    })
+    showToast('草稿已插入正文')
+    setPanelMode('chat')
+  }
+
+  const handleOpenAIConfig = () => {
+    onOpenAIConfig?.()
+  }
 
   const handleAcceptDirectionConfirmation = async () => {
     if (!directionConfirmation) {
@@ -382,16 +447,42 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         </button>
         <div className="flex flex-col min-w-0 flex-1 px-1">
           <span className="text-[14px] font-semibold text-foreground leading-none truncate">
-            {activeConversation?.title ?? '墨客'}
+            {activeConversation?.displayTitle ?? activeConversation?.title ?? '墨客'}
           </span>
-          <span className="text-[11px] text-muted-foreground leading-none mt-1">
+          <span className="mt-1 truncate text-[11px] leading-none text-muted-foreground">
             {isConversationEmpty
               ? '先开口，剩下的我帮你收'
               : activeConversation
-                ? `${activeConversation.messageCount} 条消息`
+                ? activeConversation.lastMeaningfulSnippet || `${activeConversation.messageCount} 条消息`
                 : 'AI 写作伙伴'}
           </span>
         </div>
+        {activeChapterId ? (
+          <div className="inline-flex rounded-sm border border-border surface-1 p-0.5">
+            <Button
+              type="button"
+              size="sm"
+              variant={panelMode === 'chat' ? 'subtle' : 'ghost'}
+              className="h-7 px-2.5"
+              onClick={() => setPanelMode('chat')}
+              aria-pressed={panelMode === 'chat'}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              对话
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={panelMode === 'draft' ? 'subtle' : 'ghost'}
+              className="h-7 px-2.5"
+              onClick={() => setPanelMode('draft')}
+              aria-pressed={panelMode === 'draft'}
+            >
+              <PenLine className="h-3.5 w-3.5" />
+              起草
+            </Button>
+          </div>
+        ) : null}
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
             <span
@@ -431,57 +522,77 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         />
       )}
 
-      {/* ── Message list ─────────────────────────────────── */}
-      <MessageList
-        messages={messages}
-        loading={loading}
-        contradictions={contradictions}
-        isCheckingConsistency={isCheckingConsistency}
-        projectId={projectId}
-        showScrollPill={showScrollPill}
-        visibleSuggestions={visibleSuggestions}
-        onSendMessage={handleSend}
-        onInsertDraft={handleInsertDraft}
-        onRecordPreference={handleRecordPreference}
-        onAdoptRelationship={handleAdoptRelationship}
-        onDismiss={handleDismiss}
-        onAdoptNewEntry={handleAdoptNewEntry}
-        onIgnoreContradiction={handleIgnoreContradiction}
-        onIntentionalContradiction={handleIntentionalContradiction}
-        onFixWorldEntry={handleFixWorldEntry}
-        scrollToBottom={scrollToBottom}
-        messagesContainerRef={messagesContainerRef}
-        onScroll={handleScroll}
-      />
-
-      {directionConfirmation && (
-        <DirectionConfirmationCard
-          oneLinePremise={directionConfirmation.oneLinePremise}
-          storyPromise={directionConfirmation.storyPromise}
-          themes={directionConfirmation.themes}
-          onAccept={() => void handleAcceptDirectionConfirmation()}
-          onContinueTalking={handleContinueTalking}
+      {panelMode === 'draft' ? (
+        <ChapterDraftPanel
+          projectId={projectId}
+          activeChapterId={activeChapterId}
+          config={aiConfig}
+          worldEntries={[
+            ...entriesByType.character,
+            ...entriesByType.location,
+            ...entriesByType.rule,
+            ...entriesByType.timeline,
+          ]}
+          onAcceptDraft={handleAcceptDraft}
+          onClose={() => setPanelMode('chat')}
+          onOpenAIConfig={handleOpenAIConfig}
         />
-      )}
+      ) : (
+        <>
+          {/* ── Message list ─────────────────────────────────── */}
+          <MessageList
+            messages={messages}
+            loading={loading}
+            contradictions={contradictions}
+            isCheckingConsistency={isCheckingConsistency}
+            projectId={projectId}
+            showScrollPill={showScrollPill}
+            visibleSuggestions={visibleSuggestions}
+            onSendMessage={handleSend}
+            onInsertDraft={handleInsertDraft}
+            onRecordPreference={handleRecordPreference}
+            onAdoptRelationship={handleAdoptRelationship}
+            onDismiss={handleDismiss}
+            onAdoptNewEntry={handleAdoptNewEntry}
+            onIgnoreContradiction={handleIgnoreContradiction}
+            onIntentionalContradiction={handleIntentionalContradiction}
+            onFixWorldEntry={handleFixWorldEntry}
+            scrollToBottom={scrollToBottom}
+            messagesContainerRef={messagesContainerRef}
+            onScroll={handleScroll}
+          />
 
-      {/* ── Chat input ───────────────────────────────────── */}
-      <ChatInput
-        input={input}
-        loading={loading}
-        chatError={chatError}
-        aiConfig={aiConfig}
-        placeholder={
-          isConversationEmpty
-            ? '你想写一个什么故事，或者想要什么感觉？'
-            : '与墨客聊聊你的故事…'
-        }
-        onInputChange={setInput}
-        onKeyDown={handleKeyDown}
-        onSend={() => void handleSend()}
-        onCancel={cancelStream}
-        onSaveModel={handleSaveModel}
-        onDismissError={handleDismissError}
-      />
+          {directionConfirmation && (
+            <DirectionConfirmationCard
+              oneLinePremise={directionConfirmation.oneLinePremise}
+              storyPromise={directionConfirmation.storyPromise}
+              themes={directionConfirmation.themes}
+              onAccept={() => void handleAcceptDirectionConfirmation()}
+              onContinueTalking={handleContinueTalking}
+            />
+          )}
+
+          {/* ── Chat input ───────────────────────────────────── */}
+          <ChatInput
+            input={input}
+            loading={loading}
+            chatError={chatError}
+            aiConfig={aiConfig}
+            placeholder={
+              isConversationEmpty
+                ? '你想写一个什么故事，或者想要什么感觉？'
+                : '与墨客聊聊你的故事…'
+            }
+            onInputChange={setInput}
+            onKeyDown={handleKeyDown}
+            onSend={() => void handleSend()}
+            onCancel={cancelStream}
+            onSaveModel={handleSaveModel}
+            onDismissError={handleDismissError}
+            onOpenAIConfig={handleOpenAIConfig}
+          />
+        </>
+      )}
 
       {/* ── Cache hint ───────────────────────────────────── */}
       {cacheHintVisible && cacheHint && (
@@ -507,6 +618,8 @@ export function AIChatPanel({ projectId, onInsertDraft, selectedText, onDiscussC
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         conversations={conversations}
+        activeConversationId={activeConversationId}
+        onSelect={handleSelectConversation}
         onDelete={handleDeleteConversation}
       />
     </div>

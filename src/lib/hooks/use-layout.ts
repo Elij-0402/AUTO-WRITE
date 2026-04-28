@@ -8,10 +8,11 @@ import type { LayoutSettings } from '../db/project-db'
 
 /**
  * Active sidebar tab type per D-13, D-14, D-08.
- * 'chapters' = chapter list, 'outline' = outline list, 'world' = world bible,
+ * 'chapters' = chapter list, 'world' = world bible,
  * 'planning' = planning chain
  */
-export type ActiveTab = 'chapters' | 'outline' | 'world' | 'planning'
+export type ActiveTab = 'chapters' | 'world' | 'planning'
+export type ChapterView = 'editor' | 'outline'
 
 /** Default chat panel width in pixels per D-09 */
 const DEFAULT_CHAT_PANEL_WIDTH = 320
@@ -19,16 +20,16 @@ const DEFAULT_SIDEBAR_WIDTH = 280
 
 export interface WorkspaceContextSnapshot {
   activeChapterId?: string | null
-  activeOutlineId?: string | null
+  chapterView?: ChapterView
   activeWorldEntryId?: string | null
   activePlanningSelection?: PlanningSelection | null
-  lastWorkspaceContext?: 'chapter' | 'outline' | 'world' | 'planning'
+  lastWorkspaceContext?: 'chapter' | 'world' | 'planning'
 }
 
 type PersistedLayout = LayoutSettings & {
   chatPanelWidth: number
   activeChapterId: string | null
-  activeOutlineId: string | null
+  chapterView: ChapterView
   activeWorldEntryId: string | null
   activePlanningSelection: PlanningSelection | null
   lastWorkspaceContext: NonNullable<LayoutSettings['lastWorkspaceContext']>
@@ -40,7 +41,7 @@ const DEFAULT_LAYOUT: PersistedLayout = {
   activeTab: 'chapters' as ActiveTab,
   chatPanelWidth: DEFAULT_CHAT_PANEL_WIDTH,
   activeChapterId: null,
-  activeOutlineId: null,
+  chapterView: 'editor',
   activeWorldEntryId: null,
   activePlanningSelection: null,
   lastWorkspaceContext: 'chapter' as const,
@@ -132,7 +133,7 @@ export function useLayout(projectId: string) {
     activeTab: (effectiveLayout.activeTab ?? 'chapters') as ActiveTab,
     chatPanelWidth: effectiveLayout.chatPanelWidth ?? DEFAULT_CHAT_PANEL_WIDTH,
     activeChapterId: effectiveLayout.activeChapterId ?? null,
-    activeOutlineId: effectiveLayout.activeOutlineId ?? null,
+    chapterView: effectiveLayout.chapterView ?? 'editor',
     activeWorldEntryId: effectiveLayout.activeWorldEntryId ?? null,
     activePlanningSelection: effectiveLayout.activePlanningSelection ?? null,
     lastWorkspaceContext: effectiveLayout.lastWorkspaceContext ?? 'chapter',

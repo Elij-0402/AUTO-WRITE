@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef, type RefObject } from 'react'
+import { useState, useCallback, useRef, type RefObject } from 'react'
 import { useParams } from 'next/navigation'
 import { ThemeProvider } from '@/components/editor/theme-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -8,12 +8,10 @@ import { SidebarNavProvider, type SidebarTab } from '@/lib/hooks/use-sidebar-nav
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
 import { AIOnboardingDialog } from '@/components/workspace/ai-onboarding-dialog'
 import { OnboardingTourDialog } from '@/components/workspace/onboarding-tour-dialog'
-import { ChapterDraftDialog } from '@/components/workspace/chapter-draft-dialog'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { useWorkspaceLayout } from '@/lib/hooks/use-workspace-layout'
-import { useAIConfig } from '@/lib/hooks/use-ai-config'
-import { useAIConfigDialog, useAIOnboardingDialog, useOnboardingTourDialog, useChapterDraftDialog } from '@/components/workspace/dialogs'
+import { useAIConfigDialog, useAIOnboardingDialog, useOnboardingTourDialog } from '@/components/workspace/dialogs'
 import { NormalLayout } from '@/components/workspace/layouts/normal-layout'
 import type { EditorHandle } from '@/components/editor/editor-types'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
@@ -23,45 +21,26 @@ import { FloatingToolbar } from '@/components/editor/floating-toolbar'
 import { HistoryDrawer } from '@/components/editor/history-drawer'
 import { ChapterMetaStrip } from '@/components/editor/chapter-meta-strip'
 import { Button } from '@/components/ui/button'
-import { Clock, BookOpen, ListTree, Globe2 } from 'lucide-react'
+import { Clock, BookOpen, FileText, ListTree, Globe2 } from 'lucide-react'
 import type { Chapter } from '@/lib/types'
 import { OutlineEditForm } from '@/components/outline/outline-edit-form'
 import { PlanningWorkbench } from '@/components/planning/planning-workbench'
 import { WorldEntryEditForm } from '@/components/world-bible/world-entry-edit-form'
 import { PanelErrorBoundary } from '@/components/workspace/error-boundary'
 
-type DraftApplyMode = 'insert' | 'replace' | 'append'
-
 export default function ProjectPage() {
   const params = useParams<{ id: string }>()
   const editorRef = useRef<EditorHandle>(null)
   const editorContentRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string | null>(null)
-  const [toolbarReady, setToolbarReady] = useState(false)
 
   const layout = useWorkspaceLayout({ projectId: params.id })
-  const { config } = useAIConfig()
 
   const aiConfigDialog = useAIConfigDialog()
   const onboardingDialog = useAIOnboardingDialog()
   const tourDialog = useOnboardingTourDialog(params.id)
-  const draftDialog = useChapterDraftDialog()
 
   const handleInsertDraft = useCallback((content: string) => {
-    editorRef.current?.insertText(content)
-  }, [])
-
-  const handleApplyDraft = useCallback((content: string, mode: DraftApplyMode) => {
-    if (mode === 'replace') {
-      editorRef.current?.replaceText(content)
-      return
-    }
-
-    if (mode === 'append') {
-      editorRef.current?.appendText(content)
-      return
-    }
-
     editorRef.current?.insertText(content)
   }, [])
 
@@ -69,21 +48,7 @@ export default function ProjectPage() {
     setSelectedText(text)
   }, [])
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setToolbarReady(true), 2000)
-    return () => window.clearTimeout(timer)
-  }, [])
-
-  const mainContent = layout.activeTab === 'outline' && layout.activeOutlineId ? (
-    <OutlineEditForm
-      projectId={params.id}
-      chapterId={layout.activeOutlineId}
-      onPrevious={layout.handleOutlinePrevious}
-      onNext={layout.handleOutlineNext}
-      hasPrevious={layout.hasPrevious}
-      hasNext={layout.hasNext}
-    />
-  ) : layout.activeTab === 'world' && layout.activeWorldEntryId ? (
+  const mainContent = layout.activeTab === 'world' && layout.activeWorldEntryId ? (
     <WorldEntryEditForm
       projectId={params.id}
       entryId={layout.activeWorldEntryId}
@@ -106,11 +71,17 @@ export default function ProjectPage() {
       }}
     />
   ) : layout.activeChapterId ? (
-    <EditorWithStatus
+    <ChapterWorkspaceView
       projectId={params.id}
       chapterId={layout.activeChapterId}
       chapter={layout.currentChapter}
       chapterNumber={layout.currentChapterNumber}
+      chapterView={layout.chapterView}
+      onSetChapterView={layout.setChapterView}
+      onPrevious={layout.handleOutlinePrevious}
+      onNext={layout.handleOutlineNext}
+      hasPrevious={layout.hasPrevious}
+      hasNext={layout.hasNext}
       editorRef={editorRef}
       editorContentRef={editorContentRef}
       onDiscuss={handleDiscuss}
@@ -131,18 +102,10 @@ export default function ProjectPage() {
           <AIConfigDialog open={aiConfigDialog.open} onClose={aiConfigDialog.onClose} />
           <AIOnboardingDialog open={onboardingDialog.open} onSkip={onboardingDialog.onSkip} onSaveComplete={onboardingDialog.onSaveComplete} />
           <OnboardingTourDialog projectId={params.id} open={tourDialog.open} onComplete={tourDialog.onComplete} />
-          <ChapterDraftDialog open={draftDialog.open} onOpenChange={draftDialog.onOpenChange} projectId={params.id} activeChapterId={layout.activeChapterId} config={config} worldEntries={layout.entries || []} chapters={layout.sortedChapters || []} onDraftAccepted={handleApplyDraft} />
 
           <WorkspaceTopbar
             projectId={params.id}
-            onOpenAIConfig={() => {
-              if (!toolbarReady) return
-              aiConfigDialog.onOpen()
-            }}
-            onOpenDraftDialog={() => {
-              if (!toolbarReady) return
-              draftDialog.onOpenChange(true)
-            }}
+            onOpenAIConfig={aiConfigDialog.onOpen}
             idle={layout.idle}
           />
 
@@ -151,7 +114,6 @@ export default function ProjectPage() {
               projectId={params.id}
               activeChapterId={layout.activeChapterId}
               activeTab={layout.activeTab}
-              activeOutlineId={layout.activeOutlineId}
               activeWorldEntryId={layout.activeWorldEntryId}
               activePlanningSelection={layout.activePlanningItem}
               mainContent={<PanelErrorBoundary label="编辑器">{mainContent}</PanelErrorBoundary>}
@@ -159,7 +121,6 @@ export default function ProjectPage() {
               handleChatPanelDoubleClickReset={layout.handleChatPanelDoubleClickReset}
               onSelectChapter={layout.setActiveChapterId}
               onTabChange={layout.handleTabChange}
-              onSelectOutline={layout.handleSelectOutline}
               onSelectWorldEntry={layout.handleSelectWorldEntry}
               onEditWorldEntry={layout.handleEditWorldEntry}
               onDeleteWorldEntry={layout.handleDeleteWorldEntry}
@@ -167,9 +128,11 @@ export default function ProjectPage() {
             >
               <AIChatPanel
                 projectId={params.id}
+                activeChapterId={layout.activeChapterId}
                 selectedText={selectedText}
                 onDiscussComplete={() => setSelectedText(null)}
                 onInsertDraft={handleInsertDraft}
+                onOpenAIConfig={aiConfigDialog.onOpen}
               />
             </NormalLayout>
           </div>
@@ -179,11 +142,9 @@ export default function ProjectPage() {
   )
 }
 
-function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editorRef, editorContentRef, onDiscuss }: {
+function EditorWithStatus({ projectId, chapterId, editorRef, editorContentRef, onDiscuss }: {
   projectId: string
   chapterId: string
-  chapter: Chapter | undefined
-  chapterNumber: number
   editorRef: RefObject<EditorHandle | null>
   editorContentRef: RefObject<HTMLDivElement | null>
   onDiscuss: (text: string) => void
@@ -199,13 +160,6 @@ function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editor
   return (
     <div className="flex-1 flex flex-col overflow-hidden relative">
       <FloatingToolbar onDiscuss={onDiscuss} editorRef={editorContentRef} />
-      {chapter && chapterNumber > 0 && (
-        <ChapterMetaStrip
-          chapterNumber={chapterNumber}
-          wordCount={chapter.wordCount}
-          status={chapter.status}
-        />
-      )}
       <Editor
         ref={editorRef}
         content={content}
@@ -249,13 +203,98 @@ function EditorWithStatus({ projectId, chapterId, chapter, chapterNumber, editor
   )
 }
 
+function ChapterWorkspaceView({
+  projectId,
+  chapterId,
+  chapter,
+  chapterNumber,
+  chapterView,
+  onSetChapterView,
+  onPrevious,
+  onNext,
+  hasPrevious,
+  hasNext,
+  editorRef,
+  editorContentRef,
+  onDiscuss,
+}: {
+  projectId: string
+  chapterId: string
+  chapter: Chapter | undefined
+  chapterNumber: number
+  chapterView: 'editor' | 'outline'
+  onSetChapterView: (view: 'editor' | 'outline') => void
+  onPrevious?: () => void
+  onNext?: () => void
+  hasPrevious: boolean
+  hasNext: boolean
+  editorRef: RefObject<EditorHandle | null>
+  editorContentRef: RefObject<HTMLDivElement | null>
+  onDiscuss: (text: string) => void
+}) {
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {chapter && chapterNumber > 0 ? (
+        <ChapterMetaStrip
+          chapterNumber={chapterNumber}
+          wordCount={chapter.wordCount}
+          status={chapter.status}
+          extras={
+            <div className="inline-flex rounded-sm border border-border surface-1 p-0.5">
+              <Button
+                type="button"
+                size="sm"
+                variant={chapterView === 'editor' ? 'subtle' : 'ghost'}
+                className="h-7 px-2.5"
+                onClick={() => onSetChapterView('editor')}
+                aria-pressed={chapterView === 'editor'}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                正文
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={chapterView === 'outline' ? 'subtle' : 'ghost'}
+                className="h-7 px-2.5"
+                onClick={() => onSetChapterView('outline')}
+                aria-pressed={chapterView === 'outline'}
+              >
+                <ListTree className="h-3.5 w-3.5" />
+                大纲
+              </Button>
+            </div>
+          }
+        />
+      ) : null}
+
+      {chapterView === 'outline' ? (
+        <OutlineEditForm
+          projectId={projectId}
+          chapterId={chapterId}
+          onPrevious={onPrevious}
+          onNext={onNext}
+          hasPrevious={hasPrevious}
+          hasNext={hasNext}
+        />
+      ) : (
+        <EditorWithStatus
+          projectId={projectId}
+          chapterId={chapterId}
+          editorRef={editorRef}
+          editorContentRef={editorContentRef}
+          onDiscuss={onDiscuss}
+        />
+      )}
+    </div>
+  )
+}
+
 function Placeholder({ activeTab }: { activeTab: ActiveTab }) {
   const copy =
-    activeTab === 'outline'
-      ? { hero: '梳理脉络', hint: '从左侧大纲列表中选择章节', Icon: ListTree }
-      : activeTab === 'world'
-        ? { hero: '构建世界', hint: '从左侧世界观列表中选择或创建条目', Icon: Globe2 }
-        : { hero: '', hint: '从左侧章节列表中选择或创建章节', Icon: BookOpen }
+    activeTab === 'world'
+      ? { hero: '构建世界', hint: '从左侧世界观列表中选择或创建条目', Icon: Globe2 }
+      : { hero: '', hint: '从左侧章节列表中选择章节，再切换正文或大纲视图', Icon: BookOpen }
 
   const Icon = copy.Icon
 

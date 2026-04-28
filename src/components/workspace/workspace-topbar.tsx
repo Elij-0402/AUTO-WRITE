@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, Bot, Moon, PenLine, Sun } from 'lucide-react'
+import { ArrowLeft, Bot, Moon, Sun } from 'lucide-react'
 import { useTotalWordCount, useTodayWordCount } from '@/lib/hooks/use-word-count'
 import { useProjectMeta } from '@/lib/hooks/use-project-meta'
 import { useTheme } from '@/components/editor/theme-provider'
@@ -16,7 +16,6 @@ import {
 interface WorkspaceTopbarProps {
   projectId: string
   onOpenAIConfig: () => void
-  onOpenDraftDialog: () => void
   /** True after the user has been idle for the configured timeout (T6). */
   idle?: boolean
 }
@@ -24,7 +23,6 @@ interface WorkspaceTopbarProps {
 export function WorkspaceTopbar({
   projectId,
   onOpenAIConfig,
-  onOpenDraftDialog,
   idle = false,
 }: WorkspaceTopbarProps) {
   const { project } = useProjectMeta(projectId)
@@ -88,20 +86,6 @@ export function WorkspaceTopbar({
           </Button>
         </TooltipTrigger>
         <TooltipContent>AI 设置</TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onOpenDraftDialog}
-            aria-label="生成章节草稿"
-          >
-            <PenLine />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>生成章节草稿</TooltipContent>
       </Tooltip>
 
       <ThemeToggle />

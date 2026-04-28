@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAIConfig, AIProvider } from '@/lib/hooks/use-ai-config'
 import { validateURLForSSRF, SSRFError } from '@/lib/ai/ssrf-guard'
+import { PRESETS, type PresetKey } from '@/lib/ai/config-presets'
 import {
   Dialog,
   DialogContent,
@@ -29,42 +30,6 @@ interface AIOnboardingDialogProps {
   onSkip: () => void
   /** Called on successful save */
   onSaveComplete: () => void
-}
-
-type PresetKey = 'anthropic' | 'deepseek' | 'openrouter'
-
-const PRESETS: Record<PresetKey, {
-  label: string
-  storeAs: AIProvider
-  baseUrl: string
-  defaultModel: string
-  popularModels: string[]
-  consoleUrl: string | null
-}> = {
-  anthropic: {
-    label: 'Claude',
-    storeAs: 'anthropic',
-    baseUrl: 'https://api.anthropic.com',
-    defaultModel: 'claude-sonnet-4-20250514',
-    popularModels: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-haiku-4-5-20251001'],
-    consoleUrl: 'https://console.anthropic.com/settings/keys',
-  },
-  deepseek: {
-    label: 'DeepSeek',
-    storeAs: 'openai-compatible',
-    baseUrl: 'https://api.deepseek.com',
-    defaultModel: 'deepseek-chat',
-    popularModels: ['deepseek-chat', 'deepseek-reasoner'],
-    consoleUrl: 'https://platform.deepseek.com/api_keys',
-  },
-  openrouter: {
-    label: 'OpenRouter',
-    storeAs: 'openai-compatible',
-    baseUrl: 'https://openrouter.ai/api',
-    defaultModel: 'anthropic/claude-sonnet-4',
-    popularModels: ['anthropic/claude-sonnet-4', 'openai/gpt-4o', 'google/gemini-pro-1.5'],
-    consoleUrl: 'https://openrouter.ai/keys',
-  },
 }
 
 function errorHint(raw: string): string {
@@ -113,7 +78,7 @@ export function AIOnboardingDialog({ open, onSkip, onSaveComplete }: AIOnboardin
   const { saveConfig } = useAIConfig()
   const [presetKey, setPresetKey] = useState<PresetKey>('anthropic')
   const [apiKey, setApiKey] = useState('')
-  const [model, setModel] = useState('claude-sonnet-4-20250514')
+  const [model, setModel] = useState(PRESETS.anthropic.defaultModel)
   const [saving, setSaving] = useState(false)
   const [probeError, setProbeError] = useState('')
   const saveCompletedRef = useRef(false)
@@ -124,7 +89,8 @@ export function AIOnboardingDialog({ open, onSkip, onSaveComplete }: AIOnboardin
       queueMicrotask(() => {
         setProbeError('')
         setApiKey('')
-        setModel('claude-sonnet-4-20250514')
+        setPresetKey('anthropic')
+        setModel(PRESETS.anthropic.defaultModel)
       })
     }
   }, [open])

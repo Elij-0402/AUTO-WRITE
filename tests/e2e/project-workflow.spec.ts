@@ -288,10 +288,15 @@ test('2.2 左侧导航可切换，大纲/世界观/规划都能进入', async ({
   await waitForHMR(page)
 
   await expect(page.getByText('章节').first()).toBeVisible()
+  await expect(page.getByRole('button', { name: '章节', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '世界观' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '规划' })).toBeVisible()
 
+  await createChapter(page, projectId, '第一章 导航切换')
+  await page.getByText('第一章 导航切换').first().click()
   await page.getByRole('button', { name: '大纲' }).click()
-  await expect(page.getByText('请先在章节标签中创建章节')).toBeVisible({ timeout: 10000 })
-  await expect(page.getByText('大纲').first()).toBeVisible()
+  await expect(page.getByLabel('标题')).toBeVisible({ timeout: 10000 })
+  await expect(page.getByRole('button', { name: '正文' })).toBeVisible()
 
   await page.getByRole('button', { name: '世界观' }).click()
   await expect(page.getByPlaceholder('搜索世界观...')).toBeVisible({ timeout: 10000 })

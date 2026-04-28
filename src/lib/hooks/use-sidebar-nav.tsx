@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useMemo, type ReactNode } from 
 /**
  * Sidebar navigation state — per /autoplan CEO-1D + ENG-1C.
  *
- * The workspace has three left-sidebar tabs (chapters / outline / world)
+ * The workspace has three left-sidebar tabs (chapters / world / planning)
  * plus selection inside each. Historically each consumer managed its own
  * local state and the parent page coordinated via prop drilling. That
  * worked fine until T2: a citation chip rendered deep in the AI chat
@@ -21,7 +21,7 @@ import { createContext, useCallback, useContext, useMemo, type ReactNode } from 
  *   const { activeTab, selectedEntryId, focusWorldEntry } = useSidebarNav()
  */
 
-export type SidebarTab = 'chapters' | 'outline' | 'world'
+export type SidebarTab = 'chapters' | 'world' | 'planning'
 
 export interface SidebarNavState {
   activeTab: SidebarTab

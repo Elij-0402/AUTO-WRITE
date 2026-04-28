@@ -1,21 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { AIChatPanel } from './index'
 
+const removeConversationMock = vi.fn()
+const addConversationMock = vi.fn()
+const conversationDrawerMock = vi.fn()
+const useConversationsMock = vi.fn()
+
 vi.mock('@/lib/hooks/use-conversations', () => ({
-  useConversations: () => ({
-    conversations: [
-      { id: 'conv-1', title: '对话', messageCount: 0 },
-    ],
-    loading: false,
-    remove: vi.fn(),
-  }),
+  useConversations: (...args: unknown[]) => useConversationsMock(...args),
 }))
 
 vi.mock('@/lib/db/project-db', () => ({
   createProjectDB: () => ({
     table: () => ({
-      add: vi.fn(),
+      add: addConversationMock,
       get: vi.fn(),
     }),
     contradictions: {
@@ -36,6 +36,7 @@ vi.mock('@/lib/hooks/use-ai-chat', () => ({
     sendMessage: vi.fn().mockResolvedValue({ success: true }),
     cancelStream: vi.fn(),
     appendDirectionAdjustment: vi.fn().mockResolvedValue(undefined),
+    appendDraftTurn: vi.fn().mockResolvedValue(undefined),
     suggestions: [],
     dismissSuggestion: vi.fn(),
     clearSuggestions: vi.fn(),
@@ -49,7 +50,7 @@ vi.mock('@/lib/hooks/use-ai-chat', () => ({
 
 vi.mock('@/lib/hooks/use-ai-config', () => ({
   useAIConfig: () => ({
-    config: { model: 'deepseek-chat' },
+    config: { apiKey: 'sk-test', model: 'deepseek-v4-flash', availableModels: ['deepseek-v4-flash', 'deepseek-v4-pro'] },
     saveConfig: vi.fn().mockResolvedValue(undefined),
   }),
 }))
@@ -95,15 +96,38 @@ vi.mock('./message-list', () => ({
 }))
 
 vi.mock('./chat-input', () => ({
-  ChatInput: () => <div data-testid="chat-input" />,
+  ChatInput: (props: Record<string, unknown>) => (
+    <div data-testid="chat-input">
+      <button onClick={() => (props.onOpenAIConfig as () => void)?.()}>打开 AI 设置</button>
+    </div>
+  ),
 }))
 
 vi.mock('../new-entry-dialog', () => ({
   NewEntryDialog: () => null,
 }))
 
+vi.mock('../chapter-draft-panel', () => ({
+  ChapterDraftPanel: (props: Record<string, unknown>) => (
+    <div data-testid="draft-panel">
+      <div>草稿模式</div>
+      <button onClick={() => (props.onOpenAIConfig as () => void)?.()}>草稿去配置</button>
+    </div>
+  ),
+}))
+
 vi.mock('../conversation-drawer', () => ({
-  ConversationDrawer: () => null,
+  ConversationDrawer: (props: Record<string, unknown>) => {
+    conversationDrawerMock(props)
+    return (
+      <div>
+        <div data-testid="drawer-active">{String(props.activeConversationId ?? '')}</div>
+        <button onClick={() => (props.onSelect as (id: string) => void)('conv-1')}>切到旧对话</button>
+        <button onClick={() => (props.onDelete as (id: string) => Promise<void>)('conv-2')}>删除当前对话</button>
+        <button onClick={() => (props.onDelete as (id: string) => Promise<void>)('conv-1')}>删除最后对话</button>
+      </div>
+    )
+  },
 }))
 
 vi.mock('@/components/ui/tooltip', () => ({
@@ -115,6 +139,16 @@ vi.mock('@/components/ui/tooltip', () => ({
 describe('AIChatPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    removeConversationMock.mockResolvedValue(undefined)
+    addConversationMock.mockResolvedValue(undefined)
+    useConversationsMock.mockReturnValue({
+      conversations: [
+        { id: 'conv-2', title: '新的方向', messageCount: 4, updatedAt: 20, createdAt: 10 },
+        { id: 'conv-1', title: '旧对话', messageCount: 2, updatedAt: 10, createdAt: 5 },
+      ],
+      loading: false,
+      remove: removeConversationMock,
+    })
     useProjectCharterMock.mockReturnValue({
       charter: {
         oneLinePremise: '',
@@ -146,5 +180,81 @@ describe('AIChatPanel', () => {
     render(<AIChatPanel projectId="project-1" />)
 
     expect(screen.getByText('我先这样理解')).toBeInTheDocument()
+  })
+
+  it('tracks the active conversation explicitly and lets the user switch history items', async () => {
+    const user = userEvent.setup()
+
+    render(<AIChatPanel projectId="project-1" />)
+
+    await waitFor(() => {
+      expect(screen.getByText('新的方向')).toBeInTheDocument()
+    })
+    expect(screen.getByTestId('drawer-active')).toHaveTextContent('conv-2')
+
+    await user.click(screen.getByRole('button', { name: '切到旧对话' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('旧对话')).toBeInTheDocument()
+    })
+    expect(screen.getByTestId('drawer-active')).toHaveTextContent('conv-1')
+  })
+
+  it('falls back to the next conversation, then creates a fresh one when history becomes empty', async () => {
+    const user = userEvent.setup()
+    const { rerender } = render(<AIChatPanel projectId="project-1" />)
+
+    await user.click(screen.getByRole('button', { name: '删除当前对话' }))
+
+    expect(removeConversationMock).toHaveBeenCalledWith('conv-2')
+    await waitFor(() => {
+      expect(screen.getByText('旧对话')).toBeInTheDocument()
+    })
+
+    useConversationsMock.mockReturnValue({
+      conversations: [],
+      loading: false,
+      remove: removeConversationMock,
+    })
+
+    rerender(<AIChatPanel projectId="project-1" />)
+
+    await user.click(screen.getByRole('button', { name: '删除最后对话' }))
+
+    await waitFor(() => {
+      expect(addConversationMock).toHaveBeenCalled()
+    })
+  })
+
+  it('opens AI settings from the chat composer recovery action', async () => {
+    const user = userEvent.setup()
+    const onOpenAIConfig = vi.fn()
+
+    render(<AIChatPanel projectId="project-1" onOpenAIConfig={onOpenAIConfig} />)
+
+    await user.click(screen.getByRole('button', { name: '打开 AI 设置' }))
+
+    expect(onOpenAIConfig).toHaveBeenCalledTimes(1)
+  })
+
+  it('switches into draft mode and keeps AI settings recoverable there', async () => {
+    const user = userEvent.setup()
+    const onOpenAIConfig = vi.fn()
+
+    render(
+      <AIChatPanel
+        projectId="project-1"
+        activeChapterId="chapter-1"
+        onOpenAIConfig={onOpenAIConfig}
+      />
+    )
+
+    await user.click(screen.getByRole('button', { name: '起草' }))
+
+    expect(screen.getByTestId('draft-panel')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '草稿去配置' }))
+
+    expect(onOpenAIConfig).toHaveBeenCalledTimes(1)
   })
 })

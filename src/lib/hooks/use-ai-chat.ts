@@ -74,6 +74,12 @@ function detectDraft(content: string): boolean {
   return DRAFT_INDICATORS.some(marker => content.includes(marker))
 }
 
+function deriveAutoTitle(content: string): string {
+  const normalized = content.replace(/\s+/g, ' ').trim()
+  if (!normalized) return '新对话'
+  return normalized.length > 17 ? `${normalized.slice(0, 17)}…` : normalized
+}
+
 export function useAIChat(projectId: string, conversationId: string | null, options?: UseAIChatOptions) {
   const { config } = useAIConfig()
   const { entriesByType } = useWorldEntries(projectId)
@@ -275,10 +281,21 @@ export function useAIChat(projectId: string, conversationId: string | null, opti
       // Update conversation metadata.
       const nowTs = Date.now()
       const newCount = (conversation?.messageCount ?? persistedHistory.length) + 2
-      await db.table('conversations').update(conversationId, {
+      const nextConversationUpdate: {
+        updatedAt: number
+        messageCount: number
+        title?: string
+      } = {
         updatedAt: nowTs,
         messageCount: newCount,
-      })
+      }
+      const existingConversation = await db.table('conversations').get(conversationId) as
+        | { title?: string }
+        | undefined
+      if (!existingConversation?.title || existingConversation.title === '对话' || existingConversation.title === '历史对话') {
+        nextConversationUpdate.title = deriveAutoTitle(content)
+      }
+      await db.table('conversations').update(conversationId, nextConversationUpdate)
 
       // Fallback suggestion parsing for providers that don't support tool use.
       if (!supportsToolUse(config.provider)) {
@@ -454,6 +471,59 @@ await db.contradictions.add({
     })
   }, [conversationId, projectId])
 
+  const appendDraftTurn = useCallback(async ({
+    draft,
+    outline,
+    chapterTitle,
+  }: {
+    draft: string
+    outline: string
+    chapterTitle?: string
+  }) => {
+    if (!conversationId) {
+      return
+    }
+
+    const db = createProjectDB(projectId)
+    const now = Date.now()
+    const draftTitle = chapterTitle?.trim() ? `${chapterTitle.trim()}草稿` : '章节草稿'
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      projectId,
+      conversationId,
+      role: 'user',
+      content: `请根据这个章节方向起草正文：${outline}`,
+      timestamp: now,
+    }
+
+    const assistantMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      projectId,
+      conversationId,
+      role: 'assistant',
+      content: `以下是草稿：\n\n${draft}`,
+      timestamp: now + 1,
+      hasDraft: true,
+      draftId: crypto.randomUUID(),
+    }
+
+    await db.table('messages').bulkAdd([userMsg, assistantMsg])
+    setMessages(prev => [...prev, userMsg, assistantMsg])
+
+    const conversation = await db.table('conversations').get(conversationId) as
+      | { messageCount?: number; title?: string }
+      | undefined
+
+    await db.table('conversations').update(conversationId, {
+      updatedAt: now + 1,
+      messageCount: (conversation?.messageCount ?? 0) + 2,
+      title:
+        !conversation?.title || conversation.title === '对话' || conversation.title === '历史对话'
+          ? draftTitle
+          : conversation.title,
+    })
+  }, [conversationId, projectId])
+
   const dismissSuggestion = useCallback((suggestion: Suggestion) => {
     setSuggestions(prev => prev.filter(s => {
       if (s.type === 'relationship' && suggestion.type === 'relationship') {
@@ -481,6 +551,7 @@ await db.contradictions.add({
     sendMessage,
     cancelStream,
     appendDirectionAdjustment,
+    appendDraftTurn,
     suggestions,
     isAnalyzing,
     dismissSuggestion,

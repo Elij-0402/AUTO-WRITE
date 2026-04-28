@@ -110,12 +110,35 @@ describe('useWorkspaceLayout', () => {
     const { result } = renderHook(() => useWorkspaceLayout({ projectId: 'p1' }))
 
     act(() => {
-      result.current.handleTabChange('outline')
+      result.current.handleTabChange('planning')
     })
 
-    expect(result.current.activeTab).toBe('outline')
-    expect(window.location.search).toContain('tab=outline')
-    expect(saveActiveTab).toHaveBeenCalledWith('outline')
+    expect(result.current.activeTab).toBe('planning')
+    expect(window.location.search).toContain('tab=planning')
+    expect(saveActiveTab).toHaveBeenCalledWith('planning')
+  })
+
+  it('syncs chapter view in URL state and keeps the selected chapter', () => {
+    mockUseChapters.mockReturnValue({
+      chapters: [
+        { id: 'chapter-1', deletedAt: null, order: 0, title: '第一章' },
+        { id: 'chapter-2', deletedAt: null, order: 1, title: '第二章' },
+      ],
+      loading: false,
+    })
+
+    const { result } = renderHook(() => useWorkspaceLayout({ projectId: 'p1' }))
+
+    act(() => {
+      result.current.setChapterView('outline')
+    })
+
+    expect(result.current.activeTab).toBe('chapters')
+    expect(result.current.chapterView).toBe('outline')
+    expect(result.current.activeChapterId).toBe('chapter-2')
+    expect(window.location.search).toContain('tab=chapters')
+    expect(window.location.search).toContain('chapter=chapter-2')
+    expect(window.location.search).toContain('view=outline')
   })
 
   it('syncs URL params for world and planning tab state', () => {
@@ -177,5 +200,23 @@ describe('useWorkspaceLayout', () => {
 
     expect(result.current.activeTab).toBe('world')
     expect(result.current.activeWorldEntryId).toBe('entry-2')
+  })
+
+  it('prefers URL chapter view state during initialization', () => {
+    window.history.replaceState({}, '', 'http://localhost:3000/projects/p1?tab=chapters&chapter=chapter-2&view=outline')
+
+    mockUseChapters.mockReturnValue({
+      chapters: [
+        { id: 'chapter-1', deletedAt: null, order: 0, title: '第一章' },
+        { id: 'chapter-2', deletedAt: null, order: 1, title: '第二章' },
+      ],
+      loading: false,
+    })
+
+    const { result } = renderHook(() => useWorkspaceLayout({ projectId: 'p1' }))
+
+    expect(result.current.activeTab).toBe('chapters')
+    expect(result.current.activeChapterId).toBe('chapter-2')
+    expect(result.current.chapterView).toBe('outline')
   })
 })

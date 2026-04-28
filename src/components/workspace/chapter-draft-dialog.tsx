@@ -2,26 +2,19 @@
 
 import { useState, useCallback, useMemo } from 'react'
 import {
-  PenLine,
-  RefreshCw,
-  Check,
-  X,
-  Loader2,
   ShieldCheck,
   AlertTriangle,
+  Loader2,
+  X,
 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -29,33 +22,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useChapterDraftGeneration } from '@/lib/hooks/use-chapter-draft-generation'
 import { useConsistencyScan } from '@/lib/hooks/use-consistency-scan'
-import { usePlanning } from '@/lib/hooks/use-planning'
 import type { AIClientConfig } from '@/lib/ai/client'
 import type { WorldEntry } from '@/lib/types/world-entry'
 import type { Chapter } from '@/lib/types/chapter'
 import type { WorldEntryType } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import {
-  buildDraftGenerationSourceSummary,
-  buildDraftOutlineFromPlanning,
-  normalizeDraftForInsertion,
-} from './chapter-draft-context'
+import { ChapterDraftPanel, type DraftApplyMode } from './chapter-draft-panel'
 
 type DialogTab = 'draft' | 'scan'
-type DraftApplyMode = 'insert' | 'replace' | 'append'
-
-interface WordCountPreset {
-  label: string
-  value: [number, number]
-}
-
-const WORD_COUNT_PRESETS: WordCountPreset[] = [
-  { label: '1000-2000字', value: [1000, 2000] },
-  { label: '2000-3000字', value: [2000, 3000] },
-  { label: '3000-5000字', value: [3000, 5000] },
-]
 
 const TYPE_LABEL: Record<WorldEntryType, string> = {
   character: '角色',
@@ -115,7 +90,7 @@ export function ChapterDraftDialog({
           <DialogTitle className="flex items-center gap-2">
             {activeTab === 'draft' ? (
               <>
-                <PenLine className="h-5 w-5 text-[hsl(var(--accent))]" />
+                <ShieldCheck className="h-5 w-5 text-[hsl(var(--accent))]" />
                 AI 章节草稿生成
               </>
             ) : (
@@ -161,13 +136,14 @@ export function ChapterDraftDialog({
         </div>
 
         {activeTab === 'draft' ? (
-          <DraftForm
+          <ChapterDraftPanel
             projectId={projectId}
             activeChapterId={activeChapterId}
             config={config}
             worldEntries={worldEntries}
-            onAcceptAndClose={handleAcceptAndClose}
-            onCancel={handleClose}
+            onAcceptDraft={(draft, meta) => handleAcceptAndClose(draft, meta.applyMode)}
+            onClose={handleClose}
+            onOpenAIConfig={() => {}}
           />
         ) : (
           <ConsistencyScanTab
@@ -179,323 +155,6 @@ export function ChapterDraftDialog({
         )}
       </DialogContent>
     </Dialog>
-  )
-}
-
-interface DraftFormProps {
-  projectId: string
-  activeChapterId: string | null
-  config: AIClientConfig
-  worldEntries: WorldEntry[]
-  onAcceptAndClose: (draft: string, mode: DraftApplyMode) => void
-  onCancel: () => void
-}
-
-function DraftForm({
-  projectId,
-  activeChapterId,
-  config,
-  worldEntries,
-  onAcceptAndClose,
-  onCancel,
-}: DraftFormProps) {
-  const { snapshot } = usePlanning(projectId)
-  const [outline, setOutline] = useState('')
-  const [chapterTitle, setChapterTitle] = useState('')
-  const [selectedPreset, setSelectedPreset] = useState<number | null>(0)
-  const [customWordCount, setCustomWordCount] = useState('')
-  const [appliedPlanningPrefillKey, setAppliedPlanningPrefillKey] = useState<string | null>(null)
-  const [applyMode, setApplyMode] = useState<DraftApplyMode>('insert')
-
-  const linkedChapterPlan = useMemo(
-    () => snapshot.chapterPlans.find((plan) => plan.linkedChapterId === activeChapterId) ?? null,
-    [activeChapterId, snapshot.chapterPlans]
-  )
-  const linkedSceneCards = useMemo(
-    () => linkedChapterPlan
-      ? snapshot.sceneCards.filter((scene) => scene.chapterPlanId === linkedChapterPlan.id)
-      : [],
-    [linkedChapterPlan, snapshot.sceneCards]
-  )
-  const sourceSummary = useMemo(
-    () => linkedChapterPlan
-      ? buildDraftGenerationSourceSummary(linkedChapterPlan, linkedSceneCards)
-      : null,
-    [linkedChapterPlan, linkedSceneCards]
-  )
-
-  const planningPrefillKey = linkedChapterPlan
-    ? `${linkedChapterPlan.id}:${linkedChapterPlan.updatedAt}:${linkedSceneCards.length}`
-    : null
-
-  if (linkedChapterPlan && planningPrefillKey && planningPrefillKey !== appliedPlanningPrefillKey) {
-    setAppliedPlanningPrefillKey(planningPrefillKey)
-    setChapterTitle((current) => current || linkedChapterPlan.title)
-    setOutline((current) => current || buildDraftOutlineFromPlanning(linkedChapterPlan, linkedSceneCards))
-
-    const targetWordCount = linkedChapterPlan.targetWordCount
-    if (targetWordCount) {
-      const matchedPreset = WORD_COUNT_PRESETS.findIndex(
-        (preset) =>
-          targetWordCount >= preset.value[0] &&
-          targetWordCount <= preset.value[1]
-      )
-
-      if (matchedPreset >= 0) {
-        setSelectedPreset(matchedPreset)
-      } else {
-        setSelectedPreset(null)
-        setCustomWordCount((current) => current || `${targetWordCount}-${targetWordCount}`)
-      }
-    }
-  }
-
-  const {
-    state,
-    draft,
-    error,
-    progress,
-    startGeneration,
-    acceptDraft,
-    dismissDraft,
-    cancelGeneration,
-  } = useChapterDraftGeneration({
-    projectId,
-    config,
-    worldEntries,
-  })
-
-  const handleGenerate = async () => {
-    if (!outline.trim()) return
-
-    let targetWordCount: [number, number] | undefined
-    if (selectedPreset === null && customWordCount) {
-      const match = customWordCount.match(/(\d+)[-,](\d+)/)
-      if (match) {
-        targetWordCount = [parseInt(match[1], 10), parseInt(match[2], 10)]
-      }
-    } else if (selectedPreset !== null && selectedPreset >= 0) {
-      targetWordCount = WORD_COUNT_PRESETS[selectedPreset].value
-    }
-
-    await startGeneration({
-      chapterId: null,
-      outline: outline.trim(),
-      targetWordCount,
-      chapterTitle: chapterTitle.trim() || undefined,
-    })
-  }
-
-  const handleAccept = () => {
-    if (draft) {
-      acceptDraft()
-      onAcceptAndClose(normalizeDraftForInsertion(draft), applyMode)
-    }
-  }
-
-  const handleDismiss = () => {
-    dismissDraft()
-    onCancel()
-  }
-
-  const handleRegenerate = () => {
-    dismissDraft()
-    handleGenerate()
-  }
-
-  const isGenerating = state === 'generating'
-  const isDraftReady = state === 'draft_ready'
-  const hasError = !!error
-  const normalizedDraft = draft ? normalizeDraftForInsertion(draft) : ''
-  const displayCount = draft?.trim().length ?? 0
-  const insertionCount = normalizedDraft.length
-
-  return (
-    <>
-      <div className="space-y-4 py-2">
-        {/* Chapter Title */}
-        <div className="space-y-1.5">
-          <Label htmlFor="chapter-title">章节标题（可选）</Label>
-          <Input
-            id="chapter-title"
-            placeholder="例如：第一章 觉醒"
-            value={chapterTitle}
-            onChange={(e) => setChapterTitle(e.target.value)}
-            disabled={isGenerating}
-          />
-        </div>
-
-        {/* Outline */}
-        <div className="space-y-1.5">
-          <Label htmlFor="outline">章节大纲</Label>
-          {linkedChapterPlan ? (
-            <div className="space-y-1">
-              <p className="text-[12px] text-muted-foreground">
-                已根据当前章纲和场景卡预填，可继续改写后再生成。
-              </p>
-              {sourceSummary ? (
-                <div className="rounded-sm border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] px-3 py-2 text-[12px] text-muted-foreground">
-                  {sourceSummary}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-          <Textarea
-            id="outline"
-            placeholder="描述本章的主要情节、转折点、关键场景..."
-            rows={6}
-            value={outline}
-            onChange={(e) => setOutline(e.target.value)}
-            disabled={isGenerating || isDraftReady}
-          />
-        </div>
-
-        {/* Word Count Presets */}
-        <div className="space-y-1.5">
-          <Label>目标字数</Label>
-          <div className="flex flex-wrap gap-2">
-            {WORD_COUNT_PRESETS.map((preset, index) => (
-              <button
-                key={preset.label}
-                type="button"
-                onClick={() => setSelectedPreset(index)}
-                disabled={isGenerating || isDraftReady}
-                className={cn(
-                  'px-3 py-1.5 rounded-sm text-[13px] border transition-colors',
-                  selectedPreset === index
-                    ? 'border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/10 text-foreground'
-                    : 'border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] text-muted-foreground hover:border-[hsl(var(--border-strong))]'
-                )}
-              >
-                {preset.label}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setSelectedPreset(null)}
-              disabled={isGenerating || isDraftReady}
-              className={cn(
-                'px-3 py-1.5 rounded-sm text-[13px] border transition-colors',
-                selectedPreset === null
-                  ? 'border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/10 text-foreground'
-                  : 'border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] text-muted-foreground hover:border-[hsl(var(--border-strong))]'
-              )}
-            >
-              自定义
-            </button>
-          </div>
-          {selectedPreset === null && (
-            <Input
-              placeholder="输入字数范围，如 2500-3500"
-              value={customWordCount}
-              onChange={(e) => setCustomWordCount(e.target.value)}
-              disabled={isGenerating || isDraftReady}
-              className="mt-2"
-            />
-          )}
-        </div>
-
-        {/* Progress */}
-        {isGenerating && (
-          <div className="rounded-sm border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] px-3 py-2 text-[13px] text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>{progress || '生成中...'}</span>
-            </div>
-          </div>
-        )}
-
-        {isDraftReady && draft && (
-          <div className="space-y-2 rounded-sm border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] p-3">
-            <div className="flex items-center justify-between gap-3">
-              <Label className="text-[12px]">插入策略</Label>
-              <Select value={applyMode} onValueChange={(value) => setApplyMode(value as DraftApplyMode)}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="insert">插入到光标处</SelectItem>
-                  <SelectItem value="replace">覆盖当前正文</SelectItem>
-                  <SelectItem value="append">追加为后续内容</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <p className="text-[12px] text-muted-foreground">
-              预览字数 {displayCount} 字，插入正文后 {insertionCount} 字。
-              {displayCount !== insertionCount ? ' 插入时会清理首尾空行。' : ''}
-            </p>
-          </div>
-        )}
-
-        {/* Error */}
-        {hasError && (
-          <div className="rounded-sm bg-destructive/10 border border-destructive/20 p-3 text-[13px] text-destructive">
-            {error}
-          </div>
-        )}
-
-        {/* Draft Preview */}
-        {isDraftReady && draft && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>生成的草稿预览</Label>
-              <span className="text-[11px] text-muted-foreground">
-                {displayCount} 字
-              </span>
-            </div>
-            <div className="rounded-sm border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] p-3 max-h-[300px] overflow-y-auto">
-              <p className="text-[13px] leading-[1.8] whitespace-pre-wrap">
-                {draft}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <DialogFooter className="flex-wrap gap-2">
-        {isDraftReady ? (
-          <>
-            <Button variant="ghost" onClick={handleDismiss} className="gap-1.5">
-              <X className="h-4 w-4" />
-              关闭
-            </Button>
-            <Button variant="outline" onClick={handleRegenerate} className="gap-1.5">
-              <RefreshCw className="h-4 w-4" />
-              重新生成
-            </Button>
-            <Button onClick={handleAccept} className="gap-1.5">
-              <Check className="h-4 w-4" />
-              插入到正文
-            </Button>
-          </>
-        ) : (
-          <>
-            {isGenerating && (
-              <Button variant="ghost" onClick={cancelGeneration}>
-                取消
-              </Button>
-            )}
-            <Button
-              onClick={handleGenerate}
-              disabled={!outline.trim() || isGenerating}
-              className="gap-1.5"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  生成中...
-                </>
-              ) : (
-                <>
-                  <PenLine className="h-4 w-4" />
-                  生成草稿
-                </>
-              )}
-            </Button>
-          </>
-        )}
-      </DialogFooter>
-    </>
   )
 }
 

@@ -7,6 +7,8 @@ interface ConversationDrawerProps {
   open: boolean
   onClose: () => void
   conversations: Conversation[]
+  activeConversationId: string | null
+  onSelect: (id: string) => void
   onDelete: (id: string) => void
 }
 
@@ -27,6 +29,8 @@ export function ConversationDrawer({
   open,
   onClose,
   conversations,
+  activeConversationId,
+  onSelect,
   onDelete,
 }: ConversationDrawerProps) {
   if (!open) return null
@@ -55,14 +59,30 @@ export function ConversationDrawer({
                 key={c.id}
                 className="flex items-center justify-between rounded-[var(--radius-control)] px-2.5 py-2 text-foreground/85 hover:bg-[hsl(var(--surface-2))] transition-colors"
               >
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-medium truncate">{c.title}</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
-                    {formatRelativeTime(c.updatedAt)} · {c.messageCount} 条
-                  </div>
-                </div>
                 <button
-                  onClick={() => onDelete(c.id)}
+                  type="button"
+                  className={
+                    'flex-1 min-w-0 rounded-sm px-1 py-1 text-left transition-colors ' +
+                    (activeConversationId === c.id
+                      ? 'bg-[hsl(var(--surface-2))] text-foreground'
+                      : 'text-foreground/85')
+                  }
+                  aria-label={`打开对话：${c.displayTitle ?? c.title}`}
+                  aria-pressed={activeConversationId === c.id}
+                  onClick={() => onSelect(c.id)}
+                >
+                  <div className="text-[13px] font-medium truncate">{c.displayTitle ?? c.title}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {c.lastMeaningfulSnippet
+                      ? c.lastMeaningfulSnippet
+                      : `${formatRelativeTime(c.updatedAt)} · ${c.messageCount} 条`}
+                  </div>
+                </button>
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onDelete(c.id)
+                  }}
                   className="ml-2 flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground/70 hover:text-destructive hover:bg-[hsl(var(--surface-2))] transition-colors"
                   aria-label="删除对话"
                 >

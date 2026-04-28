@@ -80,4 +80,45 @@ describe('useAIConfig', () => {
     const { result } = renderHook(() => useAIConfig())
     expect(result.current.config.provider).toBe('anthropic')
   })
+
+  it('normalizes legacy DeepSeek models into supported models', () => {
+    vi.mocked(useLiveQuery).mockReturnValue({
+      id: 'config',
+      provider: 'openai-compatible',
+      apiKey: 'sk-deepseek',
+      baseUrl: 'https://api.deepseek.com',
+      model: 'deepseek-v3.1',
+      availableModels: ['deepseek-v3.1', 'deepseek-chat'],
+    } as never)
+
+    const { result } = renderHook(() => useAIConfig())
+
+    expect(result.current.config.model).toBe('deepseek-v4-flash')
+    expect(result.current.config.availableModels).toEqual(['deepseek-v4-flash', 'deepseek-v4-pro'])
+  })
+
+  it('normalizes legacy DeepSeek models before saving', async () => {
+    const putSpy = vi.spyOn(metaDb.aiConfig, 'put').mockResolvedValue('config' as const)
+    vi.mocked(useLiveQuery).mockReturnValue({
+      id: 'config',
+      provider: 'openai-compatible',
+      apiKey: 'sk-deepseek',
+      baseUrl: 'https://api.deepseek.com',
+      model: 'deepseek-v3.1',
+      availableModels: ['deepseek-v3.1'],
+    } as never)
+
+    const { result } = renderHook(() => useAIConfig())
+    await act(async () => {
+      await result.current.saveConfig({})
+    })
+
+    expect(putSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'deepseek-v4-flash',
+        availableModels: ['deepseek-v4-flash', 'deepseek-v4-pro'],
+      })
+    )
+    putSpy.mockRestore()
+  })
 })

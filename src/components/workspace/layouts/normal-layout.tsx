@@ -15,7 +15,6 @@ interface NormalLayoutProps {
   projectId: string
   activeChapterId: string | null
   activeTab: ActiveTab
-  activeOutlineId: string | null
   activeWorldEntryId: string | null
   activePlanningSelection: PlanningSelection | null
   mainContent: React.ReactNode
@@ -23,7 +22,6 @@ interface NormalLayoutProps {
   handleChatPanelDoubleClickReset: () => void
   onSelectChapter: (id: string) => void
   onTabChange: (tab: ActiveTab) => void
-  onSelectOutline: (id: string) => void
   onSelectWorldEntry: (id: string) => void
   onEditWorldEntry: (id: string) => void
   onDeleteWorldEntry: (id: string) => void
@@ -35,7 +33,6 @@ export function NormalLayout({
   projectId,
   activeChapterId,
   activeTab,
-  activeOutlineId,
   activeWorldEntryId,
   activePlanningSelection,
   mainContent,
@@ -43,7 +40,6 @@ export function NormalLayout({
   handleChatPanelDoubleClickReset,
   onSelectChapter,
   onTabChange,
-  onSelectOutline,
   onSelectWorldEntry,
   onEditWorldEntry,
   onDeleteWorldEntry,
@@ -67,8 +63,6 @@ export function NormalLayout({
               onSelectChapter={onSelectChapter}
               activeTab={activeTab}
               onTabChange={onTabChange}
-              activeOutlineId={activeOutlineId}
-              onSelectOutline={onSelectOutline}
               activeWorldEntryId={activeWorldEntryId}
               onSelectWorldEntry={onSelectWorldEntry}
               onEditWorldEntry={onEditWorldEntry}

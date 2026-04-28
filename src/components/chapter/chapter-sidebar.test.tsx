@@ -16,10 +16,6 @@ vi.mock('@/lib/hooks/use-chapters', () => ({
   }),
 }))
 
-vi.mock('@/components/outline/outline-tab', () => ({
-  OutlineTab: () => <div>outline-tab</div>,
-}))
-
 vi.mock('@/components/world-bible/world-bible-tab', () => ({
   WorldBibleTab: () => <div>world-bible-tab</div>,
 }))
@@ -43,8 +39,6 @@ describe('ChapterSidebar', () => {
         onSelectChapter={vi.fn()}
         activeTab="chapters"
         onTabChange={vi.fn()}
-        activeOutlineId={null}
-        onSelectOutline={vi.fn()}
         activeWorldEntryId={null}
         onSelectWorldEntry={vi.fn()}
         onEditWorldEntry={vi.fn()}
@@ -55,6 +49,7 @@ describe('ChapterSidebar', () => {
     )
 
     expect(screen.getByLabelText('规划')).toBeInTheDocument()
+    expect(screen.queryByLabelText('大纲')).not.toBeInTheDocument()
   })
 
   it('calls onTabChange when clicking rail items and reflects active state from props', async () => {
@@ -67,8 +62,6 @@ describe('ChapterSidebar', () => {
         onSelectChapter={vi.fn()}
         activeTab="chapters"
         onTabChange={onTabChange}
-        activeOutlineId={null}
-        onSelectOutline={vi.fn()}
         activeWorldEntryId={null}
         onSelectWorldEntry={vi.fn()}
         onEditWorldEntry={vi.fn()}
@@ -89,8 +82,6 @@ describe('ChapterSidebar', () => {
         onSelectChapter={vi.fn()}
         activeTab="world"
         onTabChange={onTabChange}
-        activeOutlineId={null}
-        onSelectOutline={vi.fn()}
         activeWorldEntryId={null}
         onSelectWorldEntry={vi.fn()}
         onEditWorldEntry={vi.fn()}

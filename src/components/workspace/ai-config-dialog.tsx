@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useId } from 'react'
 import { useAIConfig, AIProvider } from '@/lib/hooks/use-ai-config'
 import { validateURLForSSRF, SSRFError } from '@/lib/ai/ssrf-guard'
+import { PRESETS, inferPresetKey, normalizeAIConfig, type PresetKey } from '@/lib/ai/config-presets'
 import {
   Dialog,
   DialogContent,
@@ -26,42 +27,6 @@ import { XCircle, ExternalLink } from 'lucide-react'
 interface AIConfigDialogProps {
   open: boolean
   onClose: () => void
-}
-
-type PresetKey = 'anthropic' | 'deepseek' | 'openrouter'
-
-const PRESETS: Record<PresetKey, {
-  label: string
-  storeAs: AIProvider
-  baseUrl: string
-  defaultModel: string
-  popularModels: string[]
-  consoleUrl: string | null
-}> = {
-  anthropic: {
-    label: 'Claude',
-    storeAs: 'anthropic',
-    baseUrl: 'https://api.anthropic.com',
-    defaultModel: 'claude-sonnet-4-20250514',
-    popularModels: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-haiku-4-5-20251001'],
-    consoleUrl: 'https://console.anthropic.com/settings/keys',
-  },
-  deepseek: {
-    label: 'DeepSeek',
-    storeAs: 'openai-compatible',
-    baseUrl: 'https://api.deepseek.com',
-    defaultModel: 'deepseek-v4-flash',
-    popularModels: ['deepseek-v4-flash', 'deepseek-v4-pro', 'deepseek-v3.1'],
-    consoleUrl: 'https://platform.deepseek.com/api_keys',
-  },
-  openrouter: {
-    label: 'OpenRouter',
-    storeAs: 'openai-compatible',
-    baseUrl: 'https://openrouter.ai/api',
-    defaultModel: 'anthropic/claude-sonnet-4',
-    popularModels: ['anthropic/claude-sonnet-4', 'openai/gpt-4o', 'google/gemini-pro-1.5'],
-    consoleUrl: 'https://openrouter.ai/keys',
-  },
 }
 
 function errorHint(raw: string): string {
@@ -108,7 +73,8 @@ async function probeEndpoint(
 
 export function AIConfigDialog({ open, onClose }: AIConfigDialogProps) {
   const { config, saveConfig } = useAIConfig()
-  const [presetKey, setPresetKey] = useState<PresetKey>('anthropic')
+  const normalizedConfig = normalizeAIConfig(config)
+  const [presetKey, setPresetKey] = useState<PresetKey>(() => inferPresetKey(normalizedConfig))
   const [apiKey, setApiKey] = useState('')
   const [model, setModel] = useState('')
   const [saving, setSaving] = useState(false)
@@ -120,13 +86,15 @@ export function AIConfigDialog({ open, onClose }: AIConfigDialogProps) {
   useEffect(() => {
     if (open) {
       saveCompletedRef.current = false
+      const nextPresetKey = inferPresetKey(normalizedConfig)
       queueMicrotask(() => {
+        setPresetKey(nextPresetKey)
         setProbeError('')
-        setApiKey(config.apiKey ?? '')
-        setModel(config.model ?? '')
+        setApiKey(normalizedConfig.apiKey ?? '')
+        setModel(normalizedConfig.model ?? PRESETS[nextPresetKey].defaultModel)
       })
     }
-  }, [open, config.apiKey, config.model])
+  }, [open, normalizedConfig])
 
   const preset = PRESETS[presetKey]
 

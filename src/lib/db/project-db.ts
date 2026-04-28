@@ -226,19 +226,19 @@ export interface LayoutSnapshot {
 /**
  * Layout settings stored per-project in IndexedDB per D-24.
  * sidebarWidth: persisted sidebar width in pixels per D-25
- * activeTab: which sidebar tab is shown ('chapters' | 'outline' | 'world' | 'planning') per D-08, D-14
+ * activeTab: which sidebar tab is shown ('chapters' | 'world' | 'planning') per D-08, D-14
  * chatPanelWidth: persisted right chat panel width in pixels per D-12 (320 default)
  */
 export interface LayoutSettings {
   id: string // 'default' for per-project default layout
   sidebarWidth: number
-  activeTab: 'chapters' | 'outline' | 'world' | 'planning'
+  activeTab: 'chapters' | 'world' | 'planning'
   chatPanelWidth?: number // default 320, made optional for existing projects
   activeChapterId?: string | null
-  activeOutlineId?: string | null
+  chapterView?: 'editor' | 'outline'
   activeWorldEntryId?: string | null
   activePlanningSelection?: PlanningSelection | null
-  lastWorkspaceContext?: 'chapter' | 'outline' | 'world' | 'planning'
+  lastWorkspaceContext?: 'chapter' | 'world' | 'planning'
 }
 
 /**

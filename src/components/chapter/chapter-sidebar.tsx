@@ -15,12 +15,11 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import { BookOpen, ListTree, Globe2, Map } from 'lucide-react'
+import { BookOpen, Globe2, Map } from 'lucide-react'
 import { useChapters } from '@/lib/hooks/use-chapters'
 import { ChapterRow } from './chapter-row'
 import { CreateChapterInput } from './create-chapter-input'
 import { DeleteChapterDialog } from './delete-chapter-dialog'
-import { OutlineTab } from '@/components/outline/outline-tab'
 import { PlanningSidebarTab } from '@/components/planning/planning-sidebar-tab'
 import type { PlanningSelection } from '@/components/planning/planning-workbench'
 import { WorldBibleTab } from '@/components/world-bible/world-bible-tab'
@@ -38,8 +37,6 @@ interface ChapterSidebarProps {
   onSelectChapter: (id: string) => void
   activeTab: ActiveTab
   onTabChange: (tab: ActiveTab) => void
-  activeOutlineId: string | null
-  onSelectOutline: (chapterId: string) => void
   activeWorldEntryId: string | null
   onSelectWorldEntry: (id: string) => void
   onEditWorldEntry: (id: string) => void
@@ -57,9 +54,8 @@ type RailItem = {
 
 const RAIL_ITEMS: RailItem[] = [
   { value: 'chapters', label: '章节', shortcut: 'Ctrl+1', icon: BookOpen },
-  { value: 'outline', label: '大纲', shortcut: 'Ctrl+2', icon: ListTree },
-  { value: 'world', label: '世界观', shortcut: 'Ctrl+3', icon: Globe2 },
-  { value: 'planning', label: '规划', shortcut: 'Ctrl+4', icon: Map },
+  { value: 'world', label: '世界观', shortcut: 'Ctrl+2', icon: Globe2 },
+  { value: 'planning', label: '规划', shortcut: 'Ctrl+3', icon: Map },
 ]
 
 export function ChapterSidebar({
@@ -68,8 +64,6 @@ export function ChapterSidebar({
   onSelectChapter,
   activeTab,
   onTabChange,
-  activeOutlineId,
-  onSelectOutline,
   activeWorldEntryId,
   onSelectWorldEntry,
   onEditWorldEntry,
@@ -223,15 +217,6 @@ export function ChapterSidebar({
               onCreate={handleCreateChapter}
             />
           )}
-
-          {activeTab === 'outline' && (
-            <OutlineTab
-              projectId={projectId}
-              onSelectOutline={onSelectOutline}
-              activeOutlineId={activeOutlineId}
-            />
-          )}
-
           {activeTab === 'world' && (
             <WorldBibleTab
               projectId={projectId}

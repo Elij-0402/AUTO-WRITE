@@ -1,7 +1,8 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { metaDb } from '../db/meta-db'
 import type { AIProvider } from '../ai/providers/types'
+import { normalizeAIConfig } from '../ai/config-presets'
 
 export type { AIProvider } from '../ai/providers/types'
 
@@ -35,14 +36,22 @@ export function useAIConfig() {
   const config: AIConfig = useMemo(
     () =>
       liveConfig
-        ? { ...DEFAULT_CONFIG, ...liveConfig, provider: liveConfig.provider ?? 'anthropic' }
+        ? normalizeAIConfig({ ...DEFAULT_CONFIG, ...liveConfig, provider: liveConfig.provider ?? 'anthropic' })
         : DEFAULT_CONFIG,
     [liveConfig]
   )
   const loading = liveConfig === undefined
 
+  useEffect(() => {
+    if (!liveConfig) return
+    const merged = { ...DEFAULT_CONFIG, ...liveConfig, provider: liveConfig.provider ?? 'anthropic' }
+    const normalized = normalizeAIConfig(merged)
+    if (JSON.stringify(merged) === JSON.stringify(normalized)) return
+    void metaDb.aiConfig.put(normalized)
+  }, [liveConfig])
+
   const saveConfig = useCallback(async (newConfig: Partial<AIConfig>) => {
-    const updated = { ...config, ...newConfig, id: 'config' as const }
+    const updated = normalizeAIConfig({ ...config, ...newConfig, id: 'config' as const })
     await metaDb.aiConfig.put(updated)
     return updated
   }, [config])

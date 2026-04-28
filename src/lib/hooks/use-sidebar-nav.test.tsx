@@ -67,10 +67,10 @@ describe('useSidebarNav', () => {
     })
     const { result } = renderHook(() => useSidebarNav(), { wrapper })
     act(() => {
-      result.current.setActiveTab('outline')
+      result.current.setActiveTab('chapters')
       result.current.setSelectedEntryId('xyz')
     })
-    expect(setActiveTab).toHaveBeenCalledWith('outline')
+    expect(setActiveTab).toHaveBeenCalledWith('chapters')
     expect(setSelectedEntryId).toHaveBeenCalledWith('xyz')
   })
 })

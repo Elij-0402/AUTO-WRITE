@@ -12,6 +12,7 @@ import { buildPlanningDigestBlock, buildProjectCharterBlock, buildWorldBibleBloc
 export type PlanningAction =
   | 'generate_arc'
   | 'generate_chapter_plan'
+  | 'generate_scene_cards'
   | 'suggest_next_step'
 
 export interface PlanningPromptProgress {
@@ -57,9 +58,21 @@ export interface PlanningNextStepDraft {
   targetTitle?: string
 }
 
+export interface PlanningSceneCardDraft {
+  title: string
+  viewpoint: string
+  location: string
+  objective: string
+  obstacle: string
+  outcome: string
+  continuityNotes: string
+  status?: 'planned' | 'drafting' | 'done'
+}
+
 export type ParsedPlanningActionResult =
   | { action: 'generate_arc'; data: { item: PlanningArcDraft } }
   | { action: 'generate_chapter_plan'; data: { items: PlanningChapterPlanDraft[] } }
+  | { action: 'generate_scene_cards'; data: { items: PlanningSceneCardDraft[] } }
   | { action: 'suggest_next_step'; data: { item: PlanningNextStepDraft } }
 
 export function buildPlanningPrompt(input: BuildPlanningPromptInput): string {
@@ -129,6 +142,18 @@ function buildFocusBlock(input: BuildPlanningPromptInput): string {
     ].join('\n')
   }
 
+  if (input.action === 'generate_scene_cards' && input.focusChapterPlan) {
+    return [
+      '【当前章纲】',
+      `标题：${input.focusChapterPlan.title}`,
+      `摘要：${input.focusChapterPlan.summary || '(待补充)'}`,
+      `目标：${input.focusChapterPlan.chapterGoal || '(待补充)'}`,
+      `冲突：${input.focusChapterPlan.conflict || '(待补充)'}`,
+      `转折：${input.focusChapterPlan.turn || '(待补充)'}`,
+      `揭示：${input.focusChapterPlan.reveal || '(待补充)'}`,
+    ].join('\n')
+  }
+
   return [
     '【当前任务】',
     '请基于现有作品宪章、故事圣经和规划进度，给出最值得推进的下一步。',
@@ -148,6 +173,12 @@ function buildActionInstruction(action: PlanningAction): string {
         '【任务要求】',
         '基于当前卷纲拆出 3-5 条连续章纲。',
         '每条章纲都要能看出推进作用，避免重复功能章节。',
+      ].join('\n')
+    case 'generate_scene_cards':
+      return [
+        '【任务要求】',
+        '基于当前章纲拆出 3-6 张连续场景卡。',
+        '每张场景卡都要明确视角、地点、目标、阻碍、结果与连续性提醒，避免空泛描述。',
       ].join('\n')
     case 'suggest_next_step':
       return [
@@ -202,6 +233,24 @@ function getActionSchema(action: PlanningAction): ParsedPlanningActionResult {
           ],
         },
       }
+    case 'generate_scene_cards':
+      return {
+        action,
+        data: {
+          items: [
+            {
+              title: '城门前换车',
+              viewpoint: '沈夜',
+              location: '朱雀门外',
+              objective: '确认押解路线是否被篡改',
+              obstacle: '押解官催促启程',
+              outcome: '发现前方有人提前设伏',
+              continuityNotes: '延续右臂旧伤与雨夜能见度受限',
+              status: 'planned',
+            },
+          ],
+        },
+      }
     case 'suggest_next_step':
       return {
         action,
@@ -231,6 +280,16 @@ function validatePlanningActionResult(result: ParsedPlanningActionResult): strin
       return hasStringFields(result.data.item, ['title', 'premise', 'objective', 'conflict', 'payoff'])
     case 'generate_chapter_plan':
       return validateItems(result.data.items, ['title', 'summary', 'chapterGoal', 'conflict', 'turn', 'reveal'])
+    case 'generate_scene_cards':
+      return validateItems(result.data.items, [
+        'title',
+        'viewpoint',
+        'location',
+        'objective',
+        'obstacle',
+        'outcome',
+        'continuityNotes',
+      ])
     case 'suggest_next_step':
       return hasStringFields(result.data.item, ['summary', 'reason'])
     default:

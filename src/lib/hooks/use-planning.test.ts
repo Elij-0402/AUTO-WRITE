@@ -2,7 +2,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import Dexie from 'dexie'
 import { __resetProjectDBCache, createProjectDB } from '../db/project-db'
-import { createIdeaNote, createStoryArc } from '../db/planning-queries'
+import { createChapterPlan, createIdeaNote, createSceneCard, createStoryArc } from '../db/planning-queries'
 import { usePlanning } from './use-planning'
 
 describe('usePlanning', () => {
@@ -42,5 +42,42 @@ describe('usePlanning', () => {
       '第一卷',
       '第二卷',
     ])
+  })
+
+  it('exposes scene-card mutations through the planning hook', async () => {
+    const db = createProjectDB(projectId)
+    const chapterPlan = await createChapterPlan(db, projectId, {
+      title: '第1章 雨夜押解',
+      order: 1,
+    })
+    const seededScene = await createSceneCard(db, projectId, {
+      chapterPlanId: chapterPlan.id,
+      title: '城门前换车',
+      order: 1,
+    })
+
+    const { result } = renderHook(() => usePlanning(projectId))
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    const created = await result.current.createSceneCard({
+      chapterPlanId: chapterPlan.id,
+      title: '雨巷伏杀',
+    })
+
+    await result.current.updateSceneCard(created.id, {
+      status: 'drafting',
+      viewpoint: '沈夜',
+    })
+    await result.current.reorderSceneCards(chapterPlan.id, [created.id, seededScene.id])
+    await result.current.deleteSceneCard(seededScene.id)
+
+    await waitFor(() => {
+      expect(result.current.snapshot.sceneCards).toHaveLength(1)
+      expect(result.current.snapshot.sceneCards[0].id).toBe(created.id)
+      expect(result.current.snapshot.sceneCards[0].order).toBe(1)
+      expect(result.current.snapshot.sceneCards[0].viewpoint).toBe('沈夜')
+      expect(result.current.snapshot.sceneCards[0].status).toBe('drafting')
+    })
   })
 })

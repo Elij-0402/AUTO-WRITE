@@ -14,6 +14,7 @@ import type {
   PlanningArcDraft,
   PlanningChapterPlanDraft,
   PlanningNextStepDraft,
+  PlanningSceneCardDraft,
   PlanningAction,
 } from '@/lib/ai/planning-prompts'
 
@@ -28,7 +29,7 @@ export function PlanningAiPanel({
   selection,
   onSelectItem,
 }: PlanningAiPanelProps) {
-  const { snapshot, createStoryArc, createChapterPlan } = usePlanning(projectId)
+  const { snapshot, createStoryArc, createChapterPlan, createSceneCard } = usePlanning(projectId)
   const { charter } = useProjectCharter(projectId)
   const { trackers } = useStoryTrackers(projectId)
   const { entries } = useWorldEntries(projectId)
@@ -58,6 +59,7 @@ export function PlanningAiPanel({
 
   const canGenerateArc = snapshot.ideaNotes.length > 0 && (!selection || selection.kind === 'idea')
   const canGenerateChapterPlan = !!selectedArc
+  const canGenerateSceneCards = !!selectedChapterPlan
 
   const handleRun = async (action: PlanningAction) => {
     setApplyError(null)
@@ -112,6 +114,23 @@ export function PlanningAiPanel({
         if (nextSelectionId) {
           onSelectItem({ kind: 'chapter', id: nextSelectionId })
         }
+      } else if (result.action === 'generate_scene_cards' && selectedChapterPlan) {
+        const startOrder = nextOrder(
+          snapshot.sceneCards
+            .filter((item) => item.chapterPlanId === selectedChapterPlan.id)
+            .map((item) => item.order)
+        )
+
+        for (const [index, item] of result.data.items.entries()) {
+          await createSceneCard({
+            ...item,
+            chapterPlanId: selectedChapterPlan.id,
+            order: startOrder + index,
+            status: item.status ?? 'planned',
+          })
+        }
+
+        onSelectItem({ kind: 'chapter', id: selectedChapterPlan.id })
       } else if (result.action === 'suggest_next_step') {
         const target = resolveSuggestionTarget(result.data.item, snapshot)
         if (target) {
@@ -155,6 +174,15 @@ export function PlanningAiPanel({
             loading={runningAction === 'generate_chapter_plan'}
             onClick={() => { void handleRun('generate_chapter_plan') }}
           />
+          {selection?.kind === 'chapter' ? (
+            <ActionButton
+              icon={Sparkles}
+              label="基于章纲拆解场景卡"
+              disabled={!canGenerateSceneCards || loading}
+              loading={runningAction === 'generate_scene_cards'}
+              onClick={() => { void handleRun('generate_scene_cards') }}
+            />
+          ) : null}
           <ActionButton
             icon={Sparkles}
             label="推荐下一步"
@@ -242,6 +270,10 @@ function PlanningResultPreview({
     return <ChapterPlanPreview items={result.data.items} />
   }
 
+  if (result.action === 'generate_scene_cards') {
+    return <SceneCardPreview items={result.data.items} />
+  }
+
   return <NextStepPreview item={result.data.item} />
 }
 
@@ -281,6 +313,24 @@ function NextStepPreview({ item }: { item: PlanningNextStepDraft }) {
       <PreviewField label="建议" value={item.summary} />
       <PreviewField label="原因" value={item.reason} />
       {item.targetTitle ? <PreviewField label="建议定位" value={item.targetTitle} /> : null}
+    </div>
+  )
+}
+
+function SceneCardPreview({ items }: { items: PlanningSceneCardDraft[] }) {
+  return (
+    <div className="space-y-4">
+      {items.map((item, index) => (
+        <div key={`${item.title}-${index}`} className="space-y-2 pb-3 divider-hair">
+          <h3 className="text-sm font-medium">{index + 1}. {item.title}</h3>
+          <PreviewField label="视角" value={item.viewpoint} />
+          <PreviewField label="地点" value={item.location} />
+          <PreviewField label="目标" value={item.objective} />
+          <PreviewField label="阻碍" value={item.obstacle} />
+          <PreviewField label="结果" value={item.outcome} />
+          <PreviewField label="连续性提醒" value={item.continuityNotes} />
+        </div>
+      ))}
     </div>
   )
 }

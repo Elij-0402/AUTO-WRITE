@@ -90,8 +90,14 @@ describe('buildDraftOutlineFromPlanning', () => {
     const summary = buildDraftGenerationSourceSummary(chapterPlan, sceneCards)
 
     expect(summary).toContain('来源章纲：第1章 雨夜押解')
-    expect(summary).toContain('场景卡：2 个')
+    expect(summary).toContain('场景拆解：2 张场景卡')
     expect(summary).toContain('目标字数：3200 字')
+  })
+
+  it('marks missing scene coverage explicitly in the source summary', () => {
+    const summary = buildDraftGenerationSourceSummary(chapterPlan, [])
+
+    expect(summary).toContain('场景拆解：尚未补齐')
   })
 
   it('normalizes draft text before insertion and keeps counting deterministic', () => {

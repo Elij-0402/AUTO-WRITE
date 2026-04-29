@@ -42,7 +42,9 @@ export function buildDraftGenerationSourceSummary(
 ): string {
   const parts = [
     `来源章纲：${chapterPlan.title}`,
-    `场景卡：${sceneCards.length} 个`,
+    sceneCards.length > 0
+      ? `场景拆解：${sceneCards.length} 张场景卡`
+      : '场景拆解：尚未补齐',
   ]
 
   if (chapterPlan.targetWordCount) {

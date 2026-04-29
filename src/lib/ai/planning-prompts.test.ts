@@ -139,7 +139,7 @@ function buildPrompt(action: PlanningAction): string {
     planningSnapshot,
     focusIdea: action === 'generate_arc' ? idea : undefined,
     focusArc: action === 'generate_chapter_plan' ? arc : undefined,
-    focusChapterPlan: action === 'suggest_next_step' ? chapterPlan : undefined,
+    focusChapterPlan: action === 'generate_scene_cards' || action === 'suggest_next_step' ? chapterPlan : undefined,
     currentProgress: {
       totalChapters: 3,
       linkedChapterPlans: 1,
@@ -152,6 +152,7 @@ describe('buildPlanningPrompt', () => {
   it.each([
     'generate_arc',
     'generate_chapter_plan',
+    'generate_scene_cards',
     'suggest_next_step',
   ] satisfies PlanningAction[])('builds %s prompt with charter, world, planning and result contract', (action) => {
     const prompt = buildPrompt(action)
@@ -167,6 +168,7 @@ describe('buildPlanningPrompt', () => {
   it('changes the focus section by action', () => {
     expect(buildPrompt('generate_arc')).toContain('【当前灵感】')
     expect(buildPrompt('generate_chapter_plan')).toContain('【当前卷纲】')
+    expect(buildPrompt('generate_scene_cards')).toContain('【当前章纲】')
     expect(buildPrompt('suggest_next_step')).toContain('【当前任务】')
   })
 })
@@ -185,6 +187,20 @@ describe('parsePlanningActionResult', () => {
       expect(result.value.action).toBe('generate_chapter_plan')
       expect(result.value.data.items).toHaveLength(1)
       expect(result.value.data.items[0].title).toBe('第1章 雨夜押解')
+    }
+  })
+
+  it('parses generated scene-card results', () => {
+    const result = parsePlanningActionResult(`
+[PLAN_JSON_START]
+{"action":"generate_scene_cards","data":{"items":[{"title":"城门前换车","viewpoint":"沈夜","location":"朱雀门外","objective":"确认押解路线被篡改","obstacle":"押解官催促启程","outcome":"发现有人提前设伏","continuityNotes":"保持右臂旧伤延续","status":"planned"}]}}
+[PLAN_JSON_END]
+`)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.value.action).toBe('generate_scene_cards')
+      expect(result.value.data.items[0].location).toBe('朱雀门外')
     }
   })
 

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { PlanningWorkbench } from './planning-workbench'
 
 vi.mock('./planning-ai-panel', () => ({
@@ -9,6 +9,10 @@ vi.mock('./planning-ai-panel', () => ({
 const updateIdeaNote = vi.fn()
 const updateStoryArc = vi.fn()
 const updateChapterPlan = vi.fn()
+const createSceneCard = vi.fn().mockResolvedValue({ id: 'scene-new' })
+const updateSceneCard = vi.fn().mockResolvedValue(undefined)
+const deleteSceneCard = vi.fn().mockResolvedValue(undefined)
+const reorderSceneCards = vi.fn().mockResolvedValue(undefined)
 const addChapter = vi.fn().mockResolvedValue('chapter-new')
 
 vi.mock('@/lib/hooks/use-planning', () => ({
@@ -83,8 +87,30 @@ vi.mock('@/lib/hooks/use-planning', () => ({
           updatedAt: 1,
           deletedAt: null,
         },
+        {
+          id: 'scene-2',
+          projectId: 'project-1',
+          chapterPlanId: 'chapter-1',
+          title: '雨巷伏杀',
+          viewpoint: '顾迟',
+          location: '南城雨巷',
+          objective: '护住关键证人',
+          obstacle: '刺客封路',
+          outcome: '找到熟悉纹样',
+          continuityNotes: '保持雨夜追逐的体力损耗',
+          order: 2,
+          status: 'drafting',
+          linkedEntryIds: [],
+          createdAt: 1,
+          updatedAt: 1,
+          deletedAt: null,
+        },
       ],
     },
+    createSceneCard,
+    updateSceneCard,
+    deleteSceneCard,
+    reorderSceneCards,
     updateIdeaNote,
     updateStoryArc,
     updateChapterPlan,
@@ -138,8 +164,18 @@ vi.mock('@/lib/hooks/use-chapters', () => ({
 }))
 
 vi.mock('@/components/ui/select', () => ({
-  Select: ({ value, onValueChange, children }: { value: string; onValueChange: (value: string) => void; children: React.ReactNode }) => (
-    <select aria-label="绑定章节" value={value} onChange={(e) => onValueChange(e.target.value)}>
+  Select: ({
+    value,
+    onValueChange,
+    children,
+    'aria-label': ariaLabel,
+  }: {
+    value: string
+    onValueChange: (value: string) => void
+    children: React.ReactNode
+    'aria-label'?: string
+  }) => (
+    <select aria-label={ariaLabel} value={value} onChange={(e) => onValueChange(e.target.value)}>
       {children}
     </select>
   ),
@@ -150,6 +186,10 @@ vi.mock('@/components/ui/select', () => ({
 }))
 
 describe('PlanningWorkbench', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('renders empty state when nothing is selected', () => {
     render(<PlanningWorkbench projectId="project-1" selection={null} />)
 
@@ -177,11 +217,10 @@ describe('PlanningWorkbench', () => {
     )
 
     const titleInput = screen.getByLabelText('标题')
-    fireEvent.change(titleInput, { target: { value: '雨夜入局' } })
     fireEvent.blur(titleInput)
 
     expect(updateIdeaNote).toHaveBeenCalledWith('idea-1', {
-      title: '雨夜入局',
+      title: '雨夜宫变',
       premise: '一个少女替父顶罪',
       moodKeywords: ['压抑'],
     })
@@ -210,11 +249,10 @@ describe('PlanningWorkbench', () => {
     )
 
     const titleInput = screen.getByLabelText('卷纲标题')
-    fireEvent.change(titleInput, { target: { value: '第一卷：夜雨开局' } })
     fireEvent.blur(titleInput)
 
     expect(updateStoryArc).toHaveBeenCalledWith('arc-1', expect.objectContaining({
-      title: '第一卷：夜雨开局',
+      title: '第一卷：雨夜入局',
       premise: '主角被迫入局',
       objective: '活下来',
     }))
@@ -233,7 +271,9 @@ describe('PlanningWorkbench', () => {
     expect(screen.getByDisplayValue('活着进城')).toBeInTheDocument()
     expect(screen.getByLabelText('绑定章节')).toHaveValue('linked-chapter')
     expect(screen.getByText('所属卷纲：第一卷：雨夜入局')).toBeInTheDocument()
-    expect(screen.getByText('已有 1 条旧场景资料')).toBeInTheDocument()
+    expect(screen.getByText('场景拆解：2 张场景卡，已具备起草骨架')).toBeInTheDocument()
+    expect(screen.getByText('场景卡拆解')).toBeInTheDocument()
+    expect(screen.getByText('城门前换车')).toBeInTheDocument()
   })
 
   it('updates linked chapter for selected chapter plan', () => {
@@ -275,4 +315,45 @@ describe('PlanningWorkbench', () => {
     })
   })
 
+  it('updates scene-card fields for the selected chapter plan', () => {
+    render(
+      <PlanningWorkbench
+        projectId="project-1"
+        selection={{ kind: 'chapter', id: 'chapter-1' }}
+      />
+    )
+
+    fireEvent.click(screen.getByText('城门前换车'))
+    const viewpointInput = screen.getByLabelText('视角')
+    fireEvent.change(viewpointInput, { target: { value: '顾迟' } })
+    fireEvent.blur(viewpointInput)
+
+    expect(updateSceneCard).toHaveBeenCalledWith('scene-1', expect.objectContaining({
+      viewpoint: '顾迟',
+      title: '城门前换车',
+      status: 'planned',
+    }))
+  })
+
+  it('creates, reorders, and deletes scene cards from the chapter plan view', async () => {
+    render(
+      <PlanningWorkbench
+        projectId="project-1"
+        selection={{ kind: 'chapter', id: 'chapter-1' }}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '新建场景卡' }))
+    fireEvent.click(screen.getAllByLabelText('下移场景卡')[0])
+    fireEvent.click(screen.getAllByLabelText('删除场景卡')[0])
+
+    await waitFor(() => {
+      expect(createSceneCard).toHaveBeenCalledWith({
+        chapterPlanId: 'chapter-1',
+        title: '场景 3',
+      })
+      expect(reorderSceneCards).toHaveBeenCalledWith('chapter-1', ['scene-2', 'scene-1'])
+      expect(deleteSceneCard).toHaveBeenCalledWith('scene-1')
+    })
+  })
 })

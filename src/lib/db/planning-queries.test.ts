@@ -6,7 +6,10 @@ import {
   createIdeaNote,
   createSceneCard,
   createStoryArc,
+  deleteSceneCard,
   listPlanningSnapshot,
+  reorderSceneCards,
+  updateSceneCard,
 } from './planning-queries'
 
 describe('planning-queries', () => {
@@ -74,5 +77,42 @@ describe('planning-queries', () => {
 
     expect(snapshot.storyArcs).toHaveLength(1)
     expect(snapshot.storyArcs[0].title).toBe('卷二')
+  })
+
+  it('updates, reorders, and deletes scene cards within a chapter plan', async () => {
+    const chapterPlan = await createChapterPlan(db, projectId, {
+      title: '第1章 雨夜押解',
+      order: 1,
+    })
+    const first = await createSceneCard(db, projectId, {
+      chapterPlanId: chapterPlan.id,
+      title: '城门前换车',
+      order: 1,
+    })
+    const second = await createSceneCard(db, projectId, {
+      chapterPlanId: chapterPlan.id,
+      title: '雨巷伏杀',
+      order: 2,
+    })
+    const third = await createSceneCard(db, projectId, {
+      chapterPlanId: chapterPlan.id,
+      title: '金殿请罪',
+      order: 3,
+    })
+
+    await updateSceneCard(db, second.id, {
+      viewpoint: '沈夜',
+      status: 'drafting',
+    })
+    await reorderSceneCards(db, projectId, chapterPlan.id, [third.id, first.id, second.id])
+    await deleteSceneCard(db, first.id)
+
+    const snapshot = await listPlanningSnapshot(db, projectId)
+
+    expect(snapshot.sceneCards).toHaveLength(2)
+    expect(snapshot.sceneCards.map((item) => item.id)).toEqual([third.id, second.id])
+    expect(snapshot.sceneCards.map((item) => item.order)).toEqual([1, 2])
+    expect(snapshot.sceneCards[1].viewpoint).toBe('沈夜')
+    expect(snapshot.sceneCards[1].status).toBe('drafting')
   })
 })

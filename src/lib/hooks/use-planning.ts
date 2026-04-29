@@ -6,15 +6,20 @@ import { createProjectDB } from '../db/project-db'
 import {
   createChapterPlan,
   createIdeaNote,
+  createSceneCard,
   createStoryArc,
+  deleteSceneCard,
   listPlanningSnapshot,
+  reorderSceneCards,
   updateChapterPlan,
   updateIdeaNote,
+  updateSceneCard,
   updateStoryArc,
 } from '../db/planning-queries'
 import type {
   CreateChapterPlanInput,
   CreateIdeaNoteInput,
+  CreateSceneCardInput,
   CreateStoryArcInput,
   PlanningSnapshot,
 } from '../types'
@@ -42,6 +47,7 @@ export function usePlanning(projectId: string) {
     createIdeaNote: (input: CreateIdeaNoteInput) => createIdeaNote(db, projectId, input),
     createStoryArc: (input: CreateStoryArcInput) => createStoryArc(db, projectId, input),
     createChapterPlan: (input: CreateChapterPlanInput) => createChapterPlan(db, projectId, input),
+    createSceneCard: (input: CreateSceneCardInput) => createSceneCard(db, projectId, input),
     updateIdeaNote: (
       id: string,
       fields: Parameters<typeof updateIdeaNote>[2]
@@ -54,5 +60,12 @@ export function usePlanning(projectId: string) {
       id: string,
       fields: Parameters<typeof updateChapterPlan>[2]
     ) => updateChapterPlan(db, id, fields),
+    updateSceneCard: (
+      id: string,
+      fields: Parameters<typeof updateSceneCard>[2]
+    ) => updateSceneCard(db, id, fields),
+    deleteSceneCard: (id: string) => deleteSceneCard(db, id),
+    reorderSceneCards: (chapterPlanId: string, orderedIds: string[]) =>
+      reorderSceneCards(db, projectId, chapterPlanId, orderedIds),
   }
 }

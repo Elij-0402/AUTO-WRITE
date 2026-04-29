@@ -215,3 +215,61 @@ export async function updateSceneCard(
     updatedAt: Date.now(),
   })
 }
+
+export async function deleteSceneCard(
+  db: InkForgeProjectDB,
+  id: string
+): Promise<void> {
+  const card = await db.sceneCards.get(id)
+  if (!card || card.deletedAt !== null) return
+
+  const now = Date.now()
+  await db.transaction('rw', db.sceneCards, async () => {
+    await db.sceneCards.update(id, {
+      deletedAt: now,
+      updatedAt: now,
+    })
+
+    const siblings = await db.sceneCards
+      .where('[projectId+chapterPlanId]')
+      .equals([card.projectId, card.chapterPlanId])
+      .filter((item) => item.deletedAt === null)
+      .sortBy('order')
+
+    await Promise.all(
+      siblings.map((item, index) => db.sceneCards.update(item.id, {
+        order: index + 1,
+        updatedAt: now,
+      }))
+    )
+  })
+}
+
+export async function reorderSceneCards(
+  db: InkForgeProjectDB,
+  projectId: string,
+  chapterPlanId: string,
+  orderedIds: string[]
+): Promise<void> {
+  const now = Date.now()
+  await db.transaction('rw', db.sceneCards, async () => {
+    const cards = await db.sceneCards
+      .where('[projectId+chapterPlanId]')
+      .equals([projectId, chapterPlanId])
+      .filter((item) => item.deletedAt === null)
+      .sortBy('order')
+
+    const orderedIdSet = new Set(orderedIds)
+    const preservedIds = cards
+      .map((item) => item.id)
+      .filter((id) => !orderedIdSet.has(id))
+    const nextIds = [...orderedIds.filter((id) => cards.some((item) => item.id === id)), ...preservedIds]
+
+    await Promise.all(
+      nextIds.map((id, index) => db.sceneCards.update(id, {
+        order: index + 1,
+        updatedAt: now,
+      }))
+    )
+  })
+}

@@ -4,6 +4,7 @@ import { PlanningAiPanel } from './planning-ai-panel'
 
 const createStoryArc = vi.fn().mockResolvedValue({ id: 'arc-new' })
 const createChapterPlan = vi.fn().mockResolvedValue(undefined)
+const createSceneCard = vi.fn().mockResolvedValue({ id: 'scene-new' })
 const runAction = vi.fn()
 const dismissResult = vi.fn()
 let planningAiState: {
@@ -96,6 +97,7 @@ vi.mock('@/lib/hooks/use-planning', () => ({
     },
     createStoryArc,
     createChapterPlan,
+    createSceneCard,
   }),
 }))
 
@@ -216,6 +218,65 @@ describe('PlanningAiPanel', () => {
         order: 3,
         sourceIdeaIds: ['idea-1'],
       }))
+    })
+  })
+
+  it('shows the scene-card action only for chapter selection and passes chapter context', async () => {
+    render(
+      <PlanningAiPanel
+        projectId="project-1"
+        selection={{ kind: 'chapter', id: 'chapter-1' }}
+        onSelectItem={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '基于章纲拆解场景卡' }))
+
+    await waitFor(() => {
+      expect(runAction).toHaveBeenCalledWith('generate_scene_cards', expect.objectContaining({
+        focusChapterPlanId: 'chapter-1',
+      }))
+    })
+  })
+
+  it('renders and applies generated scene-card previews', async () => {
+    const onSelectItem = vi.fn()
+    planningAiState.result = {
+      action: 'generate_scene_cards',
+      data: {
+        items: [
+          {
+            title: '城门前换车',
+            viewpoint: '沈夜',
+            location: '朱雀门外',
+            objective: '确认押解路线被篡改',
+            obstacle: '押解官催促启程',
+            outcome: '发现有人提前设伏',
+            continuityNotes: '保持右臂伤势延续',
+            status: 'planned',
+          },
+        ],
+      },
+    }
+
+    render(
+      <PlanningAiPanel
+        projectId="project-1"
+        selection={{ kind: 'chapter', id: 'chapter-1' }}
+        onSelectItem={onSelectItem}
+      />
+    )
+
+    expect(screen.getByText('1. 城门前换车')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '应用结果' }))
+
+    await waitFor(() => {
+      expect(createSceneCard).toHaveBeenCalledWith(expect.objectContaining({
+        chapterPlanId: 'chapter-1',
+        title: '城门前换车',
+        order: 7,
+      }))
+      expect(onSelectItem).toHaveBeenCalledWith({ kind: 'chapter', id: 'chapter-1' })
     })
   })
 })

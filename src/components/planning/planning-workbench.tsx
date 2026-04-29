@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select'
 
 export interface PlanningSelection {
-  kind: 'idea' | 'arc' | 'chapter' | 'scene'
+  kind: 'idea' | 'arc' | 'chapter'
   id: string
 }
 
@@ -48,8 +48,6 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
     updateIdeaNote,
     updateStoryArc,
     updateChapterPlan,
-    updateSceneCard,
-    createSceneCard,
   } = usePlanning(projectId)
   const { chapters, addChapter } = useChapters(projectId)
 
@@ -62,9 +60,6 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
   const selectedChapterPlan = selection?.kind === 'chapter'
     ? snapshot.chapterPlans.find((item) => item.id === selection.id)
     : null
-  const selectedSceneCard = selection?.kind === 'scene'
-    ? snapshot.sceneCards.find((item) => item.id === selection.id)
-    : null
   const selectedArcChapterPlans = selectedArc
     ? snapshot.chapterPlans.filter((item) => item.arcId === selectedArc.id)
     : []
@@ -74,16 +69,13 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
   const parentArc = selectedChapterPlan
     ? snapshot.storyArcs.find((item) => item.id === selectedChapterPlan.arcId)
     : null
-  const parentChapterPlan = selectedSceneCard
-    ? snapshot.chapterPlans.find((item) => item.id === selectedSceneCard.chapterPlanId)
-    : null
 
   const [title, setTitle] = useState(
-    selectedIdea?.title ?? selectedArc?.title ?? selectedChapterPlan?.title ?? selectedSceneCard?.title ?? ''
+    selectedIdea?.title ?? selectedArc?.title ?? selectedChapterPlan?.title ?? ''
   )
   const [premise, setPremise] = useState(selectedIdea?.premise ?? selectedArc?.premise ?? '')
   const [moodKeywords, setMoodKeywords] = useState(selectedIdea?.moodKeywords.join('、') ?? '')
-  const [objective, setObjective] = useState(selectedArc?.objective ?? selectedSceneCard?.objective ?? '')
+  const [objective, setObjective] = useState(selectedArc?.objective ?? '')
   const [conflict, setConflict] = useState(selectedArc?.conflict ?? selectedChapterPlan?.conflict ?? '')
   const [payoff, setPayoff] = useState(selectedArc?.payoff ?? '')
   const [summary, setSummary] = useState(selectedChapterPlan?.summary ?? '')
@@ -91,11 +83,6 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
   const [turn, setTurn] = useState(selectedChapterPlan?.turn ?? '')
   const [reveal, setReveal] = useState(selectedChapterPlan?.reveal ?? '')
   const [linkedChapterId, setLinkedChapterId] = useState(selectedChapterPlan?.linkedChapterId ?? 'unlinked')
-  const [viewpoint, setViewpoint] = useState(selectedSceneCard?.viewpoint ?? '')
-  const [location, setLocation] = useState(selectedSceneCard?.location ?? '')
-  const [obstacle, setObstacle] = useState(selectedSceneCard?.obstacle ?? '')
-  const [outcome, setOutcome] = useState(selectedSceneCard?.outcome ?? '')
-  const [continuityNotes, setContinuityNotes] = useState(selectedSceneCard?.continuityNotes ?? '')
   const latestValuesRef = useRef({
     title,
     premise,
@@ -108,11 +95,6 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
     turn,
     reveal,
     linkedChapterId,
-    viewpoint,
-    location,
-    obstacle,
-    outcome,
-    continuityNotes,
   })
   const draftValues = {
     title,
@@ -131,14 +113,9 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
         selectedArc?.updatedAt,
         selectedChapterPlan?.updatedAt,
         selectedChapterPlan?.linkedChapterId,
-        selectedSceneCard?.updatedAt,
       ].join(':')
     : 'none'
   /* eslint-disable react-hooks/exhaustive-deps */
-  // This effect intentionally rehydrates the local form from the currently
-  // selected planning entity when its semantic version changes. Depending on
-  // object identity here would reset in-progress input because usePlanning()
-  // materializes fresh records on each render.
   useEffect(() => {
     if (selectedIdea) {
       setTitle(selectedIdea.title)
@@ -188,27 +165,6 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
         reveal: selectedChapterPlan.reveal,
         linkedChapterId: selectedChapterPlan.linkedChapterId ?? 'unlinked',
       }
-      return
-    }
-
-    if (selectedSceneCard) {
-      setTitle(selectedSceneCard.title)
-      setViewpoint(selectedSceneCard.viewpoint)
-      setLocation(selectedSceneCard.location)
-      setObjective(selectedSceneCard.objective)
-      setObstacle(selectedSceneCard.obstacle)
-      setOutcome(selectedSceneCard.outcome)
-      setContinuityNotes(selectedSceneCard.continuityNotes)
-      latestValuesRef.current = {
-        ...latestValuesRef.current,
-        title: selectedSceneCard.title,
-        viewpoint: selectedSceneCard.viewpoint,
-        location: selectedSceneCard.location,
-        objective: selectedSceneCard.objective,
-        obstacle: selectedSceneCard.obstacle,
-        outcome: selectedSceneCard.outcome,
-        continuityNotes: selectedSceneCard.continuityNotes,
-      }
     }
   }, [selectionVersion])
   /* eslint-enable react-hooks/exhaustive-deps */
@@ -256,23 +212,6 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
     500
   )
 
-  const { isSaving: isSceneSaving } = useAutoSave(
-    async () => {
-      if (!selectedSceneCard) return
-      await updateSceneCard(selectedSceneCard.id, {
-        title,
-        viewpoint,
-        location,
-        objective,
-        obstacle,
-        outcome,
-        continuityNotes,
-      })
-    },
-    [selectedSceneCard?.id, title, viewpoint, location, objective, obstacle, outcome, continuityNotes],
-    500
-  )
-
   const renderWithPanel = (content: ReactNode) => (
     <div className="flex h-full overflow-hidden">
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
@@ -290,10 +229,10 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
   if (!selection) {
     return renderWithPanel(
       <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-          <h2 className="font-display text-[36px] text-foreground/85">开始规划长篇</h2>
-          <p className="max-w-md text-sm text-muted-foreground">
-            从左侧选择一条灵感、卷纲、章纲或场景卡，逐步把这本书的骨架搭起来。
-          </p>
+        <h2 className="font-display text-[36px] text-foreground/85">开始规划长篇</h2>
+        <p className="max-w-md text-sm text-muted-foreground">
+          从左侧选择一条灵感、卷纲或章纲，逐步把这本书的骨架搭起来。
+        </p>
       </div>
     )
   }
@@ -301,12 +240,12 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
   if (selection.kind === 'idea' && selectedIdea) {
     return renderWithPanel(
       <>
-          <div className="flex items-center justify-between border-b px-6 py-3">
-            <span className="text-sm font-medium">灵感卡</span>
-            <span className="text-xs text-muted-foreground">{isSaving ? '保存中...' : '已保存'}</span>
-          </div>
+        <div className="flex items-center justify-between border-b px-6 py-3">
+          <span className="text-sm font-medium">灵感卡</span>
+          <span className="text-xs text-muted-foreground">{isSaving ? '保存中...' : '已保存'}</span>
+        </div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
+        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div className="space-y-2">
             <label htmlFor="planning-title" className="text-sm">标题</label>
             <Input
@@ -348,21 +287,21 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
               placeholder="压抑、宿命、宫廷"
             />
           </div>
-          </div>
-        </>
+        </div>
+      </>
     )
   }
 
   if (selection.kind === 'arc' && selectedArc) {
     return renderWithPanel(
       <>
-          <div className="flex items-center justify-between border-b px-6 py-3">
-            <span className="text-sm font-medium">卷纲卡</span>
-            <span className="text-xs text-muted-foreground">{isArcSaving ? '保存中...' : '已保存'}</span>
-          </div>
-          <ContextMeta items={[`下挂 ${selectedArcChapterPlans.length} 章`]} />
+        <div className="flex items-center justify-between border-b px-6 py-3">
+          <span className="text-sm font-medium">卷纲卡</span>
+          <span className="text-xs text-muted-foreground">{isArcSaving ? '保存中...' : '已保存'}</span>
+        </div>
+        <ContextMeta items={[`下挂 ${selectedArcChapterPlans.length} 章`]} />
 
-          <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
+        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div className="space-y-2">
             <label htmlFor="arc-title" className="text-sm">卷纲标题</label>
             <Input
@@ -399,7 +338,7 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
             <label htmlFor="arc-payoff" className="text-sm">阶段兑现</label>
             <Textarea id="arc-payoff" value={payoff} onChange={(e) => setPayoff(e.target.value)} />
           </div>
-          </div>
+        </div>
       </>
     )
   }
@@ -433,36 +372,22 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
       onOpenLinkedChapter?.(newChapterId)
     }
 
-    const handleCreateSceneCard = async () => {
-      const created = await createSceneCard({
-        chapterPlanId: selectedChapterPlan.id,
-        title: `场景 ${selectedChapterScenes.length + 1}`,
-      })
-
-      if (created?.id && onSelectItem) {
-        onSelectItem({ kind: 'scene', id: created.id })
-      }
-    }
-
     return renderWithPanel(
       <>
-          <div className="flex items-center justify-between border-b px-6 py-3">
-            <span className="text-sm font-medium">章纲卡</span>
-            <span className="text-xs text-muted-foreground">{isChapterSaving ? '保存中...' : '已保存'}</span>
-          </div>
-          <ContextMeta
-            items={[
-              parentArc ? `所属卷纲：${parentArc.title}` : '所属卷纲：未绑定',
-              `场景卡 ${selectedChapterScenes.length} 个`,
-            ]}
-          />
+        <div className="flex items-center justify-between border-b px-6 py-3">
+          <span className="text-sm font-medium">章纲卡</span>
+          <span className="text-xs text-muted-foreground">{isChapterSaving ? '保存中...' : '已保存'}</span>
+        </div>
+        <ContextMeta
+          items={[
+            parentArc ? `所属卷纲：${parentArc.title}` : '所属卷纲：未绑定',
+            selectedChapterScenes.length > 0
+              ? `已有 ${selectedChapterScenes.length} 条旧场景资料`
+              : '可直接为本章补齐摘要、目标与转折',
+          ]}
+        />
 
-          <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
-          <div className="flex justify-end">
-            <Button type="button" variant="outline" onClick={() => { void handleCreateSceneCard() }}>
-              新增场景卡
-            </Button>
-          </div>
+        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div className="space-y-2">
             <label htmlFor="chapter-title" className="text-sm">章纲标题</label>
             <Input
@@ -525,84 +450,17 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
             <label htmlFor="chapter-reveal" className="text-sm">揭示</label>
             <Textarea id="chapter-reveal" value={reveal} onChange={(e) => setReveal(e.target.value)} />
           </div>
-          </div>
-      </>
-    )
-  }
-
-  if (selection.kind === 'scene' && selectedSceneCard) {
-    return renderWithPanel(
-      <>
-          <div className="flex items-center justify-between border-b px-6 py-3">
-            <span className="text-sm font-medium">场景卡</span>
-            <span className="text-xs text-muted-foreground">{isSceneSaving ? '保存中...' : '已保存'}</span>
-          </div>
-          <ContextMeta
-            items={[
-              parentChapterPlan ? `所属章纲：${parentChapterPlan.title}` : '所属章纲：未绑定',
-            ]}
-          />
-
-          <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
-          <div className="space-y-2">
-            <label htmlFor="scene-title" className="text-sm">场景标题</label>
-            <Input
-              id="scene-title"
-              value={title}
-              onChange={(e) => {
-                latestValuesRef.current.title = e.target.value
-                setTitle(e.target.value)
-              }}
-              onBlur={() => {
-                void updateSceneCard(selectedSceneCard.id, {
-                  title: latestValuesRef.current.title,
-                  viewpoint: latestValuesRef.current.viewpoint,
-                  location: latestValuesRef.current.location,
-                  objective: latestValuesRef.current.objective,
-                  obstacle: latestValuesRef.current.obstacle,
-                  outcome: latestValuesRef.current.outcome,
-                  continuityNotes: latestValuesRef.current.continuityNotes,
-                })
-              }}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="scene-viewpoint" className="text-sm">视角人物</label>
-              <Input id="scene-viewpoint" value={viewpoint} onChange={(e) => setViewpoint(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="scene-location" className="text-sm">场景地点</label>
-              <Input id="scene-location" value={location} onChange={(e) => setLocation(e.target.value)} />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="scene-objective" className="text-sm">场景目标</label>
-            <Textarea id="scene-objective" value={objective} onChange={(e) => setObjective(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="scene-obstacle" className="text-sm">阻碍</label>
-            <Textarea id="scene-obstacle" value={obstacle} onChange={(e) => setObstacle(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="scene-outcome" className="text-sm">结果</label>
-            <Textarea id="scene-outcome" value={outcome} onChange={(e) => setOutcome(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="scene-continuity" className="text-sm">连续性提醒</label>
-            <Textarea id="scene-continuity" value={continuityNotes} onChange={(e) => setContinuityNotes(e.target.value)} />
-          </div>
-          </div>
+        </div>
       </>
     )
   }
 
   return renderWithPanel(
-      <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-        <h2 className="font-display text-[28px] text-foreground/85">规划对象未找到</h2>
-        <p className="max-w-md text-sm text-muted-foreground">
-          当前选中的规划对象可能已被删除，请从左侧重新选择。
-        </p>
-      </div>
+    <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+      <h2 className="font-display text-[28px] text-foreground/85">规划对象未找到</h2>
+      <p className="max-w-md text-sm text-muted-foreground">
+        当前选中的规划对象可能已被删除，请从左侧重新选择。
+      </p>
+    </div>
   )
 }

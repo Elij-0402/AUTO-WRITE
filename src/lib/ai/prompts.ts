@@ -114,13 +114,12 @@ export function buildPlanningDigestBlock(planningSnapshot?: PlanningSnapshot): s
   const chapterLines = chapterPlans.slice(0, 6).map((plan) => {
     const sceneCount = sceneCards.filter((scene) => scene.chapterPlanId === plan.id).length
     const linkedLabel = plan.linkedChapterId ? '已绑定章节' : '未绑定章节'
-    return `${plan.title}｜${linkedLabel}｜已拆 ${sceneCount}/${sceneCount} 场景`
+    return sceneCount > 0
+      ? `${plan.title}｜${linkedLabel}｜旧场景资料 ${sceneCount} 条`
+      : `${plan.title}｜${linkedLabel}`
   })
 
   const pendingChapterCount = chapterPlans.filter((plan) => !plan.linkedChapterId).length
-  const pendingSceneCount = chapterPlans.filter((plan) => (
-    sceneCards.every((scene) => scene.chapterPlanId !== plan.id)
-  )).length
 
   const sections = ['【当前规划】']
   if (arcLines.length > 0) {
@@ -132,8 +131,7 @@ export function buildPlanningDigestBlock(planningSnapshot?: PlanningSnapshot): s
   sections.push(
     '',
     '【待推进】',
-    `待写章节：${pendingChapterCount}`,
-    `待拆场景章纲：${pendingSceneCount}`
+    `待写章节：${pendingChapterCount}`
   )
 
   return sections.join('\n')

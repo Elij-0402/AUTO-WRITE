@@ -9,10 +9,6 @@ vi.mock('./planning-ai-panel', () => ({
 const updateIdeaNote = vi.fn()
 const updateStoryArc = vi.fn()
 const updateChapterPlan = vi.fn()
-const updateSceneCard = vi.fn()
-const createSceneCard = vi.fn().mockResolvedValue({
-  id: 'scene-new',
-})
 const addChapter = vi.fn().mockResolvedValue('chapter-new')
 
 vi.mock('@/lib/hooks/use-planning', () => ({
@@ -92,8 +88,6 @@ vi.mock('@/lib/hooks/use-planning', () => ({
     updateIdeaNote,
     updateStoryArc,
     updateChapterPlan,
-    updateSceneCard,
-    createSceneCard,
   }),
 }))
 
@@ -239,7 +233,7 @@ describe('PlanningWorkbench', () => {
     expect(screen.getByDisplayValue('活着进城')).toBeInTheDocument()
     expect(screen.getByLabelText('绑定章节')).toHaveValue('linked-chapter')
     expect(screen.getByText('所属卷纲：第一卷：雨夜入局')).toBeInTheDocument()
-    expect(screen.getByText('场景卡 1 个')).toBeInTheDocument()
+    expect(screen.getByText('已有 1 条旧场景资料')).toBeInTheDocument()
   })
 
   it('updates linked chapter for selected chapter plan', () => {
@@ -257,31 +251,6 @@ describe('PlanningWorkbench', () => {
     expect(updateChapterPlan).toHaveBeenCalledWith('chapter-1', expect.objectContaining({
       linkedChapterId: 'chapter-2',
     }))
-  })
-
-  it('creates a scene card directly from the chapter plan editor', async () => {
-    const onSelectItem = vi.fn()
-
-    render(
-      <PlanningWorkbench
-        projectId="project-1"
-        selection={{ kind: 'chapter', id: 'chapter-1' }}
-        onSelectItem={onSelectItem}
-      />
-    )
-
-    fireEvent.click(screen.getByText('新增场景卡'))
-
-    await waitFor(() => {
-      expect(createSceneCard).toHaveBeenCalledWith({
-        chapterPlanId: 'chapter-1',
-        title: '场景 2',
-      })
-      expect(onSelectItem).toHaveBeenCalledWith({
-        kind: 'scene',
-        id: 'scene-new',
-      })
-    })
   })
 
   it('creates and binds a chapter, then forwards the new chapter id', async () => {
@@ -306,17 +275,4 @@ describe('PlanningWorkbench', () => {
     })
   })
 
-  it('renders scene card form for selected scene card', () => {
-    render(
-      <PlanningWorkbench
-        projectId="project-1"
-        selection={{ kind: 'scene', id: 'scene-1' }}
-      />
-    )
-
-    expect(screen.getByDisplayValue('城门前换车')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('沈夜')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('朱雀门外')).toBeInTheDocument()
-    expect(screen.getByText('所属章纲：第1章 雨夜押解')).toBeInTheDocument()
-  })
 })

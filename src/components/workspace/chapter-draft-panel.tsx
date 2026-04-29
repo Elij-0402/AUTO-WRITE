@@ -215,7 +215,7 @@ export function ChapterDraftPanel({
           {linkedChapterPlan ? (
             <div className="space-y-1">
               <p className="text-[12px] text-muted-foreground">
-                已根据当前章纲和场景卡预填，可继续改写后再生成。
+                已根据当前章纲资料预填，可继续改写后再生成。
               </p>
               {sourceSummary ? (
                 <div className="rounded-sm border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] px-3 py-2 text-[12px] text-muted-foreground">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Bot, Check, Lightbulb, ListTree, Loader2, Map as MapIcon, Sparkles, X } from 'lucide-react'
+import { Bot, Check, Lightbulb, Loader2, Map as MapIcon, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { usePlanning } from '@/lib/hooks/use-planning'
 import { usePlanningAi } from '@/lib/hooks/use-planning-ai'
@@ -13,7 +13,6 @@ import type { PlanningSelection } from './planning-workbench'
 import type {
   PlanningArcDraft,
   PlanningChapterPlanDraft,
-  PlanningSceneCardDraft,
   PlanningNextStepDraft,
   PlanningAction,
 } from '@/lib/ai/planning-prompts'
@@ -29,7 +28,7 @@ export function PlanningAiPanel({
   selection,
   onSelectItem,
 }: PlanningAiPanelProps) {
-  const { snapshot, createStoryArc, createChapterPlan, createSceneCard } = usePlanning(projectId)
+  const { snapshot, createStoryArc, createChapterPlan } = usePlanning(projectId)
   const { charter } = useProjectCharter(projectId)
   const { trackers } = useStoryTrackers(projectId)
   const { entries } = useWorldEntries(projectId)
@@ -55,14 +54,10 @@ export function PlanningAiPanel({
     totalChapters: chapters.length,
     linkedChapterPlans: snapshot.chapterPlans.filter((plan) => plan.linkedChapterId).length,
     unlinkedChapterPlans: snapshot.chapterPlans.filter((plan) => !plan.linkedChapterId).length,
-    pendingSceneChapterPlans: snapshot.chapterPlans.filter(
-      (plan) => snapshot.sceneCards.every((scene) => scene.chapterPlanId !== plan.id)
-    ).length,
-  }), [chapters.length, snapshot.chapterPlans, snapshot.sceneCards])
+  }), [chapters.length, snapshot.chapterPlans])
 
   const canGenerateArc = snapshot.ideaNotes.length > 0 && (!selection || selection.kind === 'idea')
   const canGenerateChapterPlan = !!selectedArc
-  const canGenerateSceneCards = !!selectedChapterPlan
 
   const handleRun = async (action: PlanningAction) => {
     setApplyError(null)
@@ -117,26 +112,6 @@ export function PlanningAiPanel({
         if (nextSelectionId) {
           onSelectItem({ kind: 'chapter', id: nextSelectionId })
         }
-      } else if (result.action === 'generate_scene_cards' && selectedChapterPlan) {
-        const startOrder = nextOrder(
-          snapshot.sceneCards
-            .filter((item) => item.chapterPlanId === selectedChapterPlan.id)
-            .map((item) => item.order)
-        )
-
-        let nextSelectionId: string | null = null
-        for (const [index, item] of result.data.items.entries()) {
-          const created = await createSceneCard({
-            ...item,
-            chapterPlanId: selectedChapterPlan.id,
-            order: startOrder + index,
-          })
-          nextSelectionId = nextSelectionId ?? created?.id ?? null
-        }
-
-        if (nextSelectionId) {
-          onSelectItem({ kind: 'scene', id: nextSelectionId })
-        }
       } else if (result.action === 'suggest_next_step') {
         const target = resolveSuggestionTarget(result.data.item, snapshot)
         if (target) {
@@ -179,13 +154,6 @@ export function PlanningAiPanel({
             disabled={!canGenerateChapterPlan || loading}
             loading={runningAction === 'generate_chapter_plan'}
             onClick={() => { void handleRun('generate_chapter_plan') }}
-          />
-          <ActionButton
-            icon={ListTree}
-            label="基于章纲拆解场景卡"
-            disabled={!canGenerateSceneCards || loading}
-            loading={runningAction === 'generate_scene_cards'}
-            onClick={() => { void handleRun('generate_scene_cards') }}
           />
           <ActionButton
             icon={Sparkles}
@@ -274,10 +242,6 @@ function PlanningResultPreview({
     return <ChapterPlanPreview items={result.data.items} />
   }
 
-  if (result.action === 'generate_scene_cards') {
-    return <SceneCardPreview items={result.data.items} />
-  }
-
   return <NextStepPreview item={result.data.item} />
 }
 
@@ -304,24 +268,6 @@ function ChapterPlanPreview({ items }: { items: PlanningChapterPlanDraft[] }) {
           <PreviewField label="冲突" value={item.conflict} />
           <PreviewField label="转折" value={item.turn} />
           <PreviewField label="揭示" value={item.reveal} />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function SceneCardPreview({ items }: { items: PlanningSceneCardDraft[] }) {
-  return (
-    <div className="space-y-4">
-      {items.map((item, index) => (
-        <div key={`${item.title}-${index}`} className="space-y-2 pb-3 divider-hair">
-          <h3 className="text-sm font-medium">{item.title}</h3>
-          <PreviewField label="视角人物" value={item.viewpoint} />
-          <PreviewField label="场景地点" value={item.location} />
-          <PreviewField label="目标" value={item.objective} />
-          <PreviewField label="阻碍" value={item.obstacle} />
-          <PreviewField label="结果" value={item.outcome} />
-          <PreviewField label="连续性提醒" value={item.continuityNotes} />
         </div>
       ))}
     </div>
@@ -371,10 +317,6 @@ function resolveSuggestionTarget(
     case 'chapter': {
       const match = snapshot.chapterPlans.find((row) => row.title === item.targetTitle)
       return match ? { kind: 'chapter', id: match.id } : null
-    }
-    case 'scene': {
-      const match = snapshot.sceneCards.find((row) => row.title === item.targetTitle)
-      return match ? { kind: 'scene', id: match.id } : null
     }
     default:
       return null

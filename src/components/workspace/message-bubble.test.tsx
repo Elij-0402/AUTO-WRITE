@@ -24,29 +24,26 @@ const directionAdjustmentMessage: ChatMessage = {
 }
 
 describe('MessageBubble', () => {
-  it('reports preference payload through the panel-owned callback', async () => {
-    const onRecordPreference = vi.fn().mockResolvedValue(undefined)
+  it('copies assistant message content through the inline copy action', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
     const user = userEvent.setup()
+    vi.stubGlobal('navigator', {
+      clipboard: {
+        writeText,
+      },
+    })
 
     render(
       <MessageBubble
         message={assistantMessage}
         projectId="proj-1"
-        onRecordPreference={onRecordPreference}
       />
     )
 
-    await user.click(screen.getByRole('button', { name: '记录偏差' }))
-    await user.click(screen.getByLabelText('人物不对味'))
-    await user.type(screen.getByLabelText('具体偏差'), '主角说话太轻浮')
-    await user.click(screen.getByRole('button', { name: '记录偏差' }))
+    await user.click(screen.getByRole('button', { name: '复制' }))
 
     await waitFor(() => {
-      expect(onRecordPreference).toHaveBeenCalledWith({
-        messageId: 'msg-1',
-        category: 'character',
-        note: '主角说话太轻浮',
-      })
+      expect(writeText).toHaveBeenCalledWith('这是一条回复。')
     })
   })
 

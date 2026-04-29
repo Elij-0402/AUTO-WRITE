@@ -5,17 +5,14 @@ import { useAIChat } from '@/lib/hooks/use-ai-chat'
 import { useAIConfig } from '@/lib/hooks/use-ai-config'
 import { useConversations } from '@/lib/hooks/use-conversations'
 import { useProjectCharter } from '@/lib/hooks/use-project-charter'
-import { recordPreferenceMemory } from '@/lib/db/project-charter-queries'
 import { createProjectDB } from '@/lib/db/project-db'
 import { useDismissedSuggestions } from '@/lib/hooks/use-dismissed-suggestions'
 import { useWorldEntries } from '@/lib/hooks/use-world-entries'
 import { useRelations } from '@/lib/hooks/use-relations'
-import { generateDirectionConfirmation, type DirectionConfirmationDraft } from '@/lib/ai/direction-confirmation'
 import { History } from 'lucide-react'
 import { PenLine, MessageSquare, Quote, Wand2 } from 'lucide-react'
 import { MessageList } from './message-list'
 import { ChatInput } from './chat-input'
-import { DirectionConfirmationCard } from './direction-confirmation-card'
 import { AIUnderstandingPanel } from './ai-understanding-panel'
 import { NewEntryDialog, type NewEntryPrefillData } from '../new-entry-dialog'
 import { ConversationDrawer } from '../conversation-drawer'
@@ -23,7 +20,6 @@ import { ChapterDraftPanel, type DraftApplyMode } from '../chapter-draft-panel'
 import { findEntryIdByName } from '@/lib/ai/find-entry-by-name'
 import type { WorldEntry, WorldEntryType } from '@/lib/types'
 import type { NewEntrySuggestion } from '@/lib/ai/suggestion-parser'
-import type { AssistantPreferenceFeedbackInput } from '../message-bubble'
 import { Button } from '@/components/ui/button'
 
 interface AIChatPanelProps {
@@ -67,7 +63,9 @@ export function AIChatPanel({
     if (conversationsLoading) return
     if (conversations.length === 0) {
       if (!activeConversationId) {
-        void ensureConversation().catch(console.error)
+        queueMicrotask(() => {
+          void ensureConversation().catch(console.error)
+        })
       }
       return
     }
@@ -75,7 +73,9 @@ export function AIChatPanel({
       ? conversations.some((conversation) => conversation.id === activeConversationId)
       : false
     if (!hasActiveConversation) {
-      setActiveConversationId(conversations[0].id)
+      queueMicrotask(() => {
+        setActiveConversationId(conversations[0].id)
+      })
     }
   }, [activeConversationId, conversations, conversationsLoading, ensureConversation])
 
@@ -113,10 +113,6 @@ export function AIChatPanel({
 
   const visibleSuggestions = filterDismissed(suggestions)
   const isConversationEmpty = messages.every(message => !message.content.trim())
-  const [directionConfirmation, setDirectionConfirmation] = useState<DirectionConfirmationDraft | null>(null)
-  const [isGeneratingDirectionConfirmation, setIsGeneratingDirectionConfirmation] = useState(false)
-  const confirmationKeyRef = useRef<string | null>(null)
-  const dismissedConfirmationKeyRef = useRef<string | null>(null)
 
   // ── Scroll management ─────────────────────────────────────────────
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
@@ -154,78 +150,6 @@ export function AIChatPanel({
     }
   }, [cacheHint])
 
-  useEffect(() => {
-    if (loading || isGeneratingDirectionConfirmation) {
-      return
-    }
-    if (!aiConfig.apiKey || !activeConversationId) {
-      return
-    }
-    if (!charter || charter.oneLinePremise.trim() || charter.storyPromise.trim() || charter.themes.length > 0) {
-      return
-    }
-
-    const nonEmptyMessages = messages.filter(message => message.content.trim())
-    const userMessages = nonEmptyMessages.filter(message => message.role === 'user')
-    const assistantMessages = nonEmptyMessages.filter(message => message.role === 'assistant')
-    if (userMessages.length < 2 || assistantMessages.length < 2) {
-      return
-    }
-
-    const confirmationWindow = nonEmptyMessages.slice(-4)
-    const confirmationKey = confirmationWindow.map(message => message.id).join(':')
-    if (!confirmationKey || confirmationKey === confirmationKeyRef.current || confirmationKey === dismissedConfirmationKeyRef.current) {
-      return
-    }
-
-    let cancelled = false
-    confirmationKeyRef.current = confirmationKey
-    setIsGeneratingDirectionConfirmation(true)
-
-    void (async () => {
-      try {
-        const draft = await generateDirectionConfirmation(
-          {
-            provider: aiConfig.provider,
-            apiKey: aiConfig.apiKey,
-            baseUrl: aiConfig.baseUrl,
-            model: aiConfig.model,
-          },
-          confirmationWindow.map(message => ({
-            role: message.role,
-            content: message.content,
-          }))
-        )
-
-        if (!cancelled) {
-          setDirectionConfirmation(draft)
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.warn('[AIChatPanel] direction confirmation failed:', error)
-        }
-      } finally {
-        if (!cancelled) {
-          setIsGeneratingDirectionConfirmation(false)
-        }
-      }
-    })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [
-    aiConfig.apiKey,
-    aiConfig.baseUrl,
-    aiConfig.model,
-    aiConfig.provider,
-    charter,
-    activeConversationId,
-    isGeneratingDirectionConfirmation,
-    loading,
-    messages,
-  ])
-
   // ── Input handling ────────────────────────────────────────────────
   const handleSend = async (overrideText?: string) => {
     const text = (overrideText ?? input).trim()
@@ -255,21 +179,6 @@ export function AIChatPanel({
   const showToast = (message: string) => {
     setToastMessage(message)
     setTimeout(() => setToastMessage(null), 3000)
-  }
-
-  const handleRecordPreference = async ({
-    messageId,
-    category,
-    note,
-  }: AssistantPreferenceFeedbackInput) => {
-    await recordPreferenceMemory(projectId, {
-      source: 'chat',
-      messageId,
-      verdict: 'reject',
-      category,
-      note,
-    })
-    showToast('已记录偏差')
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -407,25 +316,6 @@ export function AIChatPanel({
 
   const handleOpenAIConfig = () => {
     onOpenAIConfig?.()
-  }
-
-  const handleAcceptDirectionConfirmation = async () => {
-    if (!directionConfirmation) {
-      return
-    }
-
-    await saveCharter({
-      oneLinePremise: directionConfirmation.oneLinePremise,
-      storyPromise: directionConfirmation.storyPromise,
-      themes: directionConfirmation.themes,
-    })
-    setDirectionConfirmation(null)
-  }
-
-  const handleContinueTalking = () => {
-    dismissedConfirmationKeyRef.current = confirmationKeyRef.current
-    setDirectionConfirmation(null)
-    setInput(current => current.trim() ? current : '我再补一句：')
   }
 
   return (
@@ -567,7 +457,6 @@ export function AIChatPanel({
             visibleSuggestions={visibleSuggestions}
             onSendMessage={handleSend}
             onInsertDraft={handleInsertDraft}
-            onRecordPreference={handleRecordPreference}
             onAdoptRelationship={handleAdoptRelationship}
             onDismiss={handleDismiss}
             onAdoptNewEntry={handleAdoptNewEntry}
@@ -578,16 +467,6 @@ export function AIChatPanel({
             messagesContainerRef={messagesContainerRef}
             onScroll={handleScroll}
           />
-
-          {directionConfirmation && (
-            <DirectionConfirmationCard
-              oneLinePremise={directionConfirmation.oneLinePremise}
-              storyPromise={directionConfirmation.storyPromise}
-              themes={directionConfirmation.themes}
-              onAccept={() => void handleAcceptDirectionConfirmation()}
-              onContinueTalking={handleContinueTalking}
-            />
-          )}
 
           {/* ── Chat input ───────────────────────────────────── */}
           <ChatInput

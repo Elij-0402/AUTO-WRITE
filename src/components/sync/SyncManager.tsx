@@ -36,13 +36,18 @@ export function SyncManager() {
     intervalRef.current = setInterval(async () => {
       if (!navigator.onLine) return
 
-      setStatus('syncing')
-      const result = await flushSyncQueue()
-      
-      if (result.failed === 0) {
-        setStatus('synced')
-        setLastSynced(Date.now())
-      } else {
+      try {
+        setStatus('syncing')
+        const result = await flushSyncQueue()
+
+        if (result.failed === 0) {
+          setStatus('synced')
+          setLastSynced(Date.now())
+        } else {
+          setStatus('error')
+        }
+      } catch (error) {
+        console.error('Sync error during interval flush:', error)
         setStatus('error')
       }
     }, SYNC_INTERVAL)

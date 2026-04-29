@@ -2,35 +2,23 @@
 
 import { useState } from 'react'
 import { ChatMessage } from '@/lib/hooks/use-ai-chat'
-import type { PreferenceMemoryCategory } from '@/lib/types'
 import { DraftCard } from './draft-card'
-import { PreferenceFeedbackDialog } from './preference-feedback-dialog'
 import { Feather, Check, Copy } from 'lucide-react'
-
-export interface AssistantPreferenceFeedbackInput {
-  messageId: string
-  category: PreferenceMemoryCategory
-  note: string
-}
 
 interface MessageBubbleProps {
   message: ChatMessage
   projectId: string
   onInsertDraft?: (draftId: string, content: string) => void
-  onRecordPreference?: (input: AssistantPreferenceFeedbackInput) => Promise<void> | void
 }
 
 export function MessageBubble({
   message,
   projectId,
   onInsertDraft,
-  onRecordPreference,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user'
   const isDirectionAdjustment = message.kind === 'direction-adjustment'
   const [copied, setCopied] = useState(false)
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const [feedbackSaved, setFeedbackSaved] = useState(false)
   const time = new Date(message.timestamp).toLocaleTimeString('zh-CN', {
     hour: '2-digit',
     minute: '2-digit',
@@ -42,23 +30,6 @@ export function MessageBubble({
       setCopied(true)
       setTimeout(() => setCopied(false), 1600)
     } catch {}
-  }
-
-  const handlePreferenceSubmit = async ({
-    category,
-    note,
-  }: {
-    category: PreferenceMemoryCategory
-    note: string
-  }) => {
-    await onRecordPreference?.({
-      messageId: message.id,
-      category,
-      note,
-    })
-    setFeedbackOpen(false)
-    setFeedbackSaved(true)
-    setTimeout(() => setFeedbackSaved(false), 2000)
   }
 
   if (isUser) {
@@ -107,15 +78,6 @@ export function MessageBubble({
               {time}
             </span>
             <div className={`ml-auto flex items-center gap-1 transition-opacity ${isDirectionAdjustment ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-              {!isDirectionAdjustment ? (
-                <button
-                  onClick={() => setFeedbackOpen(true)}
-                  className="rounded-[var(--radius-control)] px-1.5 py-1 text-[11px] text-muted-foreground hover:bg-[hsl(var(--surface-2))] hover:text-foreground transition-colors"
-                  aria-label="记录偏差"
-                >
-                  {feedbackSaved ? '已记录' : '记录偏差'}
-                </button>
-              ) : null}
               <button
                 onClick={handleCopy}
                 className="p-1 rounded-[var(--radius-control)] text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--surface-2))] transition-all"
@@ -143,12 +105,6 @@ export function MessageBubble({
           )}
         </div>
       </div>
-
-      <PreferenceFeedbackDialog
-        open={feedbackOpen}
-        onClose={() => setFeedbackOpen(false)}
-        onSubmit={handlePreferenceSubmit}
-      />
     </>
   )
 }

@@ -12,14 +12,12 @@ import { buildPlanningDigestBlock, buildProjectCharterBlock, buildWorldBibleBloc
 export type PlanningAction =
   | 'generate_arc'
   | 'generate_chapter_plan'
-  | 'generate_scene_cards'
   | 'suggest_next_step'
 
 export interface PlanningPromptProgress {
   totalChapters: number
   linkedChapterPlans: number
   unlinkedChapterPlans: number
-  pendingSceneChapterPlans: number
 }
 
 export interface BuildPlanningPromptInput {
@@ -52,27 +50,16 @@ export interface PlanningChapterPlanDraft {
   targetWordCount?: number | null
 }
 
-export interface PlanningSceneCardDraft {
-  title: string
-  viewpoint: string
-  location: string
-  objective: string
-  obstacle: string
-  outcome: string
-  continuityNotes: string
-}
-
 export interface PlanningNextStepDraft {
   summary: string
   reason: string
-  targetKind?: 'idea' | 'arc' | 'chapter' | 'scene'
+  targetKind?: 'idea' | 'arc' | 'chapter'
   targetTitle?: string
 }
 
 export type ParsedPlanningActionResult =
   | { action: 'generate_arc'; data: { item: PlanningArcDraft } }
   | { action: 'generate_chapter_plan'; data: { items: PlanningChapterPlanDraft[] } }
-  | { action: 'generate_scene_cards'; data: { items: PlanningSceneCardDraft[] } }
   | { action: 'suggest_next_step'; data: { item: PlanningNextStepDraft } }
 
 export function buildPlanningPrompt(input: BuildPlanningPromptInput): string {
@@ -118,7 +105,6 @@ function buildCurrentProgressBlock(progress: PlanningPromptProgress): string {
     `总章节数：${progress.totalChapters}`,
     `已绑定章纲：${progress.linkedChapterPlans}`,
     `未绑定章纲：${progress.unlinkedChapterPlans}`,
-    `待拆场景章纲：${progress.pendingSceneChapterPlans}`,
   ].join('\n')
 }
 
@@ -143,18 +129,6 @@ function buildFocusBlock(input: BuildPlanningPromptInput): string {
     ].join('\n')
   }
 
-  if (input.action === 'generate_scene_cards' && input.focusChapterPlan) {
-    return [
-      '【当前章纲】',
-      `标题：${input.focusChapterPlan.title}`,
-      `摘要：${input.focusChapterPlan.summary || '(待补充)'}`,
-      `章节目标：${input.focusChapterPlan.chapterGoal || '(待补充)'}`,
-      `冲突：${input.focusChapterPlan.conflict || '(待补充)'}`,
-      `转折：${input.focusChapterPlan.turn || '(待补充)'}`,
-      `揭示：${input.focusChapterPlan.reveal || '(待补充)'}`,
-    ].join('\n')
-  }
-
   return [
     '【当前任务】',
     '请基于现有作品宪章、故事圣经和规划进度，给出最值得推进的下一步。',
@@ -174,12 +148,6 @@ function buildActionInstruction(action: PlanningAction): string {
         '【任务要求】',
         '基于当前卷纲拆出 3-5 条连续章纲。',
         '每条章纲都要能看出推进作用，避免重复功能章节。',
-      ].join('\n')
-    case 'generate_scene_cards':
-      return [
-        '【任务要求】',
-        '把当前章纲拆成 3-6 张场景卡。',
-        '每张场景卡都要写清目标、阻碍和结果，避免纯氛围场景。',
       ].join('\n')
     case 'suggest_next_step':
       return [
@@ -234,23 +202,6 @@ function getActionSchema(action: PlanningAction): ParsedPlanningActionResult {
           ],
         },
       }
-    case 'generate_scene_cards':
-      return {
-        action,
-        data: {
-          items: [
-            {
-              title: '场景标题',
-              viewpoint: '视角人物',
-              location: '场景地点',
-              objective: '场景目标',
-              obstacle: '阻碍',
-              outcome: '结果',
-              continuityNotes: '连续性提醒',
-            },
-          ],
-        },
-      }
     case 'suggest_next_step':
       return {
         action,
@@ -280,8 +231,6 @@ function validatePlanningActionResult(result: ParsedPlanningActionResult): strin
       return hasStringFields(result.data.item, ['title', 'premise', 'objective', 'conflict', 'payoff'])
     case 'generate_chapter_plan':
       return validateItems(result.data.items, ['title', 'summary', 'chapterGoal', 'conflict', 'turn', 'reveal'])
-    case 'generate_scene_cards':
-      return validateItems(result.data.items, ['title', 'viewpoint', 'location', 'objective', 'obstacle', 'outcome', 'continuityNotes'])
     case 'suggest_next_step':
       return hasStringFields(result.data.item, ['summary', 'reason'])
     default:

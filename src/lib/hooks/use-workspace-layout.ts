@@ -23,6 +23,16 @@ interface SelectionUpdateOptions {
   syncTab?: boolean
 }
 
+function normalizePlanningSelection(selection: PlanningSelection | null | undefined): PlanningSelection | null {
+  if (!selection) {
+    return null
+  }
+
+  return selection.kind === 'idea' || selection.kind === 'arc' || selection.kind === 'chapter'
+    ? selection
+    : null
+}
+
 function readWorkspaceUrlState(): WorkspaceUrlState {
   if (typeof window === 'undefined') return {}
 
@@ -34,10 +44,11 @@ function readWorkspaceUrlState(): WorkspaceUrlState {
     activeTab: (params.get('tab') as ActiveTab | null) ?? undefined,
     activeChapterId: params.get('chapter'),
     activeWorldEntryId: params.get('entry'),
-    activePlanningItem:
+    activePlanningItem: normalizePlanningSelection(
       activePlanningKind && activePlanningId
         ? { kind: activePlanningKind as PlanningSelection['kind'], id: activePlanningId }
-        : null,
+        : null
+    ),
   }
 }
 
@@ -80,7 +91,9 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
   const [activeChapterIdState, setActiveChapterIdState] = useState<string | null>(urlState.activeChapterId ?? persistedActiveChapterId)
   const [chapterBriefOpenState, setChapterBriefOpenState] = useState<boolean>(persistedChapterBriefOpen)
   const [activeWorldEntryIdState, setActiveWorldEntryIdState] = useState<string | null>(urlState.activeWorldEntryId ?? persistedActiveWorldEntryId)
-  const [activePlanningItemState, setActivePlanningItemState] = useState<PlanningSelection | null>(urlState.activePlanningItem ?? persistedActivePlanningSelection)
+  const [activePlanningItemState, setActivePlanningItemState] = useState<PlanningSelection | null>(
+    urlState.activePlanningItem ?? normalizePlanningSelection(persistedActivePlanningSelection)
+  )
 
   const { chapters, loading: chaptersLoading } = useChapters(projectId)
   const idle = useIdleMode()
@@ -103,7 +116,7 @@ export function useWorkspaceLayout({ projectId }: UseWorkspaceLayoutOptions) {
   }, [persistedActiveWorldEntryId, projectId, urlState.activeWorldEntryId])
 
   useEffect(() => {
-    setActivePlanningItemState(urlState.activePlanningItem ?? persistedActivePlanningSelection)
+    setActivePlanningItemState(urlState.activePlanningItem ?? normalizePlanningSelection(persistedActivePlanningSelection))
   }, [persistedActivePlanningSelection, projectId, urlState.activePlanningItem])
 
   const setActiveChapterId = useCallback((id: string | null, options: SelectionUpdateOptions = {}) => {

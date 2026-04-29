@@ -67,7 +67,7 @@ describe('useLayout', () => {
       await result.current.saveWorkspaceContext({
         activeChapterId: 'chapter-4',
         chapterBriefOpen: true,
-        activePlanningSelection: { kind: 'scene', id: 'scene-9' },
+        activePlanningSelection: { kind: 'chapter', id: 'plan-9' },
         lastWorkspaceContext: 'planning',
       })
     })
@@ -80,7 +80,7 @@ describe('useLayout', () => {
       activeChapterId: 'chapter-4',
       chapterBriefOpen: true,
       activeWorldEntryId: null,
-      activePlanningSelection: { kind: 'scene', id: 'scene-9' },
+      activePlanningSelection: { kind: 'chapter', id: 'plan-9' },
       lastWorkspaceContext: 'planning',
     })
   })

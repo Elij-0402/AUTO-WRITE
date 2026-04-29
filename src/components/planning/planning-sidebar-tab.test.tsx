@@ -5,7 +5,6 @@ import { PlanningSidebarTab } from './planning-sidebar-tab'
 const createIdeaNote = vi.fn()
 const createStoryArc = vi.fn()
 const createChapterPlan = vi.fn()
-const createSceneCard = vi.fn()
 
 vi.mock('@/lib/hooks/use-planning', () => ({
   usePlanning: () => ({
@@ -19,7 +18,6 @@ vi.mock('@/lib/hooks/use-planning', () => ({
     createIdeaNote,
     createStoryArc,
     createChapterPlan,
-    createSceneCard,
   }),
 }))
 
@@ -36,11 +34,9 @@ describe('PlanningSidebarTab', () => {
     expect(screen.getByText('灵感')).toBeInTheDocument()
     expect(screen.getByText('卷纲')).toBeInTheDocument()
     expect(screen.getByText('章纲')).toBeInTheDocument()
-    expect(screen.getByText('场景卡')).toBeInTheDocument()
     expect(screen.getByText('雨夜宫变')).toBeInTheDocument()
     expect(screen.getAllByText('第一卷')).toHaveLength(2)
-    expect(screen.getAllByText('第1章 雨夜押解')).toHaveLength(2)
-    expect(screen.getByText('城门前换车')).toBeInTheDocument()
+    expect(screen.getByText('第1章 雨夜押解')).toBeInTheDocument()
   })
 
   it('creates an idea note from the section action', async () => {
@@ -57,22 +53,6 @@ describe('PlanningSidebarTab', () => {
     expect(createIdeaNote).toHaveBeenCalled()
   })
 
-  it('shows scene cards grouped under their chapter plan', () => {
-    render(
-      <PlanningSidebarTab
-        projectId="project-1"
-        activeSelection={null}
-        onSelectItem={vi.fn()}
-      />
-    )
-
-    const chapterRow = screen.getAllByText('第1章 雨夜押解')[1].closest('div')
-    const sceneRow = screen.getByText('城门前换车').closest('div')
-
-    expect(chapterRow?.className).toContain('px-2')
-    expect(sceneRow?.className).toContain('pl-6')
-  })
-
   it('shows chapter plans grouped under their story arc', () => {
     render(
       <PlanningSidebarTab
@@ -82,7 +62,7 @@ describe('PlanningSidebarTab', () => {
       />
     )
 
-    const chapterListRow = screen.getAllByText('第1章 雨夜押解')[0].closest('div')
+    const chapterListRow = screen.getByText('第1章 雨夜押解').closest('div')
 
     expect(screen.getAllByText('第一卷')).toHaveLength(2)
     expect(chapterListRow?.className).toContain('pl-6')

@@ -139,12 +139,11 @@ function buildPrompt(action: PlanningAction): string {
     planningSnapshot,
     focusIdea: action === 'generate_arc' ? idea : undefined,
     focusArc: action === 'generate_chapter_plan' ? arc : undefined,
-    focusChapterPlan: action === 'generate_scene_cards' ? chapterPlan : undefined,
+    focusChapterPlan: action === 'suggest_next_step' ? chapterPlan : undefined,
     currentProgress: {
       totalChapters: 3,
       linkedChapterPlans: 1,
       unlinkedChapterPlans: 0,
-      pendingSceneChapterPlans: 1,
     },
   })
 }
@@ -153,7 +152,6 @@ describe('buildPlanningPrompt', () => {
   it.each([
     'generate_arc',
     'generate_chapter_plan',
-    'generate_scene_cards',
     'suggest_next_step',
   ] satisfies PlanningAction[])('builds %s prompt with charter, world, planning and result contract', (action) => {
     const prompt = buildPrompt(action)
@@ -169,7 +167,6 @@ describe('buildPlanningPrompt', () => {
   it('changes the focus section by action', () => {
     expect(buildPrompt('generate_arc')).toContain('【当前灵感】')
     expect(buildPrompt('generate_chapter_plan')).toContain('【当前卷纲】')
-    expect(buildPrompt('generate_scene_cards')).toContain('【当前章纲】')
     expect(buildPrompt('suggest_next_step')).toContain('【当前任务】')
   })
 })

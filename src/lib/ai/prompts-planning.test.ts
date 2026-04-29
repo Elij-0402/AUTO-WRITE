@@ -83,15 +83,15 @@ const planningSnapshot: PlanningSnapshot = {
 }
 
 describe('buildPlanningDigestBlock', () => {
-  it('summarizes current arcs, chapter plans, and pending decomposition', () => {
+  it('summarizes current arcs, chapter plans, and pending writing work', () => {
     const block = buildPlanningDigestBlock(planningSnapshot)
 
     expect(block).toContain('【当前规划】')
     expect(block).toContain('【当前卷纲】')
     expect(block).toContain('第一卷：雨夜入局｜活跃')
     expect(block).toContain('【当前章纲】')
-    expect(block).toContain('第1章 雨夜押解｜已绑定章节｜已拆 0/0 场景')
-    expect(block).toContain('第2章 金殿请罪｜未绑定章节｜已拆 1/1 场景')
+    expect(block).toContain('第1章 雨夜押解｜已绑定章节')
+    expect(block).toContain('第2章 金殿请罪｜未绑定章节｜旧场景资料 1 条')
     expect(block).toContain('【待推进】')
     expect(block).toContain('待写章节：1')
   })

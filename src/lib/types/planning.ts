@@ -83,7 +83,7 @@ export interface PlanningSnapshot {
 }
 
 export interface PlanningSelection {
-  kind: 'idea' | 'arc' | 'chapter' | 'scene'
+  kind: 'idea' | 'arc' | 'chapter'
   id: string
 }
 

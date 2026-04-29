@@ -6,12 +6,10 @@ import { ThemeProvider } from '@/components/editor/theme-provider'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { SidebarNavProvider, type SidebarTab } from '@/lib/hooks/use-sidebar-nav'
 import { AIConfigDialog } from '@/components/workspace/ai-config-dialog'
-import { AIOnboardingDialog } from '@/components/workspace/ai-onboarding-dialog'
-import { OnboardingTourDialog } from '@/components/workspace/onboarding-tour-dialog'
 import { WorkspaceTopbar } from '@/components/workspace/workspace-topbar'
 import { AIChatPanel } from '@/components/workspace/ai-chat-panel'
 import { useWorkspaceLayout } from '@/lib/hooks/use-workspace-layout'
-import { useAIConfigDialog, useAIOnboardingDialog, useOnboardingTourDialog } from '@/components/workspace/dialogs'
+import { useAIConfigDialog } from '@/components/workspace/dialogs'
 import { NormalLayout } from '@/components/workspace/layouts/normal-layout'
 import type { EditorHandle } from '@/components/editor/editor-types'
 import type { ActiveTab } from '@/lib/hooks/use-layout'
@@ -37,8 +35,6 @@ export default function ProjectPage() {
   const layout = useWorkspaceLayout({ projectId: params.id })
 
   const aiConfigDialog = useAIConfigDialog()
-  const onboardingDialog = useAIOnboardingDialog()
-  const tourDialog = useOnboardingTourDialog(params.id)
 
   const handleInsertDraft = useCallback((content: string) => {
     editorRef.current?.insertText(content)
@@ -100,8 +96,6 @@ export default function ProjectPage() {
           setSelectedEntryId={(id) => { if (id) layout.handleSelectWorldEntry(id) }}
         >
           <AIConfigDialog open={aiConfigDialog.open} onClose={aiConfigDialog.onClose} />
-          <AIOnboardingDialog open={onboardingDialog.open} onSkip={onboardingDialog.onSkip} onSaveComplete={onboardingDialog.onSaveComplete} />
-          <OnboardingTourDialog projectId={params.id} open={tourDialog.open} onComplete={tourDialog.onComplete} />
 
           <WorkspaceTopbar
             projectId={params.id}

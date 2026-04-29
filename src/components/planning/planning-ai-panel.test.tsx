@@ -4,7 +4,6 @@ import { PlanningAiPanel } from './planning-ai-panel'
 
 const createStoryArc = vi.fn().mockResolvedValue({ id: 'arc-new' })
 const createChapterPlan = vi.fn().mockResolvedValue(undefined)
-const createSceneCard = vi.fn().mockResolvedValue(undefined)
 const runAction = vi.fn()
 const dismissResult = vi.fn()
 let planningAiState: {
@@ -97,7 +96,6 @@ vi.mock('@/lib/hooks/use-planning', () => ({
     },
     createStoryArc,
     createChapterPlan,
-    createSceneCard,
   }),
 }))
 
@@ -166,7 +164,7 @@ describe('PlanningAiPanel', () => {
 
     expect(screen.getByRole('button', { name: '基于灵感生成卷纲' })).toBeDisabled()
     expect(screen.getByRole('button', { name: '基于卷纲生成章纲' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: '基于章纲拆解场景卡' })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: '基于章纲拆解场景卡' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '推荐下一步' })).toBeEnabled()
   })
 

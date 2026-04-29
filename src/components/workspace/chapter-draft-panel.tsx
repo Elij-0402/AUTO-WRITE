@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Check, Loader2, PenLine, RefreshCw, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,6 +19,7 @@ import type { AIClientConfig } from '@/lib/ai/client'
 import type { WorldEntry } from '@/lib/types/world-entry'
 import { cn } from '@/lib/utils'
 import {
+  buildPlanningPrefillFingerprint,
   buildDraftGenerationSourceSummary,
   buildDraftOutlineFromPlanning,
   normalizeDraftForInsertion,
@@ -59,7 +60,9 @@ export function ChapterDraftPanel({
   const [chapterTitle, setChapterTitle] = useState('')
   const [selectedPreset, setSelectedPreset] = useState<number | null>(0)
   const [customWordCount, setCustomWordCount] = useState('')
-  const [appliedPlanningPrefillKey, setAppliedPlanningPrefillKey] = useState<string | null>(null)
+  const [appliedPlanningFingerprint, setAppliedPlanningFingerprint] = useState<string | null>(null)
+  const [appliedSourceSummary, setAppliedSourceSummary] = useState<string | null>(null)
+  const [isOutlineDirty, setIsOutlineDirty] = useState(false)
   const [applyMode, setApplyMode] = useState<DraftApplyMode>('insert')
 
   const linkedChapterPlan = useMemo(
@@ -72,24 +75,44 @@ export function ChapterDraftPanel({
       : [],
     [linkedChapterPlan, snapshot.sceneCards]
   )
-  const sourceSummary = useMemo(
+  const latestSourceSummary = useMemo(
     () => linkedChapterPlan
       ? buildDraftGenerationSourceSummary(linkedChapterPlan, linkedSceneCards)
       : null,
     [linkedChapterPlan, linkedSceneCards]
   )
+  const planningPrefillFingerprint = useMemo(
+    () => linkedChapterPlan
+      ? buildPlanningPrefillFingerprint(linkedChapterPlan, linkedSceneCards)
+      : null,
+    [linkedChapterPlan, linkedSceneCards]
+  )
+  const hasPendingPlanningRefresh = Boolean(
+    linkedChapterPlan &&
+    planningPrefillFingerprint &&
+    appliedPlanningFingerprint &&
+    planningPrefillFingerprint !== appliedPlanningFingerprint &&
+    isOutlineDirty
+  )
 
-  const planningPrefillKey = linkedChapterPlan
-    ? `${linkedChapterPlan.id}:${linkedChapterPlan.updatedAt}:${linkedSceneCards.length}`
-    : null
+  useEffect(() => {
+    if (!linkedChapterPlan || !planningPrefillFingerprint || !latestSourceSummary) {
+      setAppliedPlanningFingerprint(null)
+      setAppliedSourceSummary(null)
+      setIsOutlineDirty(false)
+      return
+    }
 
-  if (linkedChapterPlan && planningPrefillKey && planningPrefillKey !== appliedPlanningPrefillKey) {
-    setAppliedPlanningPrefillKey(planningPrefillKey)
-    setChapterTitle((current) => current || linkedChapterPlan.title)
-    setOutline((current) => current || buildDraftOutlineFromPlanning(linkedChapterPlan, linkedSceneCards))
+    const applyPlanningPrefill = () => {
+      setAppliedPlanningFingerprint(planningPrefillFingerprint)
+      setAppliedSourceSummary(latestSourceSummary)
+      setChapterTitle((current) => current || linkedChapterPlan.title)
+      setOutline(buildDraftOutlineFromPlanning(linkedChapterPlan, linkedSceneCards))
+      setIsOutlineDirty(false)
 
-    const targetWordCount = linkedChapterPlan.targetWordCount
-    if (targetWordCount) {
+      const targetWordCount = linkedChapterPlan.targetWordCount
+      if (!targetWordCount) return
+
       const matchedPreset = WORD_COUNT_PRESETS.findIndex(
         (preset) =>
           targetWordCount >= preset.value[0] &&
@@ -103,7 +126,23 @@ export function ChapterDraftPanel({
         setCustomWordCount((current) => current || `${targetWordCount}-${targetWordCount}`)
       }
     }
-  }
+
+    if (!appliedPlanningFingerprint) {
+      applyPlanningPrefill()
+      return
+    }
+
+    if (planningPrefillFingerprint !== appliedPlanningFingerprint && !isOutlineDirty) {
+      applyPlanningPrefill()
+    }
+  }, [
+    appliedPlanningFingerprint,
+    isOutlineDirty,
+    latestSourceSummary,
+    linkedChapterPlan,
+    linkedSceneCards,
+    planningPrefillFingerprint,
+  ])
 
   const {
     state,
@@ -164,6 +203,15 @@ export function ChapterDraftPanel({
     void handleGenerate()
   }
 
+  const handleRefreshFromPlanning = () => {
+    if (!linkedChapterPlan || !planningPrefillFingerprint || !latestSourceSummary) return
+
+    setAppliedPlanningFingerprint(planningPrefillFingerprint)
+    setAppliedSourceSummary(latestSourceSummary)
+    setOutline(buildDraftOutlineFromPlanning(linkedChapterPlan, linkedSceneCards))
+    setIsOutlineDirty(false)
+  }
+
   if (!isConfigured) {
     return (
       <div
@@ -217,11 +265,29 @@ export function ChapterDraftPanel({
               <p className="text-[12px] text-muted-foreground">
                 已根据当前章纲资料预填，可继续改写后再生成。
               </p>
-              {sourceSummary ? (
-                <div className="rounded-sm border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] px-3 py-2 text-[12px] text-muted-foreground">
-                  {sourceSummary}
-                </div>
-              ) : null}
+              <div className="space-y-2">
+                {appliedSourceSummary ? (
+                  <div className="rounded-sm border border-[hsl(var(--border))] bg-[hsl(var(--surface-1))] px-3 py-2 text-[12px] text-muted-foreground">
+                    {appliedSourceSummary}
+                  </div>
+                ) : null}
+                {hasPendingPlanningRefresh ? (
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-[hsl(var(--accent))]/30 bg-[hsl(var(--accent))]/5 px-3 py-2 text-[12px] text-muted-foreground">
+                    <span>检测到更新后的章纲或场景卡，当前大纲仍保留你的本地修改。</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefreshFromPlanning}
+                      className="gap-1.5"
+                      disabled={isGenerating || isDraftReady}
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      刷新大纲
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
             </div>
           ) : null}
           <Textarea
@@ -229,7 +295,10 @@ export function ChapterDraftPanel({
             placeholder="描述本章的主要情节、转折点、关键场景..."
             rows={6}
             value={outline}
-            onChange={(event) => setOutline(event.target.value)}
+            onChange={(event) => {
+              setOutline(event.target.value)
+              setIsOutlineDirty(true)
+            }}
             disabled={isGenerating || isDraftReady}
           />
         </div>

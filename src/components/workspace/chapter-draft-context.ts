@@ -1,5 +1,21 @@
 import type { ChapterPlan, SceneCard } from '@/lib/types'
 
+export function buildPlanningPrefillFingerprint(
+  chapterPlan: ChapterPlan,
+  sceneCards: SceneCard[]
+): string {
+  const sceneFingerprint = [...sceneCards]
+    .sort((a, b) => a.order - b.order)
+    .map((scene) => `${scene.id}:${scene.order}:${scene.updatedAt}`)
+    .join('|')
+
+  return [
+    chapterPlan.id,
+    chapterPlan.updatedAt,
+    sceneFingerprint,
+  ].join('::')
+}
+
 export function buildDraftOutlineFromPlanning(
   chapterPlan: ChapterPlan,
   sceneCards: SceneCard[]

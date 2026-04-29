@@ -276,7 +276,11 @@ describe('PlanningAiPanel', () => {
         title: '城门前换车',
         order: 7,
       }))
-      expect(onSelectItem).toHaveBeenCalledWith({ kind: 'chapter', id: 'chapter-1' })
+      expect(onSelectItem).toHaveBeenCalledWith({
+        kind: 'chapter',
+        id: 'chapter-1',
+        focusSceneId: 'scene-new',
+      })
     })
   })
 })

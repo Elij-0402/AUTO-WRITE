@@ -121,16 +121,22 @@ export function PlanningAiPanel({
             .map((item) => item.order)
         )
 
+        let firstCreatedSceneId: string | null = null
         for (const [index, item] of result.data.items.entries()) {
-          await createSceneCard({
+          const created = await createSceneCard({
             ...item,
             chapterPlanId: selectedChapterPlan.id,
             order: startOrder + index,
             status: item.status ?? 'planned',
           })
+          firstCreatedSceneId = firstCreatedSceneId ?? created?.id ?? null
         }
 
-        onSelectItem({ kind: 'chapter', id: selectedChapterPlan.id })
+        onSelectItem({
+          kind: 'chapter',
+          id: selectedChapterPlan.id,
+          focusSceneId: firstCreatedSceneId ?? undefined,
+        })
       } else if (result.action === 'suggest_next_step') {
         const target = resolveSuggestionTarget(result.data.item, snapshot)
         if (target) {

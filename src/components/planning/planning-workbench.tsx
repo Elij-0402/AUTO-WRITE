@@ -16,12 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { SceneCard, SceneCardStatus } from '@/lib/types'
-
-export interface PlanningSelection {
-  kind: 'idea' | 'arc' | 'chapter'
-  id: string
-}
+import type { PlanningSelection, SceneCard, SceneCardStatus } from '@/lib/types'
 
 interface PlanningWorkbenchProps {
   projectId: string
@@ -120,6 +115,7 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
         selectedArc?.updatedAt,
         selectedChapterPlan?.updatedAt,
         selectedChapterPlan?.linkedChapterId,
+        selection?.focusSceneId,
       ].join(':')
     : 'none'
   /* eslint-disable react-hooks/exhaustive-deps */
@@ -162,9 +158,17 @@ export function PlanningWorkbench({ projectId, selection, onSelectItem, onOpenLi
       setTurn(selectedChapterPlan.turn)
       setReveal(selectedChapterPlan.reveal)
       setLinkedChapterId(selectedChapterPlan.linkedChapterId ?? 'unlinked')
-      setExpandedSceneId((current) => current && selectedChapterScenes.some((item) => item.id === current)
-        ? current
-        : selectedChapterScenes[0]?.id ?? null)
+      setExpandedSceneId((current) => {
+        if (selection?.focusSceneId && selectedChapterScenes.some((item) => item.id === selection.focusSceneId)) {
+          return selection.focusSceneId
+        }
+
+        if (current && selectedChapterScenes.some((item) => item.id === current)) {
+          return current
+        }
+
+        return selectedChapterScenes[0]?.id ?? null
+      })
       latestValuesRef.current = {
         ...latestValuesRef.current,
         title: selectedChapterPlan.title,

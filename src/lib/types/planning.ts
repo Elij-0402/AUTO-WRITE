@@ -85,6 +85,7 @@ export interface PlanningSnapshot {
 export interface PlanningSelection {
   kind: 'idea' | 'arc' | 'chapter'
   id: string
+  focusSceneId?: string
 }
 
 export interface CreateIdeaNoteInput {

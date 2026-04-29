@@ -356,4 +356,15 @@ describe('PlanningWorkbench', () => {
       expect(deleteSceneCard).toHaveBeenCalledWith('scene-1')
     })
   })
+
+  it('expands a focused scene card when the chapter selection requests it', () => {
+    render(
+      <PlanningWorkbench
+        projectId="project-1"
+        selection={{ kind: 'chapter', id: 'chapter-1', focusSceneId: 'scene-2' }}
+      />
+    )
+
+    expect(screen.getByLabelText('场景状态-2')).toHaveValue('drafting')
+  })
 })

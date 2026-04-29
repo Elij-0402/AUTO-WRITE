@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildPlanningPrefillFingerprint,
   buildDraftOutlineFromPlanning,
   buildDraftGenerationSourceSummary,
   normalizeDraftForInsertion,
@@ -104,5 +105,15 @@ describe('buildDraftOutlineFromPlanning', () => {
     const normalized = normalizeDraftForInsertion('\n\n# 标题\n\n第一段。\n\n第二段。\n\n')
 
     expect(normalized).toBe('# 标题\n\n第一段。\n\n第二段。')
+  })
+
+  it('builds a fingerprint that changes with scene ordering and updates', () => {
+    const initial = buildPlanningPrefillFingerprint(chapterPlan, sceneCards)
+    const reordered = buildPlanningPrefillFingerprint(chapterPlan, [
+      { ...sceneCards[1], order: 1, updatedAt: 20 },
+      { ...sceneCards[0], order: 2, updatedAt: 21 },
+    ])
+
+    expect(initial).not.toBe(reordered)
   })
 })

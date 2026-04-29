@@ -41,6 +41,16 @@ The planning AI panel SHALL support expanding a selected chapter plan into a str
 - **THEN** the system creates scene cards in the selected chapter plan using the preview order
 - **AND** returns focus to the first created scene card or the updated chapter-plan scene list
 
+#### Scenario: Apply generated scene cards to a chapter that already has scenes
+- **WHEN** the user accepts a generated scene-card preview for a chapter plan that already contains scene cards
+- **THEN** the system creates the new scene cards using the preview order
+- **AND** expands, focuses, or otherwise reveals the first newly created scene card in the chapter-plan scene list
+
+#### Scenario: Apply generated scene cards to an empty chapter
+- **WHEN** the user accepts a generated scene-card preview for a chapter plan with no existing scene cards
+- **THEN** the system creates the generated scene cards
+- **AND** opens the first created scene card so the user can review the result immediately
+
 #### Scenario: Hide scene-card generation when chapter context is missing
 - **WHEN** no chapter plan is selected
 - **THEN** the planning AI panel does not offer the scene-card generation action
@@ -57,4 +67,3 @@ The planning workflow SHALL expose whether a chapter plan has enough scene detai
 - **WHEN** a chapter plan linked to a chapter has scene cards
 - **THEN** the drafting prefill summary references the number of scene cards used as source material
 - **AND** uses scene-card order when assembling the draft outline context
-

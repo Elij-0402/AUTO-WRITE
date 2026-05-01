@@ -1,10 +1,20 @@
 import { test, expect } from '@playwright/test'
 
+async function openCreateProjectDialog(page: import('@playwright/test').Page) {
+  const emptyStateButton = page.getByRole('button', { name: '开始第一个故事' })
+  if (await emptyStateButton.isVisible().catch(() => false)) {
+    await emptyStateButton.click()
+    return
+  }
+
+  await page.getByRole('button', { name: '新建项目' }).click()
+}
+
 async function createProject(page: import('@playwright/test').Page, title: string) {
   await page.goto('/')
-  await page.getByRole('button', { name: '开始第一个故事' }).click()
+  await openCreateProjectDialog(page)
   const dialog = page.getByRole('dialog', { name: '新建项目' })
-  await dialog.getByLabel(/标题/).fill(title)
+  await dialog.getByPlaceholder('输入小说标题').fill(title)
   await dialog.getByRole('button', { name: '创建' }).click()
   await page.waitForURL(/\/projects\/[^/?#]+(?:\?.*)?$/)
   const projectId = page.url().match(/\/projects\/([^/?#]+)/)?.[1]
@@ -21,6 +31,7 @@ test('add character entry via world bible tab', async ({ page }) => {
 
   await expect(page.getByPlaceholder('搜索世界观...')).toBeVisible()
   await page.getByRole('button', { name: '添加角色' }).click()
-  const characterHeader = page.getByText('角色', { exact: true }).first()
-  await expect(characterHeader).toBeVisible()
+  const nameInput = page.getByLabel('姓名')
+  await expect(nameInput).toBeVisible()
+  await expect(nameInput).toHaveValue('未命名角色')
 })

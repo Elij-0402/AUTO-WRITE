@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Check, Loader2, PenLine, RefreshCw, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -95,12 +95,18 @@ export function ChapterDraftPanel({
     isOutlineDirty
   )
 
+  const resetPlanningPrefillState = useCallback(() => {
+    setAppliedPlanningFingerprint(null)
+    setAppliedSourceSummary(null)
+    setIsOutlineDirty(false)
+  }, [])
+
   useEffect(() => {
     if (!linkedChapterPlan || !planningPrefillFingerprint || !latestSourceSummary) {
-      setAppliedPlanningFingerprint(null)
-      setAppliedSourceSummary(null)
-      setIsOutlineDirty(false)
-      return
+      const resetTimer = window.setTimeout(() => {
+        resetPlanningPrefillState()
+      }, 0)
+      return () => window.clearTimeout(resetTimer)
     }
 
     const applyPlanningPrefill = () => {
@@ -142,6 +148,7 @@ export function ChapterDraftPanel({
     linkedChapterPlan,
     linkedSceneCards,
     planningPrefillFingerprint,
+    resetPlanningPrefillState,
   ])
 
   const {

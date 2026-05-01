@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/select'
 import type { PlanningSelection, SceneCard, SceneCardStatus } from '@/lib/types'
 
+export type { PlanningSelection } from '@/lib/types'
+
 interface PlanningWorkbenchProps {
   projectId: string
   selection: PlanningSelection | null

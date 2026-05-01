@@ -1,10 +1,20 @@
 import { test, expect } from '@playwright/test'
 
+async function openCreateProjectDialog(page: import('@playwright/test').Page) {
+  const emptyStateButton = page.getByRole('button', { name: '开始第一个故事' })
+  if (await emptyStateButton.isVisible().catch(() => false)) {
+    await emptyStateButton.click()
+    return
+  }
+
+  await page.getByRole('button', { name: '新建项目' }).click()
+}
+
 async function createProject(page: import('@playwright/test').Page, title: string) {
   await page.goto('/')
-  await page.getByRole('button', { name: '开始第一个故事' }).click()
+  await openCreateProjectDialog(page)
   const dialog = page.getByRole('dialog', { name: '新建项目' })
-  await dialog.getByLabel(/标题/).fill(title)
+  await dialog.getByPlaceholder('输入小说标题').fill(title)
   await dialog.getByRole('button', { name: '创建' }).click()
   await page.waitForURL(/\/projects\/[^/?#]+(?:\?.*)?$/)
   const projectId = page.url().match(/\/projects\/([^/?#]+)/)?.[1]
@@ -22,5 +32,6 @@ test('create chapter from workspace sidebar', async ({ page }) => {
   await input.fill('第一章 · 开端')
   await input.press('Enter')
 
-  await expect(page.getByText('第一章 · 开端')).toBeVisible()
+  await expect(page.getByText('第一章 · 开端').first()).toBeVisible()
+  await expect(page.getByRole('button', { name: '章节简报' })).toBeVisible()
 })
